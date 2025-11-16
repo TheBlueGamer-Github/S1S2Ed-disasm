@@ -5,6 +5,7 @@ Map_obj04_a:	mappingsTable
 	mappingsTableEntry.w	Map_obj04_a_005A
 	mappingsTableEntry.w	Map_obj04_a_008C
 	mappingsTableEntry.w	Map_obj04_a_00BE
+	mappingsTableEntry.w	Map_obj04_a_none
 
 Map_obj04_a_000C:	spriteHeader
 	spritePiece	-$60, -8, 4, 2, 0, 0, 0, 0, 0
@@ -50,5 +51,8 @@ Map_obj04_a_00BE:	spriteHeader
 	spritePiece	$20, -8, 4, 2, $10, 0, 0, 0, 0
 	spritePiece	$40, -8, 4, 2, 8, 0, 0, 0, 0
 Map_obj04_a_00BE_End
+
+Map_obj04_a_none:	spriteHeader
+Map_obj04_a_none_End
 
 	even

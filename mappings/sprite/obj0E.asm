@@ -1,226 +1,266 @@
-Map_obj0E:	mappingsTable
-	mappingsTableEntry.w	Map_obj0E_0028
-	mappingsTableEntry.w	Map_obj0E_005A
-	mappingsTableEntry.w	Map_obj0E_00A4
-	mappingsTableEntry.w	Map_obj0E_00E6
-	mappingsTableEntry.w	Map_obj0E_0150
-	mappingsTableEntry.w	Map_obj0E_01BA
-	mappingsTableEntry.w	Map_obj0E_0224
-	mappingsTableEntry.w	Map_obj0E_028E
-	mappingsTableEntry.w	Map_obj0E_0308
-	mappingsTableEntry.w	Map_obj0E_0372
-	mappingsTableEntry.w	Map_obj0E_038C
-	mappingsTableEntry.w	Map_obj0E_03BE
-	mappingsTableEntry.w	Map_obj0E_03F8
-	mappingsTableEntry.w	Map_obj0E_0402
-	mappingsTableEntry.w	Map_obj0E_040C
-	mappingsTableEntry.w	Map_obj0E_0416
-	mappingsTableEntry.w	Map_obj0E_0420
-	mappingsTableEntry.w	Map_obj0E_042A
-	mappingsTableEntry.w	Map_obj0E_044C
-	mappingsTableEntry.w	Map_obj0E_04BE
+Map_eb10: mappingsTable
+	mappingsTableEntry.w	Map_eb10_0
+	mappingsTableEntry.w	Map_eb10_1
+	mappingsTableEntry.w	Map_eb10_2
+	mappingsTableEntry.w	Map_eb10_3
+	mappingsTableEntry.w	Map_eb10_4
+	mappingsTableEntry.w	Map_eb10_5
+	mappingsTableEntry.w	Map_eb10_6
+	mappingsTableEntry.w	Map_eb10_7
+	mappingsTableEntry.w	Map_eb10_8
+	mappingsTableEntry.w	Map_eb10_9
+	mappingsTableEntry.w	Map_eb10_10
+	mappingsTableEntry.w	Map_eb10_11
+	mappingsTableEntry.w	Map_eb10_12
+	mappingsTableEntry.w	Map_eb10_13
+	mappingsTableEntry.w	Map_eb10_14
+	mappingsTableEntry.w	Map_eb10_15
+	mappingsTableEntry.w	Map_eb10_16
+	mappingsTableEntry.w	Map_eb10_17
+	mappingsTableEntry.w	Map_eb10_18
+	mappingsTableEntry.w	Map_eb10_19
+	mappingsTableEntry.w	Map_eb10_20
 
-Map_obj0E_0028:	spriteHeader
-	spritePiece	$30, $10, 4, 1, 0, 0, 0, 1, 1
-	spritePiece	$18, $18, 4, 4, 4, 0, 0, 1, 1
-	spritePiece	$38, $18, 3, 4, $14, 0, 0, 1, 1
-	spritePiece	$20, $38, 2, 1, $20, 0, 0, 1, 1
-	spritePiece	$28, $40, 1, 1, $22, 0, 0, 1, 1
-	spritePiece	$30, $38, 4, 3, $23, 0, 0, 1, 1
-Map_obj0E_0028_End
+Map_eb10_0:	spriteHeader
+ spritePiece 8, 8, 3, 1, 0, 0, 0, 0, 1
+ spritePiece 8, $10, 4, 4, 3, 0, 0, 0, 1
+ spritePiece $28, $10, 4, 4, $13, 0, 0, 0, 1
+ spritePiece 8, $30, 4, 3, $23, 0, 0, 0, 1
+ spritePiece $28, $30, 4, 3, $2F, 0, 0, 0, 1
+ spritePiece 0, $48, 4, 2, $3B, 0, 0, 0, 1
+ spritePiece $20, $48, 3, 2, $43, 0, 0, 0, 1
+ spritePiece $38, $48, 1, 1, $49, 0, 0, 0, 1
+ spritePiece 8, $58, 4, 1, $4A, 0, 0, 0, 1
+ spritePiece $28, $58, 1, 1, $4E, 0, 0, 0, 1
+Map_eb10_0_End
 
-Map_obj0E_005A:	spriteHeader
-	spritePiece	$48, $10, 2, 1, $2F, 0, 0, 1, 1
-	spritePiece	$20, $18, 4, 4, $31, 0, 0, 1, 1
-	spritePiece	$40, $18, 3, 4, $41, 0, 0, 1, 1
-	spritePiece	$58, $18, 1, 2, $4D, 0, 0, 1, 1
-	spritePiece	0, $38, 1, 2, $4F, 0, 0, 1, 1
-	spritePiece	8, $38, 4, 3, $51, 0, 0, 1, 1
-	spritePiece	$28, $38, 3, 3, $5D, 0, 0, 1, 1
-	spritePiece	$40, $38, 2, 2, $66, 0, 0, 1, 1
-	spritePiece	$50, $38, 1, 1, $6A, 0, 0, 1, 1
-Map_obj0E_005A_End
+Map_eb10_1:	spriteHeader
+ spritePiece $20, $48, 4, 3, $1BD, 0, 0, 0, 1
+ spritePiece $38, $38, 2, 2, $1C9, 0, 0, 0, 1
+ spritePiece $30, $40, 1, 1, $1CD, 0, 0, 0, 1
+ spritePiece $40, $48, 1, 1, $1CE, 0, 0, 0, 1
+ spritePiece $20, $60, 1, 1, $1CF, 0, 0, 0, 1
+ spritePiece 8, $10, 4, 3, $4F, 0, 0, 0, 1
+ spritePiece $28, $10, 4, 3, $5B, 0, 0, 0, 1
+ spritePiece $48, $18, 1, 2, $67, 0, 0, 0, 1
+ spritePiece 0, $28, 1, 3, $69, 0, 0, 0, 1
+ spritePiece 8, $28, 4, 4, $6C, 0, 0, 0, 1
+ spritePiece $28, $28, 4, 4, $7C, 0, 0, 0, 1
+ spritePiece $48, $30, 1, 3, $8C, 0, 0, 0, 1
+ spritePiece $10, $48, 4, 3, $8F, 0, 0, 0, 1
+ spritePiece $30, $48, 3, 2, $9B, 0, 0, 0, 1
+ spritePiece $30, $58, 2, 1, $A1, 0, 0, 0, 1
+Map_eb10_1_End
 
-Map_obj0E_00A4:	spriteHeader
-	spritePiece	$28, $10, 3, 3, $6B, 0, 0, 1, 1
-	spritePiece	$40, $18, 4, 2, $74, 0, 0, 1, 1
-	spritePiece	8, $28, 4, 4, $7C, 0, 0, 1, 1
-	spritePiece	$28, $28, 4, 4, $8C, 0, 0, 1, 1
-	spritePiece	$48, $28, 2, 4, $9C, 0, 0, 1, 1
-	spritePiece	$58, $28, 1, 2, $A4, 0, 0, 1, 1
-	spritePiece	$10, $48, 4, 1, $A6, 0, 0, 1, 1
-	spritePiece	$30, $48, 2, 1, $AA, 0, 0, 1, 1
-Map_obj0E_00A4_End
+Map_eb10_2:	spriteHeader
+ spritePiece $28, $38, 4, 3, $1BD, 0, 0, 0, 1
+ spritePiece $40, $28, 2, 2, $1C9, 0, 0, 0, 1
+ spritePiece $38, $30, 1, 1, $1CD, 0, 0, 0, 1
+ spritePiece $48, $38, 1, 1, $1CE, 0, 0, 0, 1
+ spritePiece $28, $50, 1, 1, $1CF, 0, 0, 0, 1
+ spritePiece 8, $20, 4, 4, $1A9, 0, 0, 0, 1
+ spritePiece $28, $20, 1, 4, $1B9, 0, 0, 0, 1
+ spritePiece 8, $10, 4, 3, $4F, 0, 0, 0, 1
+ spritePiece $28, $10, 4, 3, $5B, 0, 0, 0, 1
+ spritePiece $48, $18, 1, 2, $67, 0, 0, 0, 1
+ spritePiece 0, $28, 1, 3, $69, 0, 0, 0, 1
+ spritePiece 8, $28, 4, 4, $6C, 0, 0, 0, 1
+ spritePiece $28, $28, 4, 4, $7C, 0, 0, 0, 1
+ spritePiece $48, $30, 1, 3, $8C, 0, 0, 0, 1
+ spritePiece $10, $48, 4, 3, $8F, 0, 0, 0, 1
+ spritePiece $30, $48, 3, 2, $9B, 0, 0, 0, 1
+ spritePiece $30, $58, 2, 1, $A1, 0, 0, 0, 1
+Map_eb10_2_End
 
-Map_obj0E_00E6:	spriteHeader
-	spritePiece	$20, $10, 1, 1, $AC, 0, 0, 1, 1
-	spritePiece	$28, $10, 4, 3, $AD, 0, 0, 1, 1
-	spritePiece	$48, $10, 1, 1, $B9, 0, 0, 1, 1
-	spritePiece	$48, $18, 3, 2, $BA, 0, 0, 1, 1
-	spritePiece	$10, $20, 2, 1, $C0, 0, 0, 1, 1
-	spritePiece	0, $38, 1, 1, $C2, 0, 0, 1, 1
-	spritePiece	8, $28, 4, 3, $C3, 0, 0, 1, 1
-	spritePiece	$28, $28, 4, 3, $CF, 0, 0, 1, 1
-	spritePiece	$48, $28, 2, 3, $DB, 0, 0, 1, 1
-	spritePiece	$58, $28, 1, 1, $E1, 0, 0, 1, 1
-	spritePiece	$10, $40, 4, 2, $E2, 0, 0, 1, 1
-	spritePiece	$30, $40, 2, 2, $EA, 0, 0, 1, 1
-	spritePiece	$40, $40, 3, 1, $EE, 0, 0, 1, 1
-Map_obj0E_00E6_End
+Map_eb10_3:	spriteHeader
+ spritePiece 8, $10, 4, 4, $A3, 0, 0, 0, 1
+ spritePiece $28, 8, 3, 1, $B3, 0, 0, 0, 1
+ spritePiece $28, $10, 4, 4, $B6, 0, 0, 0, 1
+ spritePiece $48, $18, 1, 1, $C6, 0, 0, 0, 1
+ spritePiece $48, $20, 2, 3, $C7, 0, 0, 0, 1
+ spritePiece $48, $38, 1, 1, $CD, 0, 0, 0, 1
+ spritePiece 8, $30, 4, 2, $CE, 0, 0, 0, 1
+ spritePiece $28, $30, 4, 3, $D6, 0, 0, 0, 1
+ spritePiece $10, $40, 3, 4, $E2, 0, 0, 0, 1
+ spritePiece $28, $48, 3, 1, $EE, 0, 0, 0, 1
+ spritePiece 8, $50, 1, 2, $F1, 0, 0, 0, 1
+ spritePiece $28, $50, 2, 1, $F3, 0, 0, 0, 1
+ spritePiece $28, $58, 1, 1, $F5, 0, 0, 0, 1
+Map_eb10_3_End
 
-Map_obj0E_0150:	spriteHeader
-	spritePiece	$40, 8, 2, 1, $F1, 0, 0, 1, 1
-	spritePiece	$18, $10, 1, 1, $AC, 0, 1, 1, 1
-	spritePiece	$20, $10, 4, 3, $F3, 0, 0, 1, 1
-	spritePiece	$40, $10, 4, 2, $FF, 0, 0, 1, 1
-	spritePiece	$58, $20, 1, 1, $107, 0, 0, 1, 1
-	spritePiece	$40, $20, 2, 1, $108, 0, 0, 1, 1
-	spritePiece	8, $28, 1, 1, $10A, 0, 0, 1, 1
-	spritePiece	$10, $28, 4, 4, $10B, 0, 0, 1, 1
-	spritePiece	0, $38, 2, 2, $11B, 0, 0, 1, 1
-	spritePiece	$30, $28, 4, 4, $11F, 0, 0, 1, 1
-	spritePiece	$50, $28, 1, 2, $12F, 0, 0, 1, 1
-	spritePiece	$10, $48, 4, 1, $131, 0, 0, 1, 1
-	spritePiece	$30, $48, 2, 1, $135, 0, 0, 1, 1
-Map_obj0E_0150_End
+Map_eb10_4:	spriteHeader
+ spritePiece $10, 8, 4, 4, $F6, 0, 0, 0, 1
+ spritePiece $30, 8, 3, 4, $106, 0, 0, 0, 1
+ spritePiece $48, $10, 2, 3, $112, 0, 0, 0, 1
+ spritePiece $18, $28, 4, 3, $118, 0, 0, 0, 1
+ spritePiece $38, $28, 4, 3, $124, 0, 0, 0, 1
+ spritePiece $10, $28, 1, 2, $130, 0, 0, 0, 1
+ spritePiece $10, $40, 4, 3, $132, 0, 0, 0, 1
+ spritePiece $30, $40, 2, 3, $13E, 0, 0, 0, 1
+ spritePiece $40, $40, 2, 1, $144, 0, 0, 0, 1
+ spritePiece $40, $48, 1, 1, $146, 0, 0, 0, 1
+ spritePiece $18, $58, 3, 1, $147, 0, 0, 0, 1
+Map_eb10_4_End
 
-Map_obj0E_01BA:	spriteHeader
-	spritePiece	$20, 8, 4, 1, $137, 0, 0, 0, 1
-	spritePiece	$40, $10, 1, 1, $13B, 0, 0, 0, 1
-	spritePiece	8, $10, 4, 4, $13C, 0, 0, 0, 1
-	spritePiece	0, $30, 4, 2, $14C, 0, 0, 0, 1
-	spritePiece	0, $18, 1, 3, $154, 0, 0, 0, 1
-	spritePiece	$28, $10, 3, 4, $157, 0, 0, 0, 1
-	spritePiece	$40, $28, 1, 1, $163, 0, 0, 0, 1
-	spritePiece	$48, $30, 1, 1, $164, 0, 0, 0, 1
-	spritePiece	$20, $30, 4, 2, $165, 0, 0, 0, 1
-	spritePiece	8, $40, 1, 1, $16D, 0, 0, 0, 1
-	spritePiece	$10, $40, 4, 2, $16E, 0, 0, 0, 1
-	spritePiece	$30, $40, 2, 2, $176, 0, 0, 0, 1
-	spritePiece	$40, $30, 1, 3, $17A, 0, 0, 0, 1
-Map_obj0E_01BA_End
+Map_eb10_5:	spriteHeader
+ spritePiece $38, $28, 4, 3, $1E4, 0, 0, 0, 1
+ spritePiece $48, $18, 2, 2, $1F0, 0, 0, 0, 1
+ spritePiece $38, $40, 3, 1, $1F4, 0, 0, 0, 1
+ spritePiece $38, $48, 2, 1, $1F7, 0, 0, 0, 1
+ spritePiece $10, $10, 4, 4, $14A, 0, 0, 0, 1
+ spritePiece $20, 8, 2, 1, $15A, 0, 0, 0, 1
+ spritePiece $30, 0, 3, 4, $15C, 0, 0, 0, 1
+ spritePiece $48, 8, 1, 1, $168, 0, 0, 0, 1
+ spritePiece $48, $18, 1, 1, $169, 0, 0, 0, 1
+ spritePiece 0, $18, 2, 2, $16A, 0, 0, 0, 1
+ spritePiece 8, $28, 1, 3, $16E, 0, 0, 0, 1
+ spritePiece $10, $30, 4, 4, $171, 0, 0, 0, 1
+ spritePiece $30, $20, 4, 2, $181, 0, 0, 0, 1
+ spritePiece $50, $20, 1, 2, $189, 0, 0, 0, 1
+ spritePiece $30, $30, 3, 1, $18B, 0, 0, 0, 1
+ spritePiece $30, $38, 4, 3, $18E, 0, 0, 0, 1
+ spritePiece 8, $50, 4, 2, $19A, 0, 0, 0, 1
+ spritePiece $28, $50, 4, 1, $1A2, 0, 0, 0, 1
+ spritePiece $28, $58, 3, 1, $1A6, 0, 0, 0, 1
+Map_eb10_5_End
 
-Map_obj0E_0224:	spriteHeader
-	spritePiece	$18, 8, 4, 1, $17D, 0, 0, 0, 1
-	spritePiece	$38, 8, 2, 4, $181, 0, 0, 0, 1
-	spritePiece	$48, $10, 1, 1, $189, 0, 0, 0, 1
-	spritePiece	0, $20, 4, 4, $18A, 0, 0, 0, 1
-	spritePiece	8, $18, 1, 1, $19A, 0, 0, 0, 1
-	spritePiece	$10, $10, 2, 2, $19B, 0, 0, 0, 1
-	spritePiece	$20, $10, 3, 3, $19F, 0, 0, 0, 1
-	spritePiece	$20, $28, 4, 4, $1A8, 0, 0, 0, 1
-	spritePiece	$40, $28, 2, 4, $1B8, 0, 0, 0, 1
-	spritePiece	8, $40, 3, 1, $1C0, 0, 0, 0, 1
-	spritePiece	8, $50, 1, 2, $1C3, 0, 0, 0, 1
-	spritePiece	$10, $48, 3, 3, $1C5, 0, 0, 0, 1
-	spritePiece	$28, $48, 4, 2, $1CE, 0, 0, 0, 1
-Map_obj0E_0224_End
+Map_eb10_6:	spriteHeader
+ spritePiece $38, $28, 4, 3, $1E4, 0, 0, 0, 1
+ spritePiece $48, $18, 2, 2, $1F0, 0, 0, 0, 1
+ spritePiece $38, $40, 3, 1, $1F4, 0, 0, 0, 1
+ spritePiece $38, $48, 2, 1, $1F7, 0, 0, 0, 1
+ spritePiece 8, $18, 4, 4, $1D0, 0, 0, 0, 1
+ spritePiece $28, $18, 1, 4, $1E0, 0, 0, 0, 1
+ spritePiece $10, $10, 4, 4, $14A, 0, 0, 0, 1
+ spritePiece $20, 8, 2, 1, $15A, 0, 0, 0, 1
+ spritePiece $30, 0, 3, 4, $15C, 0, 0, 0, 1
+ spritePiece $48, 8, 1, 1, $168, 0, 0, 0, 1
+ spritePiece $48, $18, 1, 1, $169, 0, 0, 0, 1
+ spritePiece 0, $18, 2, 2, $16A, 0, 0, 0, 1
+ spritePiece 8, $28, 1, 3, $16E, 0, 0, 0, 1
+ spritePiece $10, $30, 4, 4, $171, 0, 0, 0, 1
+ spritePiece $30, $20, 4, 2, $181, 0, 0, 0, 1
+ spritePiece $50, $20, 1, 2, $189, 0, 0, 0, 1
+ spritePiece $30, $30, 3, 1, $18B, 0, 0, 0, 1
+ spritePiece $30, $38, 4, 3, $18E, 0, 0, 0, 1
+ spritePiece 8, $50, 4, 2, $19A, 0, 0, 0, 1
+ spritePiece $28, $50, 4, 1, $1A2, 0, 0, 0, 1
+ spritePiece $28, $58, 3, 1, $1A6, 0, 0, 0, 1
+Map_eb10_6_End
 
-Map_obj0E_028E:	spriteHeader
-	spritePiece	$28, 8, 4, 1, $1D6, 0, 0, 0, 1
-	spritePiece	$48, 8, 1, 1, $1DA, 0, 0, 0, 1
-	spritePiece	$10, $18, 1, 4, $1DB, 0, 0, 0, 1
-	spritePiece	$18, $10, 4, 4, $1DF, 0, 0, 0, 1
-	spritePiece	$38, $10, 4, 4, $1EF, 0, 0, 0, 1
-	spritePiece	$58, $10, 1, 1, $1FF, 0, 0, 0, 1
-	spritePiece	$58, $28, 1, 1, $200, 0, 0, 0, 1
-	spritePiece	$10, $38, 1, 1, $201, 0, 0, 0, 1
-	spritePiece	$18, $30, 4, 2, $202, 0, 0, 0, 1
-	spritePiece	$38, $30, 4, 2, $20A, 0, 0, 0, 1
-	spritePiece	$20, $40, 1, 1, $212, 0, 0, 0, 1
-	spritePiece	$28, $40, 1, 2, $213, 0, 0, 0, 1
-	spritePiece	$30, $40, 4, 3, $215, 0, 0, 0, 1
-	spritePiece	$50, $40, 1, 3, $221, 0, 0, 0, 1
-	spritePiece	$58, $38, 1, 2, $224, 0, 0, 0, 1
-Map_obj0E_028E_End
+Map_eb10_7:	spriteHeader
+ spritePiece $38, $18, 2, 1, $1F9, 0, 0, 0, 1
+ spritePiece $38, $20, 1, 1, $1FB, 0, 0, 0, 1
+ spritePiece $30, $28, 3, 1, $1FC, 0, 0, 0, 1
+ spritePiece $30, $30, 1, 2, $1FF, 0, 0, 0, 1
+ spritePiece $38, $30, 3, 4, $201, 0, 0, 0, 1
+ spritePiece 8, $18, 4, 4, $1D0, 0, 0, 0, 1
+ spritePiece $28, $18, 1, 4, $1E0, 0, 0, 0, 1
+ spritePiece $10, $10, 4, 4, $14A, 0, 0, 0, 1
+ spritePiece $20, 8, 2, 1, $15A, 0, 0, 0, 1
+ spritePiece $30, 0, 3, 4, $15C, 0, 0, 0, 1
+ spritePiece $48, 8, 1, 1, $168, 0, 0, 0, 1
+ spritePiece $48, $18, 1, 1, $169, 0, 0, 0, 1
+ spritePiece 0, $18, 2, 2, $16A, 0, 0, 0, 1
+ spritePiece 8, $28, 1, 3, $16E, 0, 0, 0, 1
+ spritePiece $10, $30, 4, 4, $171, 0, 0, 0, 1
+ spritePiece $30, $20, 4, 2, $181, 0, 0, 0, 1
+ spritePiece $50, $20, 1, 2, $189, 0, 0, 0, 1
+ spritePiece $30, $30, 3, 1, $18B, 0, 0, 0, 1
+ spritePiece $30, $38, 4, 3, $18E, 0, 0, 0, 1
+ spritePiece 8, $50, 4, 2, $19A, 0, 0, 0, 1
+ spritePiece $28, $50, 4, 1, $1A2, 0, 0, 0, 1
+ spritePiece $28, $58, 3, 1, $1A6, 0, 0, 0, 1
+Map_eb10_7_End
 
-Map_obj0E_0308:	spriteHeader
-	spritePiece	$28, 8, 4, 4, $226, 0, 0, 0, 1
-	spritePiece	$20, $10, 1, 1, $236, 0, 0, 0, 1
-	spritePiece	$18, $18, 2, 4, $237, 0, 0, 0, 1
-	spritePiece	$48, 8, 2, 4, $23F, 0, 0, 0, 1
-	spritePiece	$58, $10, 1, 1, $247, 0, 0, 0, 1
-	spritePiece	$18, $38, 2, 1, $248, 0, 0, 0, 1
-	spritePiece	$28, $28, 4, 4, $24A, 0, 0, 0, 1
-	spritePiece	$48, $28, 3, 2, $25A, 0, 0, 0, 1
-	spritePiece	$48, $38, 2, 2, $260, 0, 0, 0, 1
-	spritePiece	$58, $40, 1, 2, $264, 0, 0, 0, 1
-	spritePiece	$28, $48, 2, 1, $266, 0, 0, 0, 1
-	spritePiece	$30, $50, 1, 1, $268, 0, 0, 0, 1
-	spritePiece	$38, $48, 4, 2, $269, 0, 0, 0, 1
-Map_obj0E_0308_End
+Map_eb10_8:	spriteHeader
+ spritePiece $28, 8, 4, 4, $226, 0, 0, 0, 1
+ spritePiece $20, $10, 1, 1, $236, 0, 0, 0, 1
+ spritePiece $18, $18, 2, 4, $237, 0, 0, 0, 1
+ spritePiece $48, 8, 2, 4, $23F, 0, 0, 0, 1
+ spritePiece $58, $10, 1, 1, $247, 0, 0, 0, 1
+ spritePiece $18, $38, 2, 1, $248, 0, 0, 0, 1
+ spritePiece $28, $28, 4, 4, $24A, 0, 0, 0, 1
+ spritePiece $48, $28, 3, 2, $25A, 0, 0, 0, 1
+ spritePiece $48, $38, 2, 2, $260, 0, 0, 0, 1
+ spritePiece $58, $40, 1, 2, $264, 0, 0, 0, 1
+ spritePiece $28, $48, 2, 1, $266, 0, 0, 0, 1
+ spritePiece $30, $50, 1, 1, $268, 0, 0, 0, 1
+ spritePiece $38, $48, 4, 2, $269, 0, 0, 0, 1
+Map_eb10_8_End
 
-Map_obj0E_0372:	spriteHeader
-	spritePiece	8, 0, 4, 2, $271, 0, 0, 0, 1
-	spritePiece	8, $10, 3, 2, $279, 0, 0, 0, 1
-	spritePiece	$10, $20, 2, 2, $27F, 0, 0, 0, 1
-Map_obj0E_0372_End
+Map_eb10_9:	spriteHeader
+ spritePiece 8, 0, 4, 2, $271, 0, 0, 0, 1
+ spritePiece 8, $10, 3, 2, $279, 0, 0, 0, 1
+ spritePiece $10, $20, 2, 2, $27F, 0, 0, 0, 1
+Map_eb10_9_End
 
-Map_obj0E_038C:	spriteHeader
-	spritePiece	-$50, 0, 4, 1, $283, 0, 0, 3, 1
-	spritePiece	-$30, 0, 3, 1, $287, 0, 0, 3, 1
-	spritePiece	$18, 0, 3, 1, $28A, 0, 0, 3, 1
-	spritePiece	$30, 0, 4, 1, $28D, 0, 0, 3, 1
-	spritePiece	-$18, 0, 4, 1, $10, 0, 0, 0, 0
-	spritePiece	8, 0, 2, 1, $10, 0, 0, 0, 0
-Map_obj0E_038C_End
+Map_eb10_10:	spriteHeader
+ spritePiece -$18, 0, 4, 1, $10, 0, 0, 0, 0
+ spritePiece 8, 0, 2, 1, $10, 0, 0, 0, 0
+Map_eb10_10_End
 
-Map_obj0E_03BE:	spriteHeader
-	spritePiece	-$50, 0, 4, 1, $283, 0, 0, 3, 1
-	spritePiece	-$30, 0, 3, 1, $287, 0, 0, 3, 1
-	spritePiece	$18, 0, 3, 1, $28A, 0, 0, 3, 1
-	spritePiece	$30, 0, 4, 1, $28D, 0, 0, 3, 1
-	spritePiece	-$18, 0, 4, 1, $10, 0, 0, 0, 0
-	spritePiece	8, 0, 2, 1, $10, 0, 0, 0, 0
-	spritePiece	$58, 8, 2, 1, $2A0, 0, 0, 3, 1
-Map_obj0E_03BE_End
+Map_eb10_11:	spriteHeader
+ spritePiece 8, 0, 2, 1, $10, 0, 0, 0, 0
+ spritePiece $58, 8, 2, 1, $2A2, 0, 0, 0, 1
+ spritePiece -$10, 0, 3, 1, $10, 0, 0, 0, 0
+ spritePiece -$18, 0, 1, 1, $E, 0, 0, 0, 0
+Map_eb10_11_End
 
-Map_obj0E_03F8:	spriteHeader
-	spritePiece	-4, -4, 1, 1, $291, 0, 0, 1, 0
-Map_obj0E_03F8_End
+Map_eb10_12:	spriteHeader
+ spritePiece -4, -4, 1, 1, $291, 0, 0, 1, 0
+Map_eb10_12_End
 
-Map_obj0E_0402:	spriteHeader
-	spritePiece	-8, -8, 2, 2, $292, 0, 0, 1, 0
-Map_obj0E_0402_End
+Map_eb10_13:	spriteHeader
+ spritePiece -8, -8, 2, 2, $292, 0, 0, 1, 0
+Map_eb10_13_End
 
-Map_obj0E_040C:	spriteHeader
-	spritePiece	-$C, -$C, 3, 3, $296, 0, 0, 1, 0
-Map_obj0E_040C_End
+Map_eb10_14:	spriteHeader
+ spritePiece -$C, -$C, 3, 3, $296, 0, 0, 1, 0
+Map_eb10_14_End
 
-Map_obj0E_0416:	spriteHeader
-	spritePiece	-4, -4, 1, 1, $29F, 0, 0, 1, 0
-Map_obj0E_0416_End
+Map_eb10_15:	spriteHeader
+ spritePiece -4, -4, 1, 1, $29F, 0, 0, 1, 0
+Map_eb10_15_End
 
-Map_obj0E_0420:	spriteHeader
-	spritePiece	-8, -4, 2, 1, $2A0, 0, 0, 0, 1
-Map_obj0E_0420_End
+Map_eb10_16:	spriteHeader
+ spritePiece -8, -4, 2, 1, $2A2, 0, 0, 0, 1
+Map_eb10_16_End
 
-Map_obj0E_042A:	spriteHeader
-	spritePiece	8, 0, 1, 4, 0, 0, 0, 0, 0
-	spritePiece	0, 0, 1, 4, 0, 0, 0, 0, 0
-	spritePiece	8, $20, 1, 4, 0, 0, 0, 0, 0
-	spritePiece	0, $20, 1, 4, 0, 0, 0, 0, 0
-Map_obj0E_042A_End
+Map_eb10_17:	spriteHeader
+ spritePiece 8, 0, 1, 4, 0, 0, 0, 0, 0
+ spritePiece 0, 0, 1, 4, 0, 0, 0, 0, 0
+ spritePiece 8, $20, 1, 4, 0, 0, 0, 0, 0
+ spritePiece 0, $20, 1, 4, 0, 0, 0, 0, 0
+ spritePiece 0, $39, 1, 4, 0, 0, 0, 0, 0
+ spritePiece 9, $38, 1, 4, 0, 0, 0, 0, 0
+ spritePiece 0, -7, 1, 4, 0, 0, 0, 0, 0
+ spritePiece 8, -7, 1, 4, 0, 0, 0, 0, 0
+Map_eb10_17_End
 
-Map_obj0E_044C:	spriteHeader
-	spritePiece	$28, 8, 4, 4, $226, 0, 0, 0, 1
-	spritePiece	$20, $10, 1, 1, $236, 0, 0, 0, 1
-	spritePiece	$18, $18, 2, 4, $237, 0, 0, 0, 1
-	spritePiece	$48, 8, 2, 4, $23F, 0, 0, 0, 1
-	spritePiece	$58, $10, 1, 1, $247, 0, 0, 0, 1
-	spritePiece	$18, $38, 2, 1, $248, 0, 0, 0, 1
-	spritePiece	$28, $28, 4, 4, $24A, 0, 0, 0, 1
-	spritePiece	$48, $28, 3, 2, $25A, 0, 0, 0, 1
-	spritePiece	$48, $38, 2, 2, $260, 0, 0, 0, 1
-	spritePiece	$58, $40, 1, 2, $264, 0, 0, 0, 1
-	spritePiece	$28, $48, 2, 1, $266, 0, 0, 0, 1
-	spritePiece	$30, $50, 1, 1, $268, 0, 0, 0, 1
-	spritePiece	$38, $48, 4, 2, $269, 0, 0, 0, 1
-	spritePiece	$20, $48, 2, 1, $2A2, 0, 0, 0, 1
-Map_obj0E_044C_End
+Map_eb10_18:	spriteHeader
+ spritePiece $28, 8, 4, 4, $226, 0, 0, 0, 1
+ spritePiece $20, $10, 1, 1, $236, 0, 0, 0, 1
+ spritePiece $18, $18, 2, 4, $237, 0, 0, 0, 1
+ spritePiece $48, 8, 2, 4, $23F, 0, 0, 0, 1
+ spritePiece $58, $10, 1, 1, $247, 0, 0, 0, 1
+ spritePiece $18, $38, 2, 1, $248, 0, 0, 0, 1
+ spritePiece $28, $28, 4, 4, $24A, 0, 0, 0, 1
+ spritePiece $48, $28, 3, 2, $25A, 0, 0, 0, 1
+ spritePiece $48, $38, 2, 2, $260, 0, 0, 0, 1
+ spritePiece $58, $40, 1, 2, $264, 0, 0, 0, 1
+ spritePiece $28, $48, 2, 1, $266, 0, 0, 0, 1
+ spritePiece $30, $50, 1, 1, $268, 0, 0, 0, 1
+ spritePiece $38, $48, 4, 2, $269, 0, 0, 0, 1
+ spritePiece $20, $48, 2, 1, $2A2, 0, 0, 0, 1
+Map_eb10_18_End
 
-Map_obj0E_04BE:	spriteHeader
-	spritePiece	8, 0, 2, 3, $2A4, 0, 0, 1, 1
-Map_obj0E_04BE_End
+Map_eb10_19:	spriteHeader
+ spritePiece 8, 0, 2, 3, $2A4, 0, 0, 1, 1
+Map_eb10_19_End
+
+Map_eb10_20:	spriteHeader
+ spritePiece -$E, -6, 2, 1, 0, 0, 0, 0, 0
+Map_eb10_20_End
 
 	even

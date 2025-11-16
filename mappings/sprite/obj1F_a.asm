@@ -1,43 +1,82 @@
+; ---------------------------------------------------------------------------
+; Sprite mappings - Crabmeat enemy (GHZ, SYZ)
+; ---------------------------------------------------------------------------
 Map_obj1F_a:	mappingsTable
-	mappingsTableEntry.w	Map_obj1F_a_0008
-	mappingsTableEntry.w	Map_obj1F_a_002A
-	mappingsTableEntry.w	Map_obj1F_a_006C
-	mappingsTableEntry.w	Map_obj1F_a_008E
+	mappingsTableEntry.w	.stand
+	mappingsTableEntry.w	.walk
+	mappingsTableEntry.w	.slope1
+	mappingsTableEntry.w	.slope2
+	mappingsTableEntry.w	.firing
+	mappingsTableEntry.w	.ball1
+	mappingsTableEntry.w	.ball2
+	mappingsTableEntry.w	Map_77f6_7
+	mappingsTableEntry.w	Map_77f6_8
+	mappingsTableEntry.w	Map_77f6_9
 
-Map_obj1F_a_0008:	spriteHeader
-	spritePiece	-$20, -8, 4, 2, 0, 0, 0, 0, 0
-	spritePiece	-$20, 8, 4, 2, 0, 0, 0, 0, 0
-	spritePiece	0, -8, 4, 2, 0, 0, 0, 0, 0
-	spritePiece	0, 8, 4, 2, 0, 0, 0, 0, 0
-Map_obj1F_a_0008_End
+.stand:	spriteHeader
+	spritePiece	-$18, -$10, 3, 2, 0, 0, 0, 0, 0	; standing/middle walking frame
+	spritePiece	0, -$10, 3, 2, 0, 1, 0, 0, 0
+	spritePiece	-$10, 0, 2, 2, 6, 0, 0, 0, 0
+	spritePiece	0, 0, 2, 2, 6, 1, 0, 0, 0
+.stand_End
 
-Map_obj1F_a_002A:	spriteHeader
-	spritePiece	-$20, -8, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	-$10, -8, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	0, -8, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	$10, -8, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	-$20, 8, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	-$10, 8, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	0, 8, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	$10, 8, 2, 2, 0, 0, 0, 0, 0
-Map_obj1F_a_002A_End
+.walk:	spriteHeader
+	spritePiece	-$18, -$10, 3, 2, $A, 0, 0, 0, 0	; walking
+	spritePiece	0, -$10, 3, 2, $10, 0, 0, 0, 0
+	spritePiece	-$10, 0, 2, 2, $16, 0, 0, 0, 0
+	spritePiece	0, 0, 3, 2, $1A, 0, 0, 0, 0
+.walk_End
 
-Map_obj1F_a_006C:	spriteHeader
-	spritePiece	-$20, -8, 4, 2, 0, 0, 0, 0, 0
-	spritePiece	-$20, 8, 4, 2, 8, 0, 0, 0, 0
-	spritePiece	0, -8, 4, 2, 0, 0, 0, 0, 0
-	spritePiece	0, 8, 4, 2, 8, 0, 0, 0, 0
-Map_obj1F_a_006C_End
+.slope1:	spriteHeader
+	spritePiece	-$18, -$14, 3, 2, 0, 0, 0, 0, 0	; walking on slope
+	spritePiece	0, -$14, 3, 2, 0, 1, 0, 0, 0
+	spritePiece	0, -4, 2, 2, 6, 1, 0, 0, 0
+	spritePiece	-$10, -4, 2, 3, $20, 0, 0, 0, 0
+.slope1_End
 
-Map_obj1F_a_008E:	spriteHeader
-	spritePiece	-$20, -8, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	-$10, -8, 2, 2, 4, 0, 0, 0, 0
-	spritePiece	0, -8, 2, 2, 0, 0, 0, 0, 0
-	spritePiece	$10, -8, 2, 2, 4, 0, 0, 0, 0
-	spritePiece	-$20, 8, 2, 2, 8, 0, 0, 0, 0
-	spritePiece	-$10, 8, 2, 2, $C, 0, 0, 0, 0
-	spritePiece	0, 8, 2, 2, 8, 0, 0, 0, 0
-	spritePiece	$10, 8, 2, 2, $C, 0, 0, 0, 0
-Map_obj1F_a_008E_End
+.slope2:	spriteHeader
+	spritePiece	-$18, -$14, 3, 2, $A, 0, 0, 0, 0	; walking on slope
+	spritePiece	0, -$14, 3, 2, $10, 0, 0, 0, 0
+	spritePiece	0, -4, 3, 2, $26, 0, 0, 0, 0
+	spritePiece	-$10, -4, 2, 3, $2C, 0, 0, 0, 0
+.slope2_End
+
+.firing:	spriteHeader
+	spritePiece	-$10, -$10, 2, 1, $32, 0, 0, 0, 0 ; firing projectiles
+	spritePiece	0, -$10, 2, 1, $32, 1, 0, 0, 0
+	spritePiece	-$18, -8, 3, 2, $34, 0, 0, 0, 0
+	spritePiece	0, -8, 3, 2, $34, 1, 0, 0, 0
+	spritePiece	-$10, 8, 2, 1, $3A, 0, 0, 0, 0
+	spritePiece	0, 8, 2, 1, $3A, 1, 0, 0, 0
+.firing_End
+
+.ball1:	spriteHeader
+	spritePiece	-8, -8, 2, 2, $3C, 0, 0, 0, 0 ; projectile
+.ball1_End
+
+.ball2:	spriteHeader
+	spritePiece	-8, -8, 2, 2, $40, 0, 0, 0, 0 ; projectile
+.ball2_End
+
+Map_77f6_7:	spriteHeader
+ spritePiece 0, -$10, 3, 2, $A, 1, 0, 0, 0
+ spritePiece -$18, -$10, 3, 2, $10, 1, 0, 0, 0
+ spritePiece 0, 0, 2, 2, $16, 1, 0, 0, 0
+ spritePiece -$18, 0, 3, 2, $1A, 1, 0, 0, 0
+Map_77f6_7_End
+
+Map_77f6_8:	spriteHeader
+ spritePiece 0, -$14, 3, 2, 0, 1, 0, 0, 0
+ spritePiece -$18, -$14, 3, 2, 0, 0, 0, 0, 0
+ spritePiece -$10, -4, 2, 2, 6, 0, 0, 0, 0
+ spritePiece 0, -4, 2, 3, $20, 1, 0, 0, 0
+Map_77f6_8_End
+
+Map_77f6_9:	spriteHeader
+ spritePiece 0, -$14, 3, 2, $A, 1, 0, 0, 0
+ spritePiece -$18, -$14, 3, 2, $10, 1, 0, 0, 0
+ spritePiece -$18, -4, 3, 2, $26, 1, 0, 0, 0
+ spritePiece 0, -4, 2, 3, $2C, 1, 0, 0, 0
+Map_77f6_9_End
 
 	even
