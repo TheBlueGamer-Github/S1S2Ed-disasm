@@ -44863,7 +44863,63 @@ JmpTo8_Adjust2PArtPointer ; JmpTo
 ; ----------------------------------------------------------------------------
 ; Sprite_20210:
 Obj0C:
-	rts
+		moveq	#0,d0
+		move.b	obRoutine(a0),d0
+		move.w	Flap_Index(pc,d0.w),d1
+		jmp	Flap_Index(pc,d1.w)
+; ===========================================================================
+Flap_Index:	dc.w Flap_Main-Flap_Index
+		dc.w Flap_OpenClose-Flap_Index
+
+flap_time = objoff_32		; time between opening/closing
+flap_wait = objoff_30		; time until change
+; ===========================================================================
+
+Flap_Main:	; Routine 0
+		addq.b	#2,obRoutine(a0)
+		move.l	#Map_Flap,obMap(a0)
+		move.w	#make_art_tile(ArtTile_LZ_Flapping_Door,2,0),obGfx(a0)
+		ori.b	#4,obRender(a0)
+		move.b	#$28,obActWid(a0)
+		moveq	#0,d0
+		move.b	obSubtype(a0),d0 ; get object type
+		mulu.w	#60,d0		; multiply by 60 (1 second)
+		move.w	d0,flap_time(a0) ; set flap delay time
+
+Flap_OpenClose:	; Routine 2
+		subq.w	#1,flap_wait(a0) ; decrement time delay
+		bpl.s	.wait		; if time remains, branch
+		move.w	flap_time(a0),flap_wait(a0) ; reset time delay
+		bchg	#0,obAnim(a0)	; open/close door
+		tst.b	obRender(a0)
+		bpl.s	.nosound
+		;move.w	#sfx_Door,d0
+		;jsr	(QueueSound2).l	; play door sound
+
+.wait:
+.nosound:
+		lea	(Ani_Flap).l,a1
+		jsr	(AnimateSprite).l
+		clr.b	(WindTunnel_holding_flag).w ; enable wind tunnel
+		tst.b	obFrame(a0)	; is the door open?
+		bne.s	.display	; if yes, branch
+		move.w	(MainCharacter+obX).w,d0
+		cmp.w	obX(a0),d0	; has Sonic passed through the door?
+		bhs.s	.display	; if yes, branch
+		move.b	#1,(WindTunnel_holding_flag).w ; disable wind tunnel
+		move.w	#$13,d1
+		move.w	#$20,d2
+		move.w	d2,d3
+		addq.w	#1,d3
+		move.w	obX(a0),d4
+		bsr.w	SolidObject	; make the door solid
+
+.display:
+		jmp	(MarkObjGone).l
+
+		include	"_anim/Flapping Door.asm"
+Map_Flap:	include	"_maps/Flapping Door.asm"
+
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Unused sprite mappings
@@ -46800,122 +46856,53 @@ JmpTo_MarkObjGone2 ; JmpTo
 ; ----------------------------------------------------------------------------
 ; Sprite_21DAC:
 Obj16:
-	rts
-	moveq	#0,d0
-	move.b	routine(a0),d0
-	move.w	Obj16_Index(pc,d0.w),d1
-	jmp	Obj16_Index(pc,d1.w)
+		moveq	#0,d0
+		move.b	obRoutine(a0),d0
+		move.w	Harp_Index(pc,d0.w),d1
+		jmp	Harp_Index(pc,d1.w)
 ; ===========================================================================
-; off_21DBA:
-Obj16_Index:	offsetTable
-		offsetTableEntry.w Obj16_Init	; 0
-		offsetTableEntry.w Obj16_Main	; 2
+Harp_Index:	dc.w Harp_Main-Harp_Index
+		dc.w Harp_Move-Harp_Index
+		dc.w Harp_Wait-Harp_Index
+
+harp_time = objoff_30		; time between stabbing/retracting
 ; ===========================================================================
-; loc_21DBE:
-Obj16_Init:
-	addq.b	#2,routine(a0)
-	move.l	#Obj16_MapUnc_21F14,mappings(a0)
-	move.w	#make_art_tile(ArtTile_ArtNem_HtzZipline,2,0),art_tile(a0)
-	jsrto	Adjust2PArtPointer, JmpTo14_Adjust2PArtPointer
-	ori.b	#4,render_flags(a0)
-	move.b	#$20,width_pixels(a0)
-	move.b	#0,mapping_frame(a0)
-	move.b	#1,priority(a0)
-	move.w	x_pos(a0),objoff_30(a0)
-	move.w	y_pos(a0),objoff_32(a0)
-	move.b	#$40,y_radius(a0)
-	bset	#4,render_flags(a0)
-	moveq	#0,d0
-	move.b	subtype(a0),d0
-	lsl.w	#3,d0
-	move.w	d0,objoff_34(a0)
-; loc_21E10:
-Obj16_Main:
-	move.w	x_pos(a0),-(sp)
-	bsr.w	Obj16_RunSecondaryRoutine
-	moveq	#0,d1
-	move.b	width_pixels(a0),d1
-	move.w	#-$28,d3
-	move.w	(sp)+,d4
-	jsrto	PlatformObject, JmpTo3_PlatformObject
-	jmpto	MarkObjGone, JmpTo5_MarkObjGone
-; ===========================================================================
-; loc_21E2C:
-Obj16_RunSecondaryRoutine:
-	moveq	#0,d0
-	move.b	routine_secondary(a0),d0
-	move.w	Obj16_Main_States(pc,d0.w),d1
-	jmp	Obj16_Main_States(pc,d1.w)
-; ===========================================================================
-; off_21E3A:
-Obj16_Main_States: offsetTable
-	offsetTableEntry.w Obj16_Wait	; 0
-	offsetTableEntry.w Obj16_Slide	; 2
-	offsetTableEntry.w Obj16_Fall	; 4
-; ===========================================================================
-; loc_21E40:
-Obj16_Wait:
-	move.b	status(a0),d0	; get the status flags
-	andi.b	#standing_mask,d0	; is one of the players standing on it?
-	beq.s	++		; if not, branch
-	addq.b	#2,routine_secondary(a0)
-	move.w	#$200,x_vel(a0)
-	btst	#0,status(a0)
-	beq.s	+
-	neg.w	x_vel(a0)
-+
-	move.w	#$100,y_vel(a0)
-+
-	rts
-; ===========================================================================
-; loc_21E68:
-Obj16_Slide:
-	move.w	(Level_frame_counter).w,d0
-	andi.w	#$F,d0	; play the sound only every 16 frames
-	bne.s	+
-	move.w	#SndID_HTZLiftClick,d0
-	jsr	(PlaySound).l
-+
-	jsrto	ObjectMove, JmpTo4_ObjectMove
-	subq.w	#1,objoff_34(a0)
-	bne.s	+	; rts
-	addq.b	#2,routine_secondary(a0)
-	move.b	#2,mapping_frame(a0)
-	move.w	#0,x_vel(a0)
-	move.w	#0,y_vel(a0)
-	jsrto	AllocateObjectAfterCurrent, JmpTo4_AllocateObjectAfterCurrent
-	bne.s	+	; rts
-	_move.b	#ObjID_Scenery,id(a1) ; load obj1C
-	move.w	x_pos(a0),x_pos(a1)
-	move.w	y_pos(a0),y_pos(a1)
-	move.b	render_flags(a0),render_flags(a1)
-	move.b	#6,subtype(a1)
-+	rts
-; ===========================================================================
-; loc_21EC2:
-Obj16_Fall:
-	jsrto	ObjectMove, JmpTo4_ObjectMove
-	addi.w	#$38,y_vel(a0)
-	move.w	(Camera_Max_Y_pos).w,d0
-	addi.w	#224,d0
-	cmp.w	y_pos(a0),d0
-	bhs.s	+++	; rts
-	move.b	status(a0),d0
-	andi.b	#standing_mask,d0
-	beq.s	++
-	bclr	#p1_standing_bit,status(a0)
-	beq.s	+
-	bclr	#3,(MainCharacter+status).w
-	bset	#1,(MainCharacter+status).w
-+
-	bclr	#p2_standing_bit,status(a0)
-	beq.s	+
-	bclr	#3,(Sidekick+status).w
-	bset	#1,(Sidekick+status).w
-+
-	move.w	#$4000,x_pos(a0)
-+
-	rts
+
+Harp_Main:	; Routine 0
+		addq.b	#2,obRoutine(a0)
+		move.l	#Map_Harp,obMap(a0)
+		move.w	#make_art_tile(ArtTile_LZ_Harpoon,0,0),obGfx(a0)
+		ori.b	#4,obRender(a0)
+		move.b	#4,obPriority(a0)
+		move.b	obSubtype(a0),obAnim(a0) ; get type (vert/horiz)
+		move.b	#$14,obActWid(a0)
+		move.w	#60,harp_time(a0) ; set time to 1 second
+
+Harp_Move:	; Routine 2
+		lea	(Ani_Harp).l,a1
+		jsr	(AnimateSprite).l
+		moveq	#0,d0
+		move.b	obFrame(a0),d0	; get frame number
+		move.b	.types(pc,d0.w),obColType(a0) ; get collision type
+		jmp	(MarkObjGone).l
+
+.types:
+		dc.b $9B, $9C, $9D, $9E, $9F, $A0
+		even
+
+Harp_Wait:	; Routine 4
+		subq.w	#1,harp_time(a0) ; decrement timer
+		bpl.s	.chkdel		; branch if time remains
+		move.w	#60,harp_time(a0) ; reset timer
+		subq.b	#2,obRoutine(a0) ; run "Harp_Move" subroutine
+		bchg	#0,obAnim(a0)	; reverse animation
+
+.chkdel:
+		jmp	(MarkObjGone).l
+
+		include	"_anim/Harpoon.asm"
+Map_Harp:	include	"_maps/Harpoon.asm"
+
 ; ===========================================================================
 ; -------------------------------------------------------------------------------
 ; sprite mappings
@@ -51267,11 +51254,56 @@ JmpTo28_DeleteObject ; JmpTo
 ; ----------------------------------------------------------------------------
 ; Sprite_26104:
 Obj2C:
-	rts
+		moveq	#0,d0
+		move.b	obRoutine(a0),d0
+		move.w	Jaws_Index(pc,d0.w),d1
+		jmp	Jaws_Index(pc,d1.w)
+; ===========================================================================
+Jaws_Index:	dc.w Jaws_Main-Jaws_Index
+		dc.w Jaws_Turn-Jaws_Index
+
+jaws_timecount = objoff_30
+jaws_timedelay = objoff_32
+; ===========================================================================
+
+Jaws_Main:	; Routine 0
+		addq.b	#2,obRoutine(a0)
+		move.l	#Map_Jaws,obMap(a0)
+		move.w	#make_art_tile(ArtTile_Jaws,1,0),obGfx(a0)
+		ori.b	#4,obRender(a0)
+		move.b	#$A,obColType(a0)
+		move.b	#4,obPriority(a0)
+		move.b	#$10,obActWid(a0)
+		moveq	#0,d0
+		move.b	obSubtype(a0),d0 ; load object subtype number
+		lsl.w	#6,d0		; multiply d0 by 64
+		subq.w	#1,d0
+		move.w	d0,jaws_timecount(a0) ; set turn delay time
+		move.w	d0,jaws_timedelay(a0)
+		move.w	#-$40,obVelX(a0) ; move Jaws to the left
+		btst	#0,obStatus(a0)	; is Jaws facing left?
+		beq.s	Jaws_Turn	; if yes, branch
+		neg.w	obVelX(a0)	; move Jaws to the right
+
+Jaws_Turn:	; Routine 2
+		subq.w	#1,jaws_timecount(a0) ; subtract 1 from turn delay time
+		bpl.s	.animate	; if time remains, branch
+		move.w	jaws_timedelay(a0),jaws_timecount(a0) ; reset turn delay time
+		neg.w	obVelX(a0)	; change speed direction
+		bchg	#0,obStatus(a0)	; change Jaws facing direction
+		move.b	#1,obPrevAni(a0) ; reset animation
+
+.animate:
+		lea	(Ani_Jaws).l,a1
+		jsr	(AnimateSprite).l
+		jsr	(ObjectMove).l
+		jmp	(MarkObjGone).l
     if removeJmpTos
 JmpTo29_DeleteObject ; JmpTo
 	jmp	(DeleteObject).l
     endif
+		include	"_anim/Jaws.asm"
+Map_Jaws:	include	"_maps/Jaws.asm"
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; sprite mappings
@@ -52089,398 +52121,74 @@ JmpTo9_SolidObject ; JmpTo
 ; ----------------------------------------------------------------------------
 ; Sprite_26AE0:
 Obj65:
-	rts
-	moveq	#0,d0
-	move.b	routine(a0),d0
-	move.w	Obj65_Index(pc,d0.w),d1
-	jmp	Obj65_Index(pc,d1.w)
+		moveq	#0,d0
+		move.b	obRoutine(a0),d0
+		move.w	WFall_Index(pc,d0.w),d1
+		jmp	WFall_Index(pc,d1.w)
 ; ===========================================================================
-; off_26AEE:
-Obj65_Index:	offsetTable
-		offsetTableEntry.w Obj65_Init	; 0
-		offsetTableEntry.w loc_26C1C	; 2
-		offsetTableEntry.w loc_26EA4	; 4
-		offsetTableEntry.w loc_26EC2	; 6
-; ---------------------------------------------------------------------------
-; byte_26AF6:
-Obj65_Properties:
-	;    width_pixels
-	;	 radius
-	dc.b $40, $C
-	dc.b $80,  1	; 2
-	dc.b $20, $C	; 4
-	dc.b $40,  3	; 6
-	dc.b $10,$10	; 8
-	dc.b $20,  0	; 10
-	dc.b $40, $C	; 12
-	dc.b $80,  7	; 14
-; ===========================================================================
-; loc_26B06:
-Obj65_Init:
-	addq.b	#2,routine(a0)
-	move.l	#Obj65_Obj6A_Obj6B_MapUnc_26EC8,mappings(a0)
-	move.w	#make_art_tile(ArtTile_ArtKos_LevelArt,3,0),art_tile(a0)
-	jsrto	Adjust2PArtPointer, JmpTo29_Adjust2PArtPointer
-	ori.b	#4,render_flags(a0)
-	move.b	#4,priority(a0)
-	moveq	#0,d0
-	move.b	subtype(a0),d0
-	lsr.w	#2,d0
-	andi.w	#$1C,d0
-	lea	Obj65_Properties(pc,d0.w),a3
-	move.b	(a3)+,width_pixels(a0)
-	move.b	(a3)+,y_radius(a0)
-	lsr.w	#2,d0
-	move.b	d0,mapping_frame(a0)
-	cmpi.b	#1,d0
-	bne.s	+
-	bset	#7,status(a0)
-+
-	cmpi.b	#2,d0
-	bne.s	loc_26B6E
-	addq.b	#4,routine(a0)
-	move.l	#Obj65_MapUnc_26F04,mappings(a0)
-	move.w	#make_art_tile(ArtTile_ArtNem_MtzCog,3,0),art_tile(a0)
-	bra.w	loc_26EC2
+WFall_Index:	dc.w WFall_Main-WFall_Index
+		dc.w WFall_Animate-WFall_Index
+		dc.w WFall_ChkDel-WFall_Index
+		dc.w WFall_OnWater-WFall_Index
+		dc.w loc_12B36-WFall_Index
 ; ===========================================================================
 
-loc_26B6E:
-	move.w	x_pos(a0),objoff_34(a0)
-	move.w	y_pos(a0),objoff_30(a0)
-	moveq	#0,d0
-	move.b	(a3)+,d0
-	move.w	d0,objoff_3C(a0)
-	moveq	#0,d0
-	move.b	subtype(a0),d0
-	bpl.w	loc_26C16
-	andi.b	#$F,d0
-	move.b	d0,objoff_3E(a0)
-	move.b	(a3),subtype(a0)
-	cmpi.b	#7,(a3)
-	bne.s	+
-	move.w	objoff_3C(a0),objoff_3A(a0)
-+
-	jsrto	AllocateObjectAfterCurrent, JmpTo11_AllocateObjectAfterCurrent
-	bne.s	loc_26C04
-	_move.b	id(a0),id(a1) ; load obj65
-	addq.b	#4,routine(a1)
-	move.w	x_pos(a0),x_pos(a1)
-	move.w	y_pos(a0),y_pos(a1)
-	addi.w	#-$4C,x_pos(a1)
-	addi.w	#$14,y_pos(a1)
-	btst	#0,status(a0)
-	bne.s	+
-	subi.w	#-$18,x_pos(a1)
-	bset	#0,render_flags(a1)
-+
-	move.l	#Obj65_MapUnc_26F04,mappings(a1)
-	move.w	#make_art_tile(ArtTile_ArtNem_MtzCog,3,0),art_tile(a1)
-	ori.b	#4,render_flags(a1)
-	move.b	#$10,width_pixels(a1)
-	move.b	#4,priority(a1)
-	move.l	a0,objoff_3C(a1)
+WFall_Main:	; Routine 0
+		addq.b	#4,obRoutine(a0)
+		move.l	#Map_WFall,obMap(a0)
+		move.w	#make_art_tile(ArtTile_LZ_Splash,2,0),obGfx(a0)
+		ori.b	#4,obRender(a0)
+		move.b	#$18,obActWid(a0)
+		move.b	#1,obPriority(a0)
+		move.b	obSubtype(a0),d0 ; get object type
+		bpl.s	.under80	; branch if $00-$7F
+		bset	#7,obGfx(a0)
 
-loc_26C04:
-	lea	(Object_Respawn_Table).w,a2
-	moveq	#0,d0
-	move.b	respawn_index(a0),d0
-	beq.s	loc_26C16
-	bclr	#7,Obj_respawn_data-Object_Respawn_Table(a2,d0.w)
+.under80:
+		andi.b	#$F,d0		; read only the 2nd digit
+		move.b	d0,obFrame(a0)	; set frame number
+		cmpi.b	#9,d0		; is object type $x9 ?
+		bne.s	WFall_ChkDel	; if not, branch
 
-loc_26C16:
-	andi.b	#$F,subtype(a0)
+		clr.b	obPriority(a0)	; object is in front of Sonic
+		subq.b	#2,obRoutine(a0) ; goto WFall_Animate next
+		btst	#6,obSubtype(a0) ; is object type $49 ?
+		beq.s	.not49		; if not, branch
 
-loc_26C1C:
-	move.w	x_pos(a0),objoff_2E(a0)
-	moveq	#0,d0
-	move.b	subtype(a0),d0
-	add.w	d0,d0
-	move.w	off_26C7E(pc,d0.w),d1
-	jsr	off_26C7E(pc,d1.w)
-	move.w	objoff_2E(a0),d4
-	moveq	#0,d1
-	move.b	width_pixels(a0),d1
-	addi_.w	#5,d1
-	moveq	#0,d2
-	move.b	y_radius(a0),d2
-	move.w	d2,d3
-	addq.w	#1,d3
-	jsrto	SolidObject, JmpTo10_SolidObject
-	move.w	objoff_34(a0),d0
-	andi.w	#$FF80,d0
-	sub.w	(Camera_X_pos_coarse).w,d0
-	cmpi.w	#$280,d0
-	bhi.s	loc_26C66
-	jmp	(DisplaySprite).l
+		move.b	#6,obRoutine(a0) ; goto WFall_OnWater next
+
+.not49:
+		btst	#5,obSubtype(a0) ; is object type $A9 ?
+		beq.s	WFall_Animate	; if not, branch
+		move.b	#8,obRoutine(a0) ; goto loc_12B36 next
+
+WFall_Animate:	; Routine 2
+		lea	(Ani_WFall).l,a1
+		jsr	(AnimateSprite).l
+
+WFall_ChkDel:	; Routine 4
+		jmp	(MarkObjGone).l
 ; ===========================================================================
 
-loc_26C66:
-	lea	(Object_Respawn_Table).w,a2
-	moveq	#0,d0
-	move.b	respawn_index(a0),d0
-	beq.s	+
-	bclr	#7,Obj_respawn_data-Object_Respawn_Table(a2,d0.w)
-+
-	jmp	(DeleteObject).l
-; ===========================================================================
-off_26C7E:	offsetTable
-		offsetTableEntry.w return_26C8E	; 0
-		offsetTableEntry.w loc_26CA4	; 1
-		offsetTableEntry.w loc_26D34	; 2
-		offsetTableEntry.w loc_26D94	; 3
-		offsetTableEntry.w loc_26E3C	; 4
-		offsetTableEntry.w loc_26E4A	; 5
-		offsetTableEntry.w loc_26C90	; 6
-		offsetTableEntry.w loc_26D14	; 7
+WFall_OnWater:	; Routine 6
+		move.w	(Water_Level_1).w,d0
+		subi.w	#$10,d0
+		move.w	d0,obY(a0)	; match object position to water height
+		bra.s	WFall_Animate
 ; ===========================================================================
 
-return_26C8E:
-	rts
-; ===========================================================================
+loc_12B36:	; Routine 8
+		bclr	#7,obGfx(a0)
+		cmpi.w	#$1718,(Level_Layout+$100*5+12).w
+		bne.s	.animate
+		bset	#7,obGfx(a0)
 
-loc_26C90:
-	tst.b	objoff_38(a0)
-	bne.s	BranchTo_loc_26CC2
-	subq.w	#1,objoff_36(a0)
-	bne.s	loc_26CD0
-	move.b	#1,objoff_38(a0)
+.animate:
+		bra.s	WFall_Animate
 
-BranchTo_loc_26CC2 ; BranchTo
-	bra.s	loc_26CC2
-; ===========================================================================
+		include	"_anim/Waterfalls.asm"
+Map_WFall:	include	"_maps/Waterfalls.asm"
 
-loc_26CA4:
-	tst.b	objoff_38(a0)
-	bne.s	loc_26CC2
-	lea	(ButtonVine_Trigger).w,a2
-	moveq	#0,d0
-	move.b	objoff_3E(a0),d0
-	btst	#0,(a2,d0.w)
-	beq.s	loc_26CD0
-	move.b	#1,objoff_38(a0)
-
-loc_26CC2:
-	move.w	objoff_3C(a0),d0
-	cmp.w	objoff_3A(a0),d0
-	beq.s	loc_26CF2
-	addq.w	#2,objoff_3A(a0)
-
-loc_26CD0:
-	move.w	objoff_3A(a0),d0
-	btst	#0,status(a0)
-	beq.s	+
-	neg.w	d0
-	addi.w	#$80,d0
-+
-	move.w	objoff_34(a0),d1
-	sub.w	d0,d1
-	move.w	d1,x_pos(a0)
-	move.w	d1,objoff_2E(a0)
-	rts
-; ===========================================================================
-
-loc_26CF2:
-	addq.b	#1,subtype(a0)
-	move.w	#$B4,objoff_36(a0)
-	clr.b	objoff_38(a0)
-	lea	(Object_Respawn_Table).w,a2
-	moveq	#0,d0
-	move.b	respawn_index(a0),d0
-	beq.s	loc_26CD0
-	bset	#0,Obj_respawn_data-Object_Respawn_Table(a2,d0.w)
-	bra.s	loc_26CD0
-; ===========================================================================
-
-loc_26D14:
-	tst.b	objoff_38(a0)
-	bne.s	+
-	lea	(ButtonVine_Trigger).w,a2
-	moveq	#0,d0
-	move.b	objoff_3E(a0),d0
-	btst	#0,(a2,d0.w)
-	beq.s	loc_26D50
-	move.b	#1,objoff_38(a0)
-+
-	bra.s	loc_26D46
-; ===========================================================================
-
-loc_26D34:
-	tst.b	objoff_38(a0)
-	bne.s	loc_26D46
-	subq.w	#1,objoff_36(a0)
-	bne.s	loc_26D50
-	move.b	#1,objoff_38(a0)
-
-loc_26D46:
-	tst.w	objoff_3A(a0)
-	beq.s	loc_26D72
-	subq.w	#2,objoff_3A(a0)
-
-loc_26D50:
-	move.w	objoff_3A(a0),d0
-	btst	#0,status(a0)
-	beq.s	+
-	neg.w	d0
-	addi.w	#$80,d0
-+
-	move.w	objoff_34(a0),d1
-	sub.w	d0,d1
-	move.w	d1,x_pos(a0)
-	move.w	d1,objoff_2E(a0)
-	rts
-; ===========================================================================
-
-loc_26D72:
-	subq.b	#1,subtype(a0)
-	move.w	#$B4,objoff_36(a0)
-	clr.b	objoff_38(a0)
-	lea	(Object_Respawn_Table).w,a2
-	moveq	#0,d0
-	move.b	respawn_index(a0),d0
-	beq.s	loc_26D50
-	bclr	#0,Obj_respawn_data-Object_Respawn_Table(a2,d0.w)
-	bra.s	loc_26D50
-; ===========================================================================
-
-loc_26D94:
-	move.w	objoff_34(a0),d4
-	move.w	d4,d5
-	btst	#0,status(a0)
-	bne.s	loc_26DAC
-	subi.w	#$20,d4
-	addi.w	#$60,d5
-	bra.s	loc_26DB4
-; ===========================================================================
-
-loc_26DAC:
-	subi.w	#$A0,d4
-	subi.w	#$20,d5
-
-loc_26DB4:
-	move.w	y_pos(a0),d2
-	move.w	d2,d3
-	subi.w	#$10,d2
-	addi.w	#$40,d3
-	moveq	#0,d1
-	move.w	(MainCharacter+x_pos).w,d0
-	cmp.w	d4,d0
-	blo.s	+
-	cmp.w	d5,d0
-	bhs.s	+
-	move.w	(MainCharacter+y_pos).w,d0
-	cmp.w	d2,d0
-	blo.s	+
-	cmp.w	d3,d0
-	bhs.s	+
-	moveq	#1,d1
-+
-	move.w	(Sidekick+x_pos).w,d0
-	cmp.w	d4,d0
-	blo.s	+
-	cmp.w	d5,d0
-	bhs.s	+
-	move.w	(Sidekick+y_pos).w,d0
-	cmp.w	d2,d0
-	blo.s	+
-	cmp.w	d3,d0
-	bhs.s	+
-	moveq	#1,d1
-+
-	tst.b	d1
-	beq.s	loc_26E0E
-	move.w	objoff_3C(a0),d0
-	cmp.w	objoff_3A(a0),d0
-	beq.s	return_26E3A
-	addi.w	#$10,objoff_3A(a0)
-	bra.s	loc_26E1A
-; ===========================================================================
-
-loc_26E0E:
-	tst.w	objoff_3A(a0)
-	beq.s	loc_26E1A
-	subi.w	#$10,objoff_3A(a0)
-
-loc_26E1A:
-	move.w	objoff_3A(a0),d0
-	btst	#0,status(a0)
-	beq.s	+
-	neg.w	d0
-	addi.w	#$40,d0
-+
-	move.w	objoff_34(a0),d1
-	sub.w	d0,d1
-	move.w	d1,x_pos(a0)
-	move.w	d1,objoff_2E(a0)
-
-return_26E3A:
-	rts
-; ===========================================================================
-
-loc_26E3C:
-	btst	#p1_standing_bit,status(a0)
-	beq.s	+
-	addq.b	#1,subtype(a0)
-+
-	rts
-; ===========================================================================
-
-loc_26E4A:
-	tst.b	objoff_38(a0)
-	bne.s	loc_26E84
-	addq.w	#2,x_pos(a0)
-	cmpi.b	#metropolis_zone_2,(Current_Zone).w
-	bne.s	loc_26E74
-	cmpi.w	#$1CC0,x_pos(a0)
-	beq.s	loc_26E6C
-	cmpi.w	#$2940,x_pos(a0)
-	bne.s	loc_26E96
-
-loc_26E6C:
-	move.b	#0,subtype(a0)
-	bra.s	loc_26E96
-; ===========================================================================
-
-loc_26E74:
-	cmpi.w	#$1BC0,x_pos(a0)
-	bne.s	loc_26E96
-	move.b	#1,objoff_38(a0)
-	bra.s	loc_26E96
-; ===========================================================================
-
-loc_26E84:
-	subq.w	#2,x_pos(a0)
-	cmpi.w	#$1880,x_pos(a0)
-	bne.s	loc_26E96
-	move.b	#0,objoff_38(a0)
-
-loc_26E96:
-	move.w	x_pos(a0),objoff_34(a0)
-	rts
-; ===========================================================================
-
-loc_26EA4:
-	movea.l	objoff_3C(a0),a1 ; a1=object
-	move.w	objoff_3A(a1),d0
-
-loc_26EAC:
-	andi.w	#7,d0
-	move.b	byte_26EBA(pc,d0.w),mapping_frame(a0)
-	jmpto	MarkObjGone, JmpTo19_MarkObjGone
-; ===========================================================================
-byte_26EBA:
-	dc.b   0
-	dc.b   0	; 1
-	dc.b   2	; 2
-	dc.b   2	; 3
-	dc.b   2	; 4
-	dc.b   1	; 5
-	dc.b   1	; 6
-	dc.b   1	; 7
-	even
-; ===========================================================================
-
-loc_26EC2:
-	bra.s	loc_26EAC
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; sprite mappings
@@ -70613,8 +70321,10 @@ LBlk_Action:	; Routine 2
 		bsr.w	loc_12180
 
 .chkdel:
-		;out_of_range.w	DeleteObject,lblk_origX(a0)
+		out_of_range.w	+,lblk_origX(a0)
 		jmp	(DisplaySprite).l
++
+		jmp	(DeleteObject).l
 ; ===========================================================================
 .index:		dc.w .type00-.index, .type01-.index
 		dc.w .type02-.index, .type03-.index
@@ -70875,7 +70585,7 @@ Orb_Display:	; Routine 4
 		jsr	(ObjectMove).l
 
 Orb_ChkDel:
-		;out_of_range.w	.chkgone
+		out_of_range.w	.chkgone
 		bra.w	Jmp_ToDisplaySpriteOrb
 
 .chkgone:
@@ -89596,14 +89306,15 @@ PlrList_Cnz2_End
 ; CPZ Primary
 ;---------------------------------------------------------------------------------------
 PlrList_Cpz1: plrlistheader
-	plreq ArtTile_ArtNem_CPZMetalThings, ArtNem_CPZMetalThings
-	plreq ArtTile_ArtNem_ConstructionStripes_2, ArtNem_ConstructionStripes
+	plreq	ArtTile_LZ_Flapping_Door,    Nem_FlapDoor   ; flapping door
+	plreq ArtTile_ArtNem_Button, ArtNem_Button
 	plreq ArtTile_ArtNem_WaterSurface, ArtNem_WaterSurface
 	plreq	ArtTile_LZ_Block_1,    Nem_LzBlock1         ; block
 	plreq	ArtTile_LZ_Block_2,    Nem_LzBlock2         ; blocks
 	plreq	ArtTile_Burrobot,    Nem_Burrobot           ; burrobot enemy
+	plreq	ArtTile_LZ_Harpoon,     Nem_Harpoon         ; harpoon
 	plreq	ArtTile_LZ_Orbinaut,    Nem_Orbinaut           ; burrobot enemy
-	plreq	ArtTile_LZ_Cork,        Nem_Cork            ; cork block
+	plreq	ArtTile_LZ_Splash,      Nem_Splash          ; waterfalls and splash
 PlrList_Cpz1_End
 Nem_Cork:	binclude	"artnem/LZ Cork.nem"
 		even
@@ -89613,16 +89324,25 @@ Nem_LzBlock2:	binclude	"artnem/LZ Blocks.nem"
 		even
 Nem_LzDoor2:	binclude	"artnem/LZ Horizontal Door.nem"
 		even
+Nem_Harpoon:	binclude	"artnem/LZ Harpoon.nem"
+		even
+Nem_FlapDoor:	binclude	"artnem/LZ Flapping Door.nem"
+		even
 ;---------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; CPZ Secondary
 ;---------------------------------------------------------------------------------------
 PlrList_Cpz2: plrlistheader
+	plreq	ArtTile_LZ_Cork,        Nem_Cork            ; cork block
+	plreq ArtTile_ArtNem_BigBubbles, ArtNem_BigBubbles
+	plreq	ArtTile_Jaws,        Nem_Jaws               ; jaws enemy
 	plreq ArtTile_ArtNem_Spikes, ArtNem_Spikes
 	plreq ArtTile_ArtNem_VrtclSprng, ArtNem_VrtclSprng
 	plreq ArtTile_ArtNem_HrzntlSprng, ArtNem_HrzntlSprng
 	plreq	ArtTile_LZ_Blocks,     Nem_LzDoor2          ; large horizontal door
 PlrList_Cpz2_End
+Nem_Splash:	binclude	"artnem/LZ Water & Splashes.nem"
+		even
 ;---------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; DEZ Primary
@@ -91413,7 +91133,7 @@ Off_Objects: zoneOrderedOffsetTable 2,2
 	zoneOffsetTableEntry.w  Objects_Null	; Act 2
 	; CPZ
 	zoneOffsetTableEntry.w  Objects_CPZ_1	; Act 1
-	zoneOffsetTableEntry.w  Objects_Null	; Act 2
+	zoneOffsetTableEntry.w  Objects_CPZ_2	; Act 2
 	; DEZ
 	zoneOffsetTableEntry.w  Objects_DEZ_1	; Act 1
 	zoneOffsetTableEntry.w  Objects_DEZ_2	; Act 2
@@ -91483,7 +91203,7 @@ Objects_CNZ_2:	BINCLUDE	"level/objects/CNZ_2.bin"
 	ObjectLayoutBoundary
 Objects_CPZ_1:	BINCLUDE	"level/objects/lz1 (JP1).bin"
 	ObjectLayoutBoundary
-Objects_CPZ_2:	BINCLUDE	"level/objects/CPZ_2.bin"
+Objects_CPZ_2:	BINCLUDE	"level/objects/lz2.bin"
 	ObjectLayoutBoundary
 Objects_DEZ_1:	BINCLUDE	"level/objects/DEZ_1.bin"
 	ObjectLayoutBoundary
