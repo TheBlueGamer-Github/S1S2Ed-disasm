@@ -1,4 +1,4 @@
-EHZ_Header:
+Mus81_GHZ_Header:
 	smpsHeaderStartSong 1
 	smpsHeaderVoice     Mus81_GHZ_Voices
 	smpsHeaderChan      $06, $03
