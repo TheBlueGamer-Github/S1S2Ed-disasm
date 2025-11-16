@@ -1,75 +1,47 @@
+; ---------------------------------------------------------------------------
+; Sprite mappings - spikes
+; ---------------------------------------------------------------------------
 Map_obj36:	mappingsTable
-	mappingsTableEntry.w	Map_obj36_0010
-	mappingsTableEntry.w	Map_obj36_0022
-	mappingsTableEntry.w	Map_obj36_0044
-	mappingsTableEntry.w	Map_obj36_0076
-	mappingsTableEntry.w	Map_obj36_00B8
-	mappingsTableEntry.w	Map_obj36_00CA
-	mappingsTableEntry.w	Map_obj36_00EC
-	mappingsTableEntry.w	Map_obj36_011E
+	mappingsTableEntry.w	byte_CFF4
+	mappingsTableEntry.w	byte_D004
+	mappingsTableEntry.w	byte_D014
+	mappingsTableEntry.w	byte_D01A
+	mappingsTableEntry.w	byte_D02A
+	mappingsTableEntry.w	byte_D049
 
-Map_obj36_0010:	spriteHeader
-	spritePiece	-$10, -$10, 2, 4, 0, 0, 0, 0, 0
-	spritePiece	0, -$10, 2, 4, 0, 0, 0, 0, 0
-Map_obj36_0010_End
+byte_CFF4:	spriteHeader
+	spritePiece	-$14, -$10, 1, 4, 4, 0, 0, 0, 0	; 3 spikes
+	spritePiece	-4, -$10, 1, 4, 4, 0, 0, 0, 0
+	spritePiece	$C, -$10, 1, 4, 4, 0, 0, 0, 0
+byte_CFF4_End
 
-Map_obj36_0022:	spriteHeader
-	spritePiece	-$20, -$10, 2, 4, 0, 0, 0, 0, 0
-	spritePiece	-$10, -$10, 2, 4, 0, 0, 0, 0, 0
-	spritePiece	0, -$10, 2, 4, 0, 0, 0, 0, 0
-	spritePiece	$10, -$10, 2, 4, 0, 0, 0, 0, 0
-Map_obj36_0022_End
+byte_D004:	spriteHeader
+	spritePiece	-$10, -$14, 4, 1, 0, 0, 0, 0, 0	; 3 spikes facing sideways
+	spritePiece	-$10, -4, 4, 1, 0, 0, 0, 0, 0
+	spritePiece	-$10, $C, 4, 1, 0, 0, 0, 0, 0
+byte_D004_End
 
-Map_obj36_0044:	spriteHeader
-	spritePiece	-$30, -$10, 2, 4, 0, 0, 0, 0, 0
-	spritePiece	-$20, -$10, 2, 4, 0, 0, 0, 0, 0
-	spritePiece	-$10, -$10, 2, 4, 0, 0, 0, 0, 0
-	spritePiece	0, -$10, 2, 4, 0, 0, 0, 0, 0
-	spritePiece	$10, -$10, 2, 4, 0, 0, 0, 0, 0
-	spritePiece	$20, -$10, 2, 4, 0, 0, 0, 0, 0
-Map_obj36_0044_End
+byte_D014:	spriteHeader
+	spritePiece	-4, -$10, 1, 4, 4, 0, 0, 0, 0	; 1 spike
+byte_D014_End
 
-Map_obj36_0076:	spriteHeader
-	spritePiece	-$40, -$10, 2, 4, 0, 0, 0, 0, 0
-	spritePiece	-$30, -$10, 2, 4, 0, 0, 0, 0, 0
-	spritePiece	-$20, -$10, 2, 4, 0, 0, 0, 0, 0
-	spritePiece	-$10, -$10, 2, 4, 0, 0, 0, 0, 0
-	spritePiece	0, -$10, 2, 4, 0, 0, 0, 0, 0
-	spritePiece	$10, -$10, 2, 4, 0, 0, 0, 0, 0
-	spritePiece	$20, -$10, 2, 4, 0, 0, 0, 0, 0
-	spritePiece	$30, -$10, 2, 4, 0, 0, 0, 0, 0
-Map_obj36_0076_End
+byte_D01A:	spriteHeader
+	spritePiece	-$1C, -$10, 1, 4, 4, 0, 0, 0, 0	; 3 spikes widely spaced
+	spritePiece	-4, -$10, 1, 4, 4, 0, 0, 0, 0
+	spritePiece	$14, -$10, 1, 4, 4, 0, 0, 0, 0
+byte_D01A_End
 
-Map_obj36_00B8:	spriteHeader
-	spritePiece	-$10, -$10, 4, 2, 0, 0, 0, 0, 0
-	spritePiece	-$10, 0, 4, 2, 0, 0, 0, 0, 0
-Map_obj36_00B8_End
+byte_D02A:	spriteHeader
+	spritePiece	-$40, -$10, 1, 4, 4, 0, 0, 0, 0	; 6 spikes
+	spritePiece	-$28, -$10, 1, 4, 4, 0, 0, 0, 0
+	spritePiece	-$10, -$10, 1, 4, 4, 0, 0, 0, 0
+	spritePiece	8, -$10, 1, 4, 4, 0, 0, 0, 0
+	spritePiece	$20, -$10, 1, 4, 4, 0, 0, 0, 0
+	spritePiece	$38, -$10, 1, 4, 4, 0, 0, 0, 0
+byte_D02A_End
 
-Map_obj36_00CA:	spriteHeader
-	spritePiece	-$10, -$20, 4, 2, 0, 0, 0, 0, 0
-	spritePiece	-$10, -$10, 4, 2, 0, 0, 0, 0, 0
-	spritePiece	-$10, 0, 4, 2, 0, 0, 0, 0, 0
-	spritePiece	-$10, $10, 4, 2, 0, 0, 0, 0, 0
-Map_obj36_00CA_End
-
-Map_obj36_00EC:	spriteHeader
-	spritePiece	-$10, -$30, 4, 2, 0, 0, 0, 0, 0
-	spritePiece	-$10, -$20, 4, 2, 0, 0, 0, 0, 0
-	spritePiece	-$10, -$10, 4, 2, 0, 0, 0, 0, 0
-	spritePiece	-$10, 0, 4, 2, 0, 0, 0, 0, 0
-	spritePiece	-$10, $10, 4, 2, 0, 0, 0, 0, 0
-	spritePiece	-$10, $20, 4, 2, 0, 0, 0, 0, 0
-Map_obj36_00EC_End
-
-Map_obj36_011E:	spriteHeader
-	spritePiece	-$10, -$40, 4, 2, 0, 0, 0, 0, 0
-	spritePiece	-$10, -$30, 4, 2, 0, 0, 0, 0, 0
-	spritePiece	-$10, -$20, 4, 2, 0, 0, 0, 0, 0
-	spritePiece	-$10, -$10, 4, 2, 0, 0, 0, 0, 0
-	spritePiece	-$10, 0, 4, 2, 0, 0, 0, 0, 0
-	spritePiece	-$10, $10, 4, 2, 0, 0, 0, 0, 0
-	spritePiece	-$10, $20, 4, 2, 0, 0, 0, 0, 0
-	spritePiece	-$10, $30, 4, 2, 0, 0, 0, 0, 0
-Map_obj36_011E_End
+byte_D049:	spriteHeader
+	spritePiece	-$10, -4, 4, 1, 0, 0, 0, 0, 0	; 1 spike facing sideways
+byte_D049_End
 
 	even

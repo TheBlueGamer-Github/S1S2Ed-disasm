@@ -1,49 +1,77 @@
 Map_obj42:	mappingsTable
-	mappingsTableEntry.w	Map_obj42_0010
-	mappingsTableEntry.w	Map_obj42_001A
-	mappingsTableEntry.w	Map_obj42_0024
-	mappingsTableEntry.w	Map_obj42_002E
-	mappingsTableEntry.w	Map_obj42_0040
-	mappingsTableEntry.w	Map_obj42_0052
-	mappingsTableEntry.w	Map_obj42_006C
-	mappingsTableEntry.w	Map_obj42_007E
+	mappingsTableEntry.w	M_Newt_Trans
+	mappingsTableEntry.w	M_Newt_Norm
+	mappingsTableEntry.w	M_Newt_Fires
+	mappingsTableEntry.w	M_Newt_Drop1
+	mappingsTableEntry.w	M_Newt_Drop2
+	mappingsTableEntry.w	M_Newt_Drop3
+	mappingsTableEntry.w	M_Newt_Fly1a
+	mappingsTableEntry.w	M_Newt_Fly1b
+	mappingsTableEntry.w	M_Newt_Fly2a
+	mappingsTableEntry.w	M_Newt_Fly2b
+	mappingsTableEntry.w	M_Newt_Blank
 
-Map_obj42_0010:	spriteHeader
-	spritePiece	-$18, -1, 1, 1, 0, 0, 0, 0, 0
-Map_obj42_0010_End
+M_Newt_Trans:	spriteHeader
+	spritePiece	-$14, -$14, 4, 2, 0, 0, 0, 0, 0	; partially visible
+	spritePiece	$C, -$C, 1, 1, 8, 0, 0, 0, 0
+	spritePiece	-$C, -4, 4, 3, 9, 0, 0, 0, 0
+M_Newt_Trans_End
 
-Map_obj42_001A:	spriteHeader
-	spritePiece	-$18, -1, 2, 1, 1, 0, 0, 0, 0
-Map_obj42_001A_End
+M_Newt_Norm:	spriteHeader
+	spritePiece	-$14, -$14, 2, 3, $15, 0, 0, 0, 0 ; visible
+	spritePiece	-4, -$14, 3, 2, $1B, 0, 0, 0, 0
+	spritePiece	-4, -4, 3, 3, $21, 0, 0, 0, 0
+M_Newt_Norm_End
 
-Map_obj42_0024:	spriteHeader
-	spritePiece	-$14, -4, 2, 2, 3, 0, 0, 0, 0
-Map_obj42_0024_End
+M_Newt_Fires:	spriteHeader
+	spritePiece	-$14, -$14, 2, 3, $2A, 0, 0, 0, 0 ; open mouth, firing
+	spritePiece	-4, -$14, 3, 2, $1B, 0, 0, 0, 0
+	spritePiece	-4, -4, 3, 3, $21, 0, 0, 0, 0
+M_Newt_Fires_End
 
-Map_obj42_002E:	spriteHeader
-	spritePiece	-8, -4, 2, 2, 7, 0, 0, 0, 0
-	spritePiece	-$10, -4, 2, 2, 3, 0, 0, 0, 0
-Map_obj42_002E_End
+M_Newt_Drop1:	spriteHeader
+	spritePiece	-$14, -$14, 2, 3, $30, 0, 0, 0, 0 ; dropping
+	spritePiece	-4, -$14, 3, 2, $1B, 0, 0, 0, 0
+	spritePiece	-4, -4, 3, 2, $36, 0, 0, 0, 0
+	spritePiece	$C, $C, 1, 1, $3C, 0, 0, 0, 0
+M_Newt_Drop1_End
 
-Map_obj42_0040:	spriteHeader
-	spritePiece	0, -4, 2, 2, 7, 0, 1, 0, 0
-	spritePiece	-8, -4, 1, 2, $B, 0, 1, 0, 0
-Map_obj42_0040_End
+M_Newt_Drop2:	spriteHeader
+	spritePiece	-$14, -$C, 4, 2, $3D, 0, 0, 0, 0
+	spritePiece	$C, -4, 1, 1, $20, 0, 0, 0, 0
+	spritePiece	-4, 4, 3, 1, $45, 0, 0, 0, 0
+M_Newt_Drop2_End
 
-Map_obj42_0052:	spriteHeader
-	spritePiece	$C, -4, 1, 2, $D, 0, 0, 0, 0
-	spritePiece	4, -4, 1, 2, $B, 0, 0, 0, 0
-	spritePiece	-4, -4, 1, 2, $D, 1, 1, 0, 0
-Map_obj42_0052_End
+M_Newt_Drop3:	spriteHeader
+	spritePiece	-$14, -8, 4, 2, $48, 0, 0, 0, 0
+	spritePiece	$C, -8, 1, 2, $50, 0, 0, 0, 0
+M_Newt_Drop3_End
 
-Map_obj42_006C:	spriteHeader
-	spritePiece	$10, -4, 1, 2, $D, 0, 0, 0, 0
-	spritePiece	8, -4, 1, 2, $D, 1, 1, 0, 0
-Map_obj42_006C_End
+M_Newt_Fly1a:	spriteHeader
+	spritePiece	-$14, -8, 4, 2, $48, 0, 0, 0, 0 ; flying
+	spritePiece	$C, -8, 1, 2, $50, 0, 0, 0, 0
+	spritePiece	$14, -2, 1, 1, $52, 0, 0, 0, 0
+M_Newt_Fly1a_End
 
-Map_obj42_007E:	spriteHeader
-	spritePiece	-$10, -$10, 2, 4, $15, 0, 0, 0, 0
-	spritePiece	0, -$10, 2, 4, $1D, 0, 0, 0, 0
-Map_obj42_007E_End
+M_Newt_Fly1b:	spriteHeader
+	spritePiece	-$14, -8, 4, 2, $48, 0, 0, 0, 0
+	spritePiece	$C, -8, 1, 2, $50, 0, 0, 0, 0
+	spritePiece	$14, -2, 2, 1, $53, 0, 0, 0, 0
+M_Newt_Fly1b_End
+
+M_Newt_Fly2a:	spriteHeader
+	spritePiece	-$14, -8, 4, 2, $48, 0, 0, 0, 0
+	spritePiece	$C, -8, 1, 2, $50, 0, 0, 0, 0
+	spritePiece	$14, -2, 1, 1, $52, 0, 0, 3, 1
+M_Newt_Fly2a_End
+
+M_Newt_Fly2b:	spriteHeader
+	spritePiece	-$14, -8, 4, 2, $48, 0, 0, 0, 0
+	spritePiece	$C, -8, 1, 2, $50, 0, 0, 0, 0
+	spritePiece	$14, -2, 2, 1, $53, 0, 0, 3, 1
+M_Newt_Fly2b_End
+
+M_Newt_Blank:	spriteHeader
+M_Newt_Blank_End
 
 	even
