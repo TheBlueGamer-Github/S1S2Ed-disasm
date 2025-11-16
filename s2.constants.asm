@@ -46,6 +46,35 @@ subtype =		$28
 ; ---------------------------------------------------------------------------
 ; conventions specific to Sonic/Tails (Obj01, Obj02, and ObjDB):
 ; note: $1F, $20, and $21 are unused and available (however, $1F is cleared by loc_A53A and ObjB2_Landed_on_plane)
+obID:		equ 0	; object ID number
+obRender:	equ 1	; bitfield for x/y flip, display mode
+obGfx:		equ 2	; palette line & VRAM setting (2 bytes)
+obMap:		equ 4	; mappings address (4 bytes)
+obX:		equ 8	; x-axis position (2-4 bytes)
+obScreenY:	equ $A	; y-axis position for screen-fixed items (2 bytes)
+obY:		equ $C	; y-axis position (2-4 bytes)
+obVelX:		equ $10	; x-axis velocity (2 bytes)
+obVelY:		equ $12	; y-axis velocity (2 bytes)
+obInertia:	equ $14	; potential speed (2 bytes)
+obHeight:	equ $16	; height/2
+obWidth:	equ $17	; width/2
+obPriority:	equ $18	; sprite stack priority -- 0 is front
+obActWid:	equ $19	; action width
+obFrame:	equ $1A	; current frame displayed
+obAniFrame:	equ $1B	; current frame in animation script
+obAnim:		equ $1C	; current animation
+obPrevAni:	equ $1D	; previous animation
+obTimeFrame:	equ $1E	; time to next frame
+obDelayAni:	equ $1F	; time to delay animation
+obColType:	equ $20	; collision response type
+obColProp:	equ $21	; collision extra property
+obStatus:	equ $22	; orientation or mode
+obRespawnNo:	equ $23	; respawn list index number
+obRoutine:	equ $24	; routine number
+ob2ndRout:	equ $25	; secondary routine number
+obAngle:	equ $26	; angle
+obSubtype:	equ $28	; object subtype
+obSolid:	equ ob2ndRout ; solid status flag
 inertia =		$14 ; and $15 ; directionless representation of speed... not updated in the air
 flip_angle =		$27 ; angle about the x axis (360 degrees = 256) (twist/tumble)
 air_left =		$28
@@ -127,7 +156,6 @@ objoff_10 =		x_vel
 objoff_14 =		inertia+0
 objoff_15 =		inertia+1
 objoff_1F =		anim_frame_duration+1
-objoff_23 =		respawn_index
 objoff_27 =		$27
 objoff_28 =		subtype ; overlaps subtype, but a few objects use it for other things anyway
  enum               objoff_29=$29,objoff_2A=$2A,objoff_2B=$2B,objoff_2C=$2C,objoff_2D=$2D,objoff_2E=$2E,objoff_2F=$2F
@@ -152,115 +180,21 @@ ss_rings_tens = objoff_3D
 ss_rings_units = objoff_3E
 ss_last_angle_index = objoff_3F
 ; ---------------------------------------------------------------------------
-; Sonic 1 equivalency table for SSTs:
-obRender 	=		render_flags
-obGfx		=		art_tile
-obMap		=		mappings
-obX			=		x_pos
-obScreenY	=		x_sub
-obY			=		y_pos
-obVelX		=		x_vel
-obVelY		=		y_vel
-obInertia	=		inertia
-obHeight	=		y_radius
-obWidth		=		x_radius
-obPriority	=		priority
-obActWid	=		width_pixels
-obFrame		=		mapping_frame
-obAniFrame	=		anim_frame
-obAnim		=		anim
-obPrevAni	=		prev_anim					; used to be called obNextAni in Sonic 1
-obTimeFrame	=		anim_frame_duration
-obColType	=		collision_flags
-obColProp	=		collision_property
-obStatus	=		status
-obRespawnNo	=		respawn_index
-obRoutine	=		routine
-ob2ndRout	=		routine_secondary
-obAngle		=		angle
-obSubtype	=		subtype
-
-; the following were specific to Sonic in Sonic 1
-flashtime		=		invulnerable_time
-inv_time		=		invincibility_time
-shoetime		=		speedshoes_time
-standonobject	=		interact
-
-; ---------------------------------------------------------------------------
 ; property of all objects:
 object_size_bits =	6
 object_size =		1<<object_size_bits ; the size of an object
 next_object =		object_size
 
 ; ---------------------------------------------------------------------------
-; render_flags bitfield
-
-render_flags.x_flip		= 0 ; Sprite mirrored horizontally.
-render_flags.y_flip		= 1 ; Sprite mirrored vertically.
-render_flags.level_fg		= 2 ; Move with level foreground.
-render_flags.level_bg		= 3 ; Move with level background; leftover from Sonic 1.
-render_flags.explicit_height	= 4 ; Draw culling uses `y_radius` instead of guessing a height.
-render_flags.static_mappings	= 5 ; Mappings pointer points directly to a lone sprite piece instead of a list of sprites.
-render_flags.multi_sprite	= 6 ; Object SST holds metadata for multiple sprites.
-render_flags.on_screen		= 7 ; Object is on-screen and was rendered on the previous frame.
-
-; ---------------------------------------------------------------------------
-; status bitfield
-
-status.player.x_flip			= render_flags.x_flip ; Facing left.
-status.player.in_air			= 1 ; Airborne. 
-status.player.rolling			= 2 ; Spinning, i.e. jumping or rolling.
-status.player.on_object			= 3 ; Stood on an object rather than the level.
-status.player.rolljumping		= 4 ; Jumping whilst rolling; locks the player's controls.
-status.player.pushing			= 5 ; Pressing against an object.
-status.player.underwater		= 6 ; Submersed.
-status.player.prevent_tails_respawn	= 7 ; Prevents AI Tails from respawning.
-
-status.player.ss.x_flip		= render_flags.x_flip ; Sprite mirrored horizontally.
-status.player.ss.y_flip		= render_flags.y_flip ; Sprite mirrored vertically.
-status.player.ss.jumping	= 2 ; Jumping.
-status.player.ss.slowing	= 6 ; Coming to a stop after moving or landing.
-
-status.npc.x_flip		= render_flags.x_flip ; Facing right.
-status.npc.y_flip		= render_flags.y_flip ; Facing up.
-status.npc.misc			= 2 ; Used for various purposes by bosses.
-status.npc.p1_standing		= 3 ; Stood on by player 1.
-status.npc.p2_standing		= 4 ; Stood on by player 2.
-status.npc.p1_pushing		= 5 ; Pushed by player 1.
-status.npc.p2_pushing		= 6 ; Pushed by player 2.
-status.npc.no_balancing		= 7 ; Prevents player from performing their balancing animation whilst stood upon this object. Also set when the object is destroyed by the player.
-
-; ---------------------------------------------------------------------------
-; status_secondary bitfield
-
-status_secondary.shield		= 0
-status_secondary.invincible	= 1
-status_secondary.speed_shoes	= 2
-status_secondary.sliding	= 7
-
-; Ugly old constants, kept for backwards-compatibility.
-
-; status_secondary variable bit numbers
-status_sec_hasShield:		EQU	status_secondary.shield
-status_sec_isInvincible:	EQU	status_secondary.invincible
-status_sec_hasSpeedShoes:	EQU	status_secondary.speed_shoes
-status_sec_isSliding:		EQU	status_secondary.sliding
-; status_secondary variable masks (1 << x == pow(2, x))
-status_sec_hasShield_mask:	EQU	1<<status_sec_hasShield		; $01
-status_sec_isInvincible_mask:	EQU	1<<status_sec_isInvincible	; $02
-status_sec_hasSpeedShoes_mask:	EQU	1<<status_sec_hasSpeedShoes	; $04
-status_sec_isSliding_mask:	EQU	1<<status_sec_isSliding		; $80
-
-; ---------------------------------------------------------------------------
 ; Bits 3-6 of an object's status after a SolidObject call is a
 ; bitfield with the following meaning:
-p1_standing_bit   = status.npc.p1_standing
+p1_standing_bit   = 3
 p2_standing_bit   = p1_standing_bit + 1
 
 p1_standing       = 1<<p1_standing_bit
 p2_standing       = 1<<p2_standing_bit
 
-pushing_bit_delta = status.npc.p1_pushing-status.npc.p1_standing
+pushing_bit_delta = 2
 p1_pushing_bit    = p1_standing_bit + pushing_bit_delta
 p2_pushing_bit    = p1_pushing_bit + 1
 
@@ -360,6 +294,20 @@ next_bumper         = 6
 prev_bumper_x       = bumper_x-next_bumper
 
 ; ---------------------------------------------------------------------------
+; status_secondary bitfield variables
+;
+; status_secondary variable bit numbers
+status_sec_hasShield:		EQU	0
+status_sec_isInvincible:	EQU	1
+status_sec_hasSpeedShoes:	EQU	2
+status_sec_isSliding:		EQU	7
+; status_secondary variable masks (1 << x == pow(2, x))
+status_sec_hasShield_mask:	EQU	1<<status_sec_hasShield		; $01
+status_sec_isInvincible_mask:	EQU	1<<status_sec_isInvincible	; $02
+status_sec_hasSpeedShoes_mask:	EQU	1<<status_sec_hasSpeedShoes	; $04
+status_sec_isSliding_mask:	EQU	1<<status_sec_isSliding		; $80
+
+; ---------------------------------------------------------------------------
 ; Constants that can be used instead of hard-coded IDs for various things.
 ; The "id" function allows to remove elements from an array/table without having
 ; to change the IDs everywhere in the code.
@@ -404,6 +352,7 @@ no_of_zones = cur_zone_id
 ; Zone and act IDs
 emerald_hill_zone_act_1 =	(emerald_hill_zone<<8)|$00
 emerald_hill_zone_act_2 =	(emerald_hill_zone<<8)|$01
+zone_1_act_1 =	(zone_1<<8)|$00
 chemical_plant_zone_act_1 =	(chemical_plant_zone<<8)|$00
 chemical_plant_zone_act_2 =	(chemical_plant_zone<<8)|$01
 aquatic_ruin_zone_act_1 =	(aquatic_ruin_zone<<8)|$00
@@ -468,7 +417,7 @@ GameModeID_Demo =		id(GameMode_Demo) ; 8
 GameModeID_Level =		id(GameMode_Level) ; C
 GameModeID_SpecialStage =	id(GameMode_SpecialStage) ; 10
 GameModeID_ContinueScreen =	id(GameMode_ContinueScreen) ; 14
-GameModeID_2PResults =		id(GameMode_2PResults) ; 18
+GameModeID_2PResults =		$18 ; 18
 GameModeID_2PLevelSelect =	id(GameMode_2PLevelSelect) ; 1C
 GameModeID_EndingSequence =	id(GameMode_EndingSequence) ; 20
 GameModeID_OptionsMenu =	id(GameMode_OptionsMenu) ; 24
@@ -521,7 +470,8 @@ PalID_SS3_2p =	id(PalPtr_SS3_2p) ; 24
 PalID_OOZ_B =	id(PalPtr_OOZ_B) ; 25
 PalID_Menu =	id(PalPtr_Menu) ; 26
 PalID_Result =	id(PalPtr_Result) ; 27
-
+PalID_BGND1 =	id(PalPtr_BGND1) ; 3
+PalID_CPZ2 =	id(PalPtr_CPZ2) ; 11
 ; PLC IDs
 offset :=	ArtLoadCues
 ptrsize :=	2
@@ -537,7 +487,7 @@ PLCID_MilesLife2P =	id(PLCptr_MilesLife2P) ; 6
 PLCID_MilesLife =	id(PLCptr_MilesLife) ; 7
 PLCID_TailsLife2P =	id(PLCptr_TailsLife2P) ; 8
 PLCID_TailsLife =	id(PLCptr_TailsLife) ; 9
-PLCID_Unused1 =		id(PLCptr_Unused1) ; A
+PLCID_Std1S1 =		id(PLCptr_Std1S1) ; A
 PLCID_Unused2 =		id(PLCptr_Unused2) ; B
 PLCID_Mtz1 =		id(PLCptr_Mtz1) ; C
 PLCID_Mtz2 =		id(PLCptr_Mtz2) ; D
@@ -567,7 +517,7 @@ PLCID_Results =		id(PLCptr_Results) ; 26
 PLCID_Signpost =	id(PLCptr_Signpost) ; 27
 PLCID_CpzBoss =		id(PLCptr_CpzBoss) ; 28
 PLCID_EhzBoss =		id(PLCptr_EhzBoss) ; 29
-PLCID_HtzBoss =		id(PLCptr_HtzBoss) ; 2A
+PLCID_FZBoss =		id(PLCptr_FZBoss) ; 2A
 PLCID_ArzBoss =		id(PLCptr_ArzBoss) ; 2B
 PLCID_MczBoss =		id(PLCptr_MczBoss) ; 2C
 PLCID_CnzBoss =		id(PLCptr_CnzBoss) ; 2D
@@ -594,6 +544,9 @@ PLCID_Tornado =		id(PLCptr_Tornado) ; 3F
 PLCID_Capsule =		id(PLCptr_Capsule) ; 40
 PLCID_Explosion =	id(PLCptr_Explosion) ; 41
 PLCID_ResultsTails =	id(PLCptr_ResultsTails) ; 42
+PLCID_Boss =		id(PLCptr_ArzBoss) ; 2B
+PLCID_Ending1 =		id(PLCptr_Ending1) ; 4
+PLCID_Ending2 =		id(PLCptr_Ending2) ; 5
 
 ; Object IDs
 offset :=	Obj_Index
@@ -664,6 +617,8 @@ ObjID_Shield =			id(ObjPtr_Shield)		; 38
 ObjID_GameOver =		id(ObjPtr_GameOver)		; 39
 ObjID_TimeOver =		id(ObjPtr_TimeOver)		; 39
 ObjID_Results =			id(ObjPtr_Results)		; 3A
+ObjID_PurpleRock =			id(ObjPtr_PurpleRock)		; 3B
+ObjID_BreakableWall =		id(ObjPtr_BreakableWall)		; 3C
 ObjID_OOZLauncher =		id(ObjPtr_OOZLauncher)		; 3D
 ObjID_EggPrison =		id(ObjPtr_EggPrison)		; 3E
 ObjID_Fan =			id(ObjPtr_Fan)			; 3F
@@ -821,6 +776,14 @@ ObjID_ContinueText =		id(ObjPtr_ContinueText)		; DA
 ObjID_ContinueIcons =		id(ObjPtr_ContinueIcons)	; DA
 ObjID_ContinueChars =		id(ObjPtr_ContinueChars)	; DB
 ObjID_RingPrize =		id(ObjPtr_RingPrize)		; DC
+
+; Animation flags
+afEnd:		equ $FF	; return to beginning of animation
+afBack:		equ $FE	; go back (specified number) bytes
+afChange:	equ $FD	; run specified animation
+afRoutine:	equ $FC	; increment routine counter
+afReset:	equ $FB	; reset animation and 2nd object routine counter
+af2ndRoutine:	equ $FA	; increment 2nd routine counter
 
 ; Music IDs
 offset :=	zMasterPlaylist
@@ -994,6 +957,41 @@ offset :=	SonicAniData
 ptrsize :=	2
 idstart :=	0
 
+AniID1SonAni_Walk		= id(ptr_Walk)		;  0 ;   0
+AniID1SonAni_Run			= id(ptr_Run)		;  1 ;   1
+AniID1SonAni_Roll		= id(ptr_Roll)		;  2 ;   2
+AniID1SonAni_Roll2		= id(ptr_Roll2)		;  3 ;   3
+AniID1SonAni_Push		= id(ptr_Push)		;  4 ;   4
+AniID1SonAni_Wait		= id(ptr_Wait)		;  5 ;   5
+AniID1SonAni_Balance		= id(ptr_Balance)	;  6 ;   6
+AniID1SonAni_LookUp		= id(ptr_LookUp)		;  7 ;   7
+AniID1SonAni_Duck		= id(ptr_Duck)		;  8 ;   8
+AniID1SonAni_Spindash		= id(ptr_Warp1)	;  9 ;   9
+AniID1SonAni_Blink		= id(ptr_Warp2)		; 10 ;  $A ; Exclusive to Sonic
+AniID1SonAni_GetUp		= id(ptr_Warp3)		; 11 ;  $B ; Exclusive to Sonic
+AniID1SonAni_Balance2		= id(ptr_Warp4)	; 12 ;  $C ; Exclusive to Sonic
+AniID1SonAni_Stop		= id(ptr_Stop)		; 13 ;  $D
+AniID1SonAni_Float		= id(ptr_Float1)		; 14 ;  $E
+AniID1SonAni_Float2		= id(ptr_Float2)		; 15 ;  $F
+AniID1SonAni_Spring		= id(ptr_Spring)		; 16 ; $10
+AniID1SonAni_Hang		= id(ptr_Hang)		; 17 ; $11
+AniID1SonAni_Dash2		= id(ptr_Leap1)		; 18 ; $12 ; Unused.
+AniID1SonAni_Dash3		= id(ptr_Leap2)		; 19 ; $13 ; Unused.
+AniID1SonAni_Hang2		= id(ptr_Surf)		; 20 ; $14
+AniID1SonAni_Bubble		= id(ptr_GetAir)		; 21 ; $15
+AniID1SonAni_DeathBW		= id(ptr_Burnt)	; 22 ; $16
+AniID1SonAni_Drown		= id(ptr_Drown)		; 23 ; $17
+AniID1SonAni_Death		= id(ptr_Death)		; 24 ; $18
+AniID1SonAni_Hurt		= id(ptr_Shrink)		; 25 ; $19
+AniID1SonAni_Hurt2		= id(ptr_Hurt)		; 26 ; $1A
+AniID1SonAni_Slide		= id(ptr_WaterSlide)		; 27 ; $1B
+AniID1SonAni_Blank		= id(ptr_Null)		; 28 ; $1C
+AniID1SonAni_Balance3		= id(ptr_Float3)	; 29 ; $1D ; Exclusive to Sonic
+AniID1SonAni_Balance4		= id(ptr_Float4)	; 30 ; $1E ; Exclusive to Sonic
+AniID1SupSonAni_Transform	= id(ptr_Float4)	; 31 ; $1F ; Exclusive to Sonic
+AniID1SonAni_Lying		= id(ptr_Float4)		; 32 ; $20 ; Exclusive to Sonic
+AniID1SonAni_LieDown		= id(ptr_Float4)	; 33 ; $21 ; Exclusive to Sonic
+
 AniIDSonAni_Walk		= id(SonAni_Walk_ptr)		;  0 ;   0
 AniIDSonAni_Run			= id(SonAni_Run_ptr)		;  1 ;   1
 AniIDSonAni_Roll		= id(SonAni_Roll_ptr)		;  2 ;   2
@@ -1099,12 +1097,16 @@ TitleCard_Left:			; level title card: red part on the left
 				ds.b	object_size
 
 				; Reserved object RAM, free slots
+Endlogo:
 				ds.b	object_size
+Endemeralds:
 				ds.b	object_size
+Endemeralds_end:
 				ds.b	object_size
 				ds.b	object_size
 				ds.b	object_size
 
+Credits:
 CPZPylon:			; Pylon in the foreground in CPZ
 				ds.b	object_size
 WaterSurface1:			; First water surface
@@ -1317,7 +1319,7 @@ Deform_lock:			ds.b	1	; set to 1 to stop all deformation
 				ds.b	1	; $FFFFEEDD ; seems unused
 Camera_Max_Y_Pos_Changing:	ds.b	1
 Dynamic_Resize_Routine:		ds.b	1
-				ds.b	2	; $FFFFEEE0-$FFFFEEE1
+v_creditsnum:				ds.w	1	; $FFFFEEE0-$FFFFEEE1
 Camera_BG_X_offset:		ds.w	1	; Used to control background scrolling in X in WFZ ending and HTZ screen shake
 Camera_BG_Y_offset:		ds.w	1	; Used to control background scrolling in Y in WFZ ending and HTZ screen shake
 HTZ_Terrain_Delay:		ds.w	1	; During HTZ screen shake, this is a delay between rising and sinking terrain during which there is no shaking
@@ -1418,7 +1420,7 @@ PalCycle_Frame2_CNZ:		ds.w	1
 				ds.b	4	; $FFFFF658-$FFFFF65B ; seems unused
 Palette_frame:			ds.w	1
 Palette_timer:			ds.b	1	; was "Palette_frame_count"
-Super_Sonic_palette:		ds.b	1	; 0 = off | 1 = fading | -1 = fading done
+Super_Sonic_palette:		ds.b	1
 
 DEZ_Eggman:					; Word
 DEZ_Shake_Timer:				; Word
@@ -1574,10 +1576,19 @@ Boss_defeated_flag:		ds.b	1
 				ds.b	2	; $FFFFF7A8-$FFFFF7A9 ; seems unused
 Current_Boss_ID:		ds.b	1
 				ds.b	5	; $FFFFF7AB-$FFFFF7AF ; seems unused
-MTZ_Platform_Cog_X:		ds.w	1	; X position of moving MTZ platform for cog animation.
-MTZCylinder_Angle_Sonic:	ds.b	1
-MTZCylinder_Angle_Tails:	ds.b	1
-				ds.b	$A	; $FFFFF7B4-$FFFFF7BD ; seems unused
+v_lani0_frame:		ds.b	1		; level graphics animation 0 - current frame
+v_lani0_time:		ds.b	1		; level graphics animation 0 - time until next frame
+v_lani1_frame:		ds.b	1		; level graphics animation 1 - current frame
+v_lani1_time:		ds.b	1		; level graphics animation 1 - time until next frame
+v_lani2_frame:		ds.b	1		; level graphics animation 2 - current frame
+v_lani2_time:		ds.b	1		; level graphics animation 2 - time until next frame
+v_lani3_frame:		ds.b	1		; level graphics animation 3 - current frame
+v_lani3_time:		ds.b	1		; level graphics animation 3 - time until next frame
+v_lani4_frame:		ds.b	1		; level graphics animation 4 - current frame
+v_lani4_time:		ds.b	1		; level graphics animation 4 - time until next frame
+v_lani5_frame:		ds.b	1		; level graphics animation 5 - current frame
+v_lani5_time:		ds.b	1		; level graphics animation 5 - time until next frame
+				ds.b	2	; $FFFFF7B4-$FFFFF7BD ; seems unused
 BigRingGraphics:		ds.w	1	; S1 holdover
 				ds.b	7	; $FFFFF7C0-$FFFFF7C6 ; seems unused
 WindTunnel_flag:		ds.b	1
@@ -1592,7 +1603,8 @@ Chain_Bonus_counter:		ds.w	1	; counts up when you destroy things that give point
 Bonus_Countdown_1:		ds.w	1	; level results time bonus or special stage Sonic ring bonus
 Bonus_Countdown_2:		ds.w	1	; level results ring bonus or special stage Tails ring bonus
 Update_Bonus_score:		ds.b	1
-				ds.b	3	; $FFFFF7D7-$FFFFF7D9 ; seems unused
+v_sonicend:	ds.b	1
+				ds.b	2	; $FFFFF7D8-$FFFFF7D9 ; seems unused
 
 Camera_X_pos_coarse:		ds.w	1	; (Camera_X_pos - 128) / 256
 Camera_X_pos_coarse_End:
@@ -2047,11 +2059,11 @@ SS_TriggerRingsToGo:			ds.b	1
     endif
 	dephase
 
-	phase	Horiz_Scroll_Buf	; Still in SS RAM
+	phase	ramaddr(Horiz_Scroll_Buf)	; Still in SS RAM
 SS_Horiz_Scroll_Buf_1:		HorizontalScrollBuffer
 	dephase
 
-	phase	Boss_variables	; Still in SS RAM
+	phase	ramaddr(Boss_variables)	; Still in SS RAM
 				ds.b	4 ; unused
 SS_Offset_X:			ds.w	1
 SS_Offset_Y:			ds.w	1
@@ -2112,14 +2124,6 @@ CutScene:
 
 	!org	0	; Reset the program counter
 
-
-; ---------------------------------------------------------------------------
-; Clocks
-Master_Clock    = 53693175
-M68000_Clock    = Master_Clock/7
-Z80_Clock       = Master_Clock/15
-FM_Sample_Rate  = M68000_Clock/(6*6*4)
-PSG_Sample_Rate = Z80_Clock/16
 
 ; ---------------------------------------------------------------------------
 ; VDP addressses
@@ -2212,6 +2216,36 @@ VRAM_Menu_Plane_A_Name_Table             = $C000	; Extends until $CFFF
 VRAM_Menu_Plane_B_Name_Table             = $E000	; Extends until $EFFF
 VRAM_Menu_Plane_Table_Size               = $1000	; 64 cells x 32 cells x 2 bytes per cell
 
+; Boss locations
+; The main values are based on where the camera boundaries mainly lie
+; The end values are where the camera scrolls towards after defeat
+boss_ghz_x:	equ $2960		; Green Hill Zone
+boss_ghz_y:	equ $300
+boss_ghz_end:	equ boss_ghz_x+$160
+
+boss_lz_x:	equ $1DE0		; Labyrinth Zone
+boss_lz_y:	equ $C0
+boss_lz_end:	equ boss_lz_x+$250
+
+boss_mz_x:	equ $1800		; Marble Zone
+boss_mz_y:	equ $210
+boss_mz_end:	equ boss_mz_x+$160
+
+boss_slz_x:	equ $2000		; Star Light Zone
+boss_slz_y:	equ $210
+boss_slz_end:	equ boss_slz_x+$160
+
+boss_syz_x:	equ $2C00		; Spring Yard Zone
+boss_syz_y:	equ $4CC
+boss_syz_end:	equ boss_syz_x+$140
+
+boss_sbz2_x:	equ $2050		; Scrap Brain Zone Act 2 Cutscene
+boss_sbz2_y:	equ $510
+
+boss_fz_x:	equ $2450		; Final Zone
+boss_fz_y:	equ $510
+boss_fz_end:	equ boss_fz_x+$2B0
+
 ; From here on, art tiles are used; VRAM address is art tile * $20.
 ArtTile_VRAM_Start                    = $0000
 
@@ -2233,6 +2267,9 @@ ArtTile_ArtNem_FontStuff_TtlScr       = $0680
 
 ; Credits screen
 ArtTile_ArtNem_CreditText_CredScr     = $0001
+ArtTile_Sonic_Team_Font:	equ $0A6
+ArtTile_Credits_Font:		equ $5A0
+
 
 ; Menu background.
 ArtTile_ArtNem_MenuBox                = $0070
@@ -2289,6 +2326,10 @@ ArtTile_ContinueScreen_Additional     = $0590
 ArtTile_ContinueCountdown             = $06FC
 
 ; ---------------------------------------------------------------------------
+ArtTile_FZ_Boss:		equ $300
+ArtTile_FZ_Eggman_Fleeing:	equ $3A0
+ArtTile_FZ_Eggman_No_Vehicle:	equ $470
+
 ; Level art stuff.
 ArtTile_ArtKos_LevelArt               = $0000
 ArtTile_ArtKos_NumTiles_EHZ           = $0393
@@ -2312,10 +2353,10 @@ ArtTile_ArtKos_NumTiles_DEZ           = $0326 ; Skips several CPZ tiles.
 
 ; Objects that use the same art tiles on all levels in which
 ; they are loaded, even if not all levels load them.
-ArtTile_ArtNem_WaterSurface           = $0400
+ArtTile_ArtNem_WaterSurface           = $0300
 ArtTile_ArtNem_Button                 = $0424
 ArtTile_ArtNem_HorizSpike             = $042C
-ArtTile_ArtNem_Spikes                 = $0434
+ArtTile_ArtNem_Spikes                 = $0516
 ArtTile_ArtNem_DignlSprng             = $043C
 ArtTile_ArtNem_LeverSpring            = $0440
 ArtTile_ArtNem_VrtclSprng             = $045C
@@ -2327,7 +2368,10 @@ ArtTile_ArtUnc_Flowers1               = $0394
 ArtTile_ArtUnc_Flowers2               = $0396
 ArtTile_ArtUnc_Flowers3               = $0398
 ArtTile_ArtUnc_Flowers4               = $039A
-ArtTile_ArtNem_Buzzer                 = $03D2
+ArtTile_ArtNem_Buzzer                 = $03E0
+ArtTile_Crabmeat                 	  = $0418
+ArtTile_Newtron                 	  = $0492
+ArtTile_GreenNewtron                  = $2492
 
 ; WFZ, SCZ
 ArtTile_ArtNem_WfzHrzntlPrpllr        = $03CD
@@ -2341,10 +2385,10 @@ ArtTile_ArtNem_Balkrie                = $0565
 ; EHZ
 ArtTile_ArtUnc_EHZPulseBall           = $039C
 ArtTile_ArtNem_Waterfall              = $039E
-ArtTile_ArtNem_EHZ_Bridge             = $03B6
+ArtTile_ArtNem_EHZ_Bridge             = $038E
 ArtTile_ArtNem_Buzzer_Fireball        = $03BE	; Actually unused
 ArtTile_ArtNem_Coconuts               = $03EE
-ArtTile_ArtNem_Masher                 = $0414
+ArtTile_ArtNem_Masher                 = $047C
 ArtTile_ArtUnc_EHZMountains           = $0500
 
 ; MTZ
@@ -2357,7 +2401,7 @@ ArtTile_ArtNem_MtzSupernova           = $0368
 ArtTile_ArtNem_MtzWheel               = $0378
 ArtTile_ArtNem_MtzWheelIndent         = $03F0
 ArtTile_ArtNem_LavaCup                = $03F9
-ArtTile_ArtNem_BoltEnd_Rope           = $03FD
+ArtTile_ArtNem_BoltEnd_Rope           = $038E
 ArtTile_ArtNem_MtzSteam               = $0405
 ArtTile_ArtNem_MtzSpikeBlock          = $0414
 ArtTile_ArtNem_MtzSpike               = $041C
@@ -2419,7 +2463,7 @@ ArtTile_ArtNem_BallThing              = $0354
 ArtTile_ArtNem_LaunchBall             = $0368
 ArtTile_ArtNem_OOZPlatform            = $039D
 ArtTile_ArtNem_PushSpring             = $03C5
-ArtTile_ArtNem_OOZSwingPlat           = $03E3
+ArtTile_ArtNem_OOZSwingPlat           = $0380
 ArtTile_ArtNem_StripedBlocksHoriz     = $03FF
 ArtTile_ArtNem_OOZFanHoriz            = $0403
 ArtTile_ArtNem_Aquis                  = $0500
@@ -2463,6 +2507,8 @@ ArtTile_ArtUnc_CNZSlotPics_2_2p       = $0760
 ArtTile_ArtUnc_CNZSlotPics_3_2p       = $0770
 
 ; CPZ
+ArtTile_LZ_Block_1:		equ $1E0
+ArtTile_LZ_Block_2:		equ $1F0
 ArtTile_ArtUnc_CPZAnimBack            = $0370
 ArtTile_ArtNem_CPZMetalThings         = $0373
 ArtTile_ArtNem_ConstructionStripes_2  = $0394
@@ -2475,6 +2521,18 @@ ArtTile_ArtNem_CPZMetalBlock          = $0430
 ArtTile_ArtNem_CPZDroplet             = $043C
 ArtTile_ArtNem_Grabber                = $0500
 ArtTile_ArtNem_Spiny                  = $052D
+ArtTile_Burrobot:		equ $04A6
+ArtTile_LZ_Moving_Block:	equ $3BC
+ArtTile_LZ_Door:		equ $3C4
+ArtTile_LZ_Harpoon:		equ $3CC
+ArtTile_LZ_Pole:		equ $3DE
+ArtTile_LZ_Push_Block:		equ $3DE
+ArtTile_LZ_Blocks:		equ $3E6
+ArtTile_LZ_Conveyor_Belt:	equ $3F6
+ArtTile_LZ_Sonic_Drowning:	equ $440
+ArtTile_LZ_Rising_Platform:	equ ArtTile_LZ_Blocks+$69
+ArtTile_LZ_Orbinaut:		equ $467
+ArtTile_LZ_Cork:		equ ArtTile_LZ_Blocks+$11A
 
 ; DEZ
 ArtTile_ArtUnc_DEZAnimBack            = $0326
@@ -2492,7 +2550,8 @@ ArtTile_ArtNem_Grounder               = $0509
 ArtTile_ArtNem_ChopChop               = $053B
 ArtTile_ArtUnc_Waterfall1_2           = $0557
 ArtTile_ArtNem_BigBubbles             = $055B
-
+ArtTile_ArtNem_TailsDust2             = $048C
+ArtTile_ArtNem_SonicDust2             = $049C
 ; ---------------------------------------------------------------------------
 ; Bosses
 ; Common tiles for some bosses (any for which no eggpod tiles are defined,
@@ -2510,8 +2569,9 @@ ArtTile_ArtNem_BossSmoke_1            = $0570
 ; EHZ boss
 ArtTile_ArtNem_Eggpod_1               = $03A0
 ArtTile_ArtNem_EHZBoss                = $0400
-ArtTile_ArtNem_EggChoppers            = $056C
-
+ArtTile_ArtNem_EggChoppers            = $046C
+ArtTile_Eggman_Exhaust:		equ ArtTile_ArtNem_EHZBoss+$12A
+ArtTile_Prison_Capsule:		equ $49D
 ; HTZ boss
 ArtTile_ArtNem_Eggpod_2               = $03C1
 ArtTile_ArtNem_HTZBoss                = $0421
@@ -2570,6 +2630,7 @@ ArtTile_ArtNem_ResultsText            = $05B0
 ArtTile_ArtUnc_Signpost               = $05E8
 ArtTile_ArtNem_MiniCharacter          = $05F4
 ArtTile_ArtNem_Capsule                = $0680
+ArtTile_GHZ_Giant_Ball:		equ $3AA
 
 ; Tornado.
 ArtTile_ArtNem_Tornado                = $0500
@@ -2581,19 +2642,23 @@ ArtTile_ArtNem_Bubbles                = $05E8
 ArtTile_ArtNem_SuperSonic_stars       = $05F2
 
 ; Universal (used on all standard levels).
-ArtTile_ArtNem_Checkpoint             = $047C
-ArtTile_ArtNem_TailsDust              = $048C
-ArtTile_ArtNem_SonicDust              = $049C
-ArtTile_ArtNem_Numbers                = $04AC
-ArtTile_ArtNem_Shield                 = $04BE
-ArtTile_ArtNem_Invincible_stars       = $04DE
+ArtTile_ArtNem_Checkpoint             = $0506
+ArtTile_ArtNem_TailsDust              = $055F
+ArtTile_ArtNem_SonicDust              = $056F
+ArtTile_ArtNem_Numbers                = $03AA
+ArtTile_ArtNem_Shield                 = $051E
+ArtTile_ArtNem_Invincible_stars       = $053E
 ArtTile_ArtNem_Powerups               = $0680
 ArtTile_ArtNem_Ring                   = $06BC
 ArtTile_ArtNem_HUD                    = ArtTile_ArtNem_Powerups + $4A
 ArtTile_ArtUnc_Sonic                  = $0780
 ArtTile_ArtUnc_Tails                  = $07A0
 ArtTile_ArtUnc_Tails_Tails            = $07B0
-
+ArtTile_Eggman:			equ $400
+ArtTile_Eggman_Weapons:		equ $46C
+ArtTile_Eggman_Button:		equ $4A4
+ArtTile_Eggman_Spikeball:	equ $518
+ArtTile_Eggman_Trap_Floor:	equ $518
 ; ---------------------------------------------------------------------------
 ; HUD. The HUD components are linked in a chain, and linked to
 ; power-ups, because the mappings of monitors and lives counter(s)
@@ -2620,7 +2685,23 @@ ArtTile_Art_HUD_Numbers_2P            = ArtTile_HUD_Score_E
 ; Unused objects, objects with mappings never loaded, objects with
 ; missing mappings and/or tiles, objects whose mappings and/or tiles
 ; are never loaded.
+
 ArtTile_ArtNem_MZ_Platform            = $02B8
+ArtTile_MZ_Block:		equ $2B8
+ArtTile_MZ_Spike_Stomper:	equ $300
+ArtTile_MZ_Fireball:		equ $345
+ArtTile_MZ_Glass_Pillar:	equ $38E
+ArtTile_MZ_Lava:		equ $3A8
+
+ArtTile_SLZ_Seesaw:		equ $374
+ArtTile_SLZ_Fan:		equ $3A0
+ArtTile_SLZ_Pylon:		equ $3CC
+ArtTile_SLZ_Swing:		equ $3DC
+ArtTile_SLZ_Orbinaut:		equ $429
+ArtTile_SLZ_Fireball:		equ $480
+ArtTile_SLZ_Fireball_Launcher:	equ $4D8
+ArtTile_SLZ_Collapsing_Floor:	equ $4E0
+ArtTile_SLZ_Spikeball:		equ $4F0
 ArtTile_ArtUnc_HPZPulseOrb_1          = $02E8
 ArtTile_ArtUnc_HPZPulseOrb_2          = $02F0
 ArtTile_ArtUnc_HPZPulseOrb_3          = $02F8
@@ -2635,5 +2716,34 @@ ArtTile_ArtNem_BigRing                = $0400
 ArtTile_ArtNem_FloatPlatform          = $0418
 ArtTile_ArtNem_BigRing_Flash          = $0462
 ArtTile_ArtNem_EndPoints              = $04B6
-ArtTile_ArtNem_BreakWall              = $0590
-ArtTile_ArtNem_GHZ_Purple_Rock        = $06C0
+ArtTile_ArtNem_BreakWall              = $0340
+ArtTile_ArtNem_GHZ_Purple_Rock        = $03BC
+ArtTile_ArtNem_GHZ_Motobug        = $04E9
+ArtTile_GHZ_Flower_4:		equ ArtTile_ArtKos_LevelArt+$340
+ArtTile_GHZ_Edge_Wall:		equ $34C
+ArtTile_GHZ_Flower_Stalk:	equ ArtTile_ArtKos_LevelArt+$358
+ArtTile_GHZ_Big_Flower_1:	equ ArtTile_ArtKos_LevelArt+$35C
+ArtTile_GHZ_Small_Flower:	equ ArtTile_ArtKos_LevelArt+$36C
+ArtTile_GHZ_Waterfall:		equ ArtTile_ArtKos_LevelArt+$378
+ArtTile_GHZ_Flower_3:		equ ArtTile_ArtKos_LevelArt+$380
+ArtTile_MZ_Animated_Magma:	equ ArtTile_ArtKos_LevelArt+$2D2
+ArtTile_MZ_Animated_Lava:	equ ArtTile_ArtKos_LevelArt+$2E2
+ArtTile_MZ_Torch:		equ ArtTile_ArtKos_LevelArt+$2F2
+ArtTile_SBZ_Smoke_Puff_1:	equ ArtTile_ArtKos_LevelArt+$448
+ArtTile_SBZ_Smoke_Puff_2:	equ ArtTile_ArtKos_LevelArt+$454
+
+; Ending
+ArtTile_Ending_Flowers:		equ $3A0
+ArtTile_Ending_Emeralds:	equ $3C5
+ArtTile_Ending_Sonic:		equ $3E1
+ArtTile_Ending_Eggman:		equ $524
+ArtTile_Ending_Rabbit:		equ $553
+ArtTile_Ending_Chicken:		equ $565
+ArtTile_Ending_Penguin:		equ $573
+ArtTile_Ending_Seal:		equ $585
+ArtTile_Ending_Pig:		equ $593
+ArtTile_Ending_Flicky:		equ $5A5
+ArtTile_Ending_Squirrel:	equ $5B3
+ArtTile_Ending_STH:		equ $5C5
+
+ArtTile_SBZ_Orbinaut:		equ $429

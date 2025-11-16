@@ -309,9 +309,9 @@ endpad := $
 zmake68kPtr function addr,zROMWindow+(addr&7FFFh)
 
 ; Function to turn a sample rate into a djnz loop counter
-pcmLoopCounterBase function sampleRate,baseCycles, 1+(Z80_Clock/(sampleRate)-(baseCycles)+(13/2))/13
-pcmLoopCounter function sampleRate, pcmLoopCounterBase(sampleRate,152/2) ; 152 is the number of cycles zPlaySegaSound takes to deliver two samples.
-dpcmLoopCounter function sampleRate, pcmLoopCounterBase(sampleRate,295/2) ; 295 is the number of cycles zWriteToDAC takes to deliver two samples.
+pcmLoopCounterBase function sampleRate,baseCycles, 1+(53693175/15/(sampleRate)-(baseCycles)+(13/2))/13
+pcmLoopCounter function sampleRate, pcmLoopCounterBase(sampleRate,146/2) ; 146 is the number of cycles zPlaySegaSound takes to deliver two samples.
+dpcmLoopCounter function sampleRate, pcmLoopCounterBase(sampleRate,289/2) ; 289 is the number of cycles zWriteToDAC takes to deliver two samples.
 
 ; >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; Z80 'ROM' start:
@@ -678,14 +678,12 @@ zWaitLoop:
 	; In our case, the so-called 'd' value is shadow register 'a'
 
 zWriteToDAC:
-	; According to Kabuto, the Z80 suffers a delay of approximately 3.3 cycles for each ROM access.
-	; https://plutiedev.com/mirror/kabuto-hardware-notes#bus-system
 	djnz	$			; 8	; Busy wait for specific amount of time in 'b'
 
 	di				; 4	; disable interrupts (while updating DAC)
 	ld	a,2Ah			; 7	; DAC port
 	ld	(zYM2612_A0),a		; 13	; Set DAC port register
-	ld	a,(hl)			; 7+3	; Get next DAC byte
+	ld	a,(hl)			; 7	; Get next DAC byte
 	rlca				; 4
 	rlca				; 4
 	rlca				; 4
@@ -710,7 +708,7 @@ zWriteToDAC:
 	ld	a,2Ah			; 7	; DAC port
 	ld	(zYM2612_A0),a		; 13	; Set DAC port register
 	ld	b,c			; 4	; reload 'b' with wait value
-	ld	a,(hl)			; 7+3	; Get next DAC byte
+	ld	a,(hl)			; 7	; Get next DAC byte
 	inc	hl			; 6	; Next byte in DAC stream...
 	dec	de			; 6	; One less byte
 	and	0Fh			; 7	; LOWER 4-bit offset into zDACDecodeTbl
@@ -724,13 +722,14 @@ zWriteToDAC:
 	ex	af,af'			; 4	; back to regular registers
 	ei				; 4	; enable interrupts (done updating DAC, busy waiting for next update)
 	jp	zWaitLoop		; 10	; Back to the wait loop; if there's more DAC to write, we come back down again!
-					; 295
-	; 295 cycles for two samples. dpcmLoopCounter should use 295 divided by 2.
+					; 289
+	; 289 cycles for two samples. dpcmLoopCounter should use 289 divided by 2.
 ; ---------------------------------------------------------------------------
 ; 'jman2050' DAC decode lookup table
 ; zbyte_1B3
 zDACDecodeTbl:
-	binclude "sound/DAC/deltas.bin"
+	db	   0,    1,   2,   4,   8,  10h,  20h,  40h
+	db	 80h,   -1,  -2,  -4,  -8, -10h, -20h, -40h
 
 	; The following two tables are used for when an SFX terminates
 	; its track to properly restore the music track it temporarily took
@@ -1050,29 +1049,17 @@ zDoModulation:
 ; End of function zDoModulation
 
 ; ---------------------------------------------------------------------------
-zMakePSGFrequency function frequency,min(3FFh,roundFloatToInteger(PSG_Sample_Rate/(frequency*2)))
-zMakePSGFrequencies macro
-		irp op,ALLARGS
-			dw zMakePSGFrequency(op)
-		endm
-	endm
-
 ; This the note -> frequency setting lookup
 ; the same array is found at $729CE in Sonic 1, and at $C9C44 in Ristar
 ; zword_359:
 	ensure1byteoffset 8Ch
 zPSGFrequencies:
-	; 6 octaves, each one begins with C and ends with B, with
-	; the exception of the final octave, which ends at A-flat.
-	; The last octave's final note is set to the PSG's maximum
-	; frequency. This is typically used by the noise channel to
-	; create a sound that is similar to a hi-hat.
-	zMakePSGFrequencies  130.98,    138.78,    146.99,    155.79,    165.22,    174.78,    185.19,    196.24,    207.91,    220.63,    233.52,    247.47
-	zMakePSGFrequencies  261.96,    277.56,    293.59,    311.58,    329.97,    349.56,    370.39,    392.49,    415.83,    440.39,    468.03,    494.95
-	zMakePSGFrequencies  522.71,    556.51,    588.73,    621.44,    661.89,    699.12,    740.79,    782.24,    828.59,    880.79,    932.17,    989.91
-	zMakePSGFrequencies 1045.42,   1107.52,   1177.47,   1242.89,   1316.00,   1398.25,   1491.47,   1575.50,   1669.55,   1747.82,   1864.34,   1962.46
-	zMakePSGFrequencies 2071.49,   2193.34,   2330.42,   2485.78,   2601.40,   2796.51,   2943.69,   3107.23,   3290.01,   3495.64,   3608.40,   3857.25
-	zMakePSGFrequencies 4142.98,   4302.32,   4660.85,   4863.50,   5084.56,   5326.69,   5887.39,   6214.47,   6580.02, 223721.56
+	dw	356h, 326h, 2F9h, 2CEh, 2A5h, 280h, 25Ch, 23Ah, 21Ah, 1FBh, 1DFh, 1C4h
+	dw	1ABh, 193h, 17Dh, 167h, 153h, 140h, 12Eh, 11Dh, 10Dh, 0FEh, 0EFh, 0E2h
+	dw	0D6h, 0C9h, 0BEh, 0B4h, 0A9h, 0A0h,  97h,  8Fh,  87h,  7Fh,  78h,  71h
+	dw	 6Bh,  65h,  5Fh,  5Ah,  55h,  50h,  4Bh,  47h,  43h,  40h,  3Ch,  39h
+	dw	 36h,  33h,  30h,  2Dh,  2Bh,  28h,  26h,  24h,  22h,  20h,  1Fh,  1Dh
+	dw	 1Bh,  1Ah,  18h,  17h,  16h,  15h,  13h,  12h,  11h,    0
 ; ---------------------------------------------------------------------------
 
 ; zloc_3E5
@@ -1381,14 +1368,6 @@ zPSGNoteOff:
 ; End of function zPSGNoteOff
 
 ; ---------------------------------------------------------------------------
-zMakeFMFrequency function frequency,roundFloatToInteger(frequency*1024*1024*2/FM_Sample_Rate)
-zMakeFMFrequenciesOctave macro octave
-		; Frequencies for the base octave. The first frequency is B, the last frequency is B-flat.
-		irp op, 15.39, 16.35, 17.34, 18.36, 19.45, 20.64, 21.84, 23.13, 24.51, 25.98, 27.53, 29.15
-			dw zMakeFMFrequency(op)+octave*800h
-		endm
-	endm
-
 ; lookup table of FM note frequencies for instruments and sound effects
     if OptimiseDriver
 	ensure1byteoffset 18h
@@ -1397,15 +1376,15 @@ zMakeFMFrequenciesOctave macro octave
     endif
 ; zbyte_534
 zFrequencies:
-	zMakeFMFrequenciesOctave 0
+	dw 025Eh,0284h,02ABh,02D3h,02FEh,032Dh,035Ch,038Fh,03C5h,03FFh,043Ch,047Ch
     if ~~OptimiseDriver	; We will calculate these, instead, which will save space
-	zMakeFMFrequenciesOctave 1
-	zMakeFMFrequenciesOctave 2
-	zMakeFMFrequenciesOctave 3
-	zMakeFMFrequenciesOctave 4
-	zMakeFMFrequenciesOctave 5
-	zMakeFMFrequenciesOctave 6
-	zMakeFMFrequenciesOctave 7
+	dw 0A5Eh,0A84h,0AABh,0AD3h,0AFEh,0B2Dh,0B5Ch,0B8Fh,0BC5h,0BFFh,0C3Ch,0C7Ch
+	dw 125Eh,1284h,12ABh,12D3h,12FEh,132Dh,135Ch,138Fh,13C5h,13FFh,143Ch,147Ch
+	dw 1A5Eh,1A84h,1AABh,1AD3h,1AFEh,1B2Dh,1B5Ch,1B8Fh,1BC5h,1BFFh,1C3Ch,1C7Ch
+	dw 225Eh,2284h,22ABh,22D3h,22FEh,232Dh,235Ch,238Fh,23C5h,23FFh,243Ch,247Ch
+	dw 2A5Eh,2A84h,2AABh,2AD3h,2AFEh,2B2Dh,2B5Ch,2B8Fh,2BC5h,2BFFh,2C3Ch,2C7Ch
+	dw 325Eh,3284h,32ABh,32D3h,32FEh,332Dh,335Ch,338Fh,33C5h,33FFh,343Ch,347Ch
+	dw 3A5Eh,3A84h,3AABh,3AD3h,3AFEh,3B2Dh,3B5Ch,3B8Fh,3BC5h,3BFFh,3C3Ch,3C7Ch ; 96 entries
     endif
 
 ; zloc_5F4
@@ -1601,8 +1580,6 @@ CmdPtr__End:
 ; ---------------------------------------------------------------------------
 ; zloc_6EF
 zPlaySegaSound:
-.loop_counter = pcmLoopCounter(Snd_Sega.sample_rate)
-
     if FixDriverBugs
 	; reset panning (don't want Sega sound playing on only one speaker)
 	ld	a,0B6h		; Set Panning / AMS / FMS
@@ -1617,30 +1594,28 @@ zPlaySegaSound:
 	bankswitch Snd_Sega	; We want the Sega sound
 
 	ld	hl,zmake68kPtr(Snd_Sega) ; was: 9E8Ch
-	ld	de,Snd_Sega.size/2	; was: 30BAh
+	ld	de,(Snd_Sega_End - Snd_Sega)/2	; was: 30BAh
 	ld	a,2Ah			; DAC data register
 	ld	(zYM2612_A0),a		; Select it
 	ld	c,80h			; If QueueToPlay is not this, stops Sega PCM
 
 .loop:
-	; According to Kabuto, the Z80 suffers a delay of approximately 3.3 cycles for each ROM access.
-	; https://plutiedev.com/mirror/kabuto-hardware-notes#bus-system
-	ld	a,(hl)				; 7+3	; Get next PCM byte
+	ld	a,(hl)				; 7	; Get next PCM byte
 	ld	(zYM2612_D0),a			; 13	; Send to DAC
 	inc	hl				; 6	; Advance pointer
 	nop					; 4
-	ld	b,.loop_counter			; 7	; Sega PCM pitch
+	ld	b,pcmLoopCounter(16500)	; 7	; Sega PCM pitch
 	djnz	$				; 8	; Delay loop
 
 	nop					; 4
 	ld	a,(zAbsVar.QueueToPlay)		; 13	; Get next item to play
 	cp	c				; 4	; Is it 80h?
 	jr	nz,.stop			; 7	; If not, stop Sega PCM
-	ld	a,(hl)				; 7+3	; Get next PCM byte
+	ld	a,(hl)				; 7	; Get next PCM byte
 	ld	(zYM2612_D0),a			; 13	; Send to DAC
 	inc	hl				; 6	; Advance pointer
 	nop					; 4
-	ld	b,.loop_counter			; 7	; Sega PCM pitch
+	ld	b,pcmLoopCounter(16500)	; 7	; Sega PCM pitch
 	djnz	$				; 8	; Delay loop
 
 	nop					; 4
@@ -1648,8 +1623,8 @@ zPlaySegaSound:
 	ld	a,d				; 4	; a = d
 	or	e				; 4	; Is de zero?
 	jp	nz,.loop			; 10	; If not, loop
-						; 152
-	; Two samples per 152 cycles, meaning that pcmLoopCounter should used 152 divided by 2.
+						; 146
+	; Two samples per 146 cycles, meaning that pcmLoopCounter should used 146 divided by 2.
 
 .stop:
 	call	zBankSwitchToMusic
@@ -3360,7 +3335,7 @@ zSetVoice:
 	add	a,4		; Next detune/coarse freq register
 	djnz	.detuneloop
 
-	push	af		; Saving 'a' for much later... will be restored when time to "Total Level"
+	push	af		; Daving 'a' for much later... will be restored when time to "Total Level"
 
 	; other regs up to just before "total level", all channels
 	add	a,10h		; We're at 40h+, now at 50h+ (RS/AR of operator 1 register)
@@ -3805,51 +3780,54 @@ zPSG_Env13:
 
 ;	END of zPSG_EnvTbl -------------------------------
 
-; Stuff for zMasterPlaylist.
-z80_bank_size = 8000h
-getZ80BankOffset function label, label # z80_bank_size
-getZ80BankBase function label, label - getZ80BankOffset(label)
-withinSameZ80Bank function label1, label2, getZ80BankBase(label1) == getZ80BankBase(label2)
-
-MusFlag_SlowerOnPAL = 1 << 6 ; Song should play slower on PAL consoles.
-
-music_metadata macro DATA,FLAGS
-	db	(withinSameZ80Bank(DATA.pointer, MusicPoint2)<<7)|((~~DATA.is_compressed)<<5)|(FLAGS)|(getZ80BankOffset(DATA.pointer)/2)
-    endm
-
 ; zbyte_11F5h
 zMasterPlaylist:
-zMusIDPtr_2PResult:	music_metadata Mus_2PResult
-zMusIDPtr_EHZ:		music_metadata Mus_EHZ
-zMusIDPtr_MCZ_2P:	music_metadata Mus_MCZ_2P
-zMusIDPtr_OOZ:		music_metadata Mus_OOZ
-zMusIDPtr_MTZ:		music_metadata Mus_MTZ
-zMusIDPtr_HTZ:		music_metadata Mus_HTZ
-zMusIDPtr_ARZ:		music_metadata Mus_ARZ
-zMusIDPtr_CNZ_2P:	music_metadata Mus_CNZ_2P
-zMusIDPtr_CNZ:		music_metadata Mus_CNZ
-zMusIDPtr_DEZ:		music_metadata Mus_DEZ
-zMusIDPtr_MCZ:		music_metadata Mus_MCZ
-zMusIDPtr_EHZ_2P:	music_metadata Mus_EHZ_2P
-zMusIDPtr_SCZ:		music_metadata Mus_SCZ
-zMusIDPtr_CPZ:		music_metadata Mus_CPZ
-zMusIDPtr_WFZ:		music_metadata Mus_WFZ
-zMusIDPtr_HPZ:		music_metadata Mus_HPZ
-zMusIDPtr_Options:	music_metadata Mus_Options
-zMusIDPtr_SpecStage:	music_metadata Mus_SpecStage
-zMusIDPtr_Boss:		music_metadata Mus_Boss
-zMusIDPtr_EndBoss:	music_metadata Mus_EndBoss
-zMusIDPtr_Ending:	music_metadata Mus_Ending
-zMusIDPtr_SuperSonic:	music_metadata Mus_SuperSonic
-zMusIDPtr_Invincible:	music_metadata Mus_Invincible
-zMusIDPtr_ExtraLife:	music_metadata Mus_ExtraLife
-zMusIDPtr_Title:	music_metadata Mus_Title
-zMusIDPtr_EndLevel:	music_metadata Mus_EndLevel
-zMusIDPtr_GameOver:	music_metadata Mus_GameOver
-zMusIDPtr_Continue:	music_metadata Mus_Continue
-zMusIDPtr_Emerald:	music_metadata Mus_Emerald
-zMusIDPtr_Credits:	music_metadata Mus_Credits
-zMusIDPtr_Countdown:	music_metadata Mus_Drowning,MusFlag_SlowerOnPAL
+
+; Music IDs
+; bank         - Which bank that the song is in.
+; pal          - Whether the song should play slower on PAL consoles.
+; uncompressed - Whether the song data is uncompressed or not.
+; label        - The location of the song data's pointer.
+music_metadata macro bank,pal,uncompressed,label
+    if bank
+.base = MusicPoint2
+    else
+.base = MusicPoint1
+    endif
+	db	(bank<<7)|(pal<<6)|(uncompressed<<5)|((label-.base)/2)
+    endm
+
+zMusIDPtr_2PResult:	music_metadata 1,0,0,MusPtr_2PResult
+zMusIDPtr_EHZ:		music_metadata 1,0,0,MusPtr_EHZ
+zMusIDPtr_MCZ_2P:	music_metadata 1,0,0,MusPtr_MCZ_2P
+zMusIDPtr_OOZ:		music_metadata 1,0,0,MusPtr_OOZ
+zMusIDPtr_MTZ:		music_metadata 1,0,0,MusPtr_MTZ
+zMusIDPtr_HTZ:		music_metadata 1,0,0,MusPtr_HTZ
+zMusIDPtr_ARZ:		music_metadata 1,0,0,MusPtr_ARZ
+zMusIDPtr_CNZ_2P:	music_metadata 1,0,0,MusPtr_CNZ_2P
+zMusIDPtr_CNZ:		music_metadata 1,0,0,MusPtr_CNZ
+zMusIDPtr_DEZ:		music_metadata 1,0,0,MusPtr_DEZ
+zMusIDPtr_MCZ:		music_metadata 1,0,0,MusPtr_MCZ
+zMusIDPtr_EHZ_2P:	music_metadata 1,0,0,MusPtr_EHZ_2P
+zMusIDPtr_SCZ:		music_metadata 1,0,0,MusPtr_SCZ
+zMusIDPtr_CPZ:		music_metadata 1,0,0,MusPtr_CPZ
+zMusIDPtr_WFZ:		music_metadata 1,0,0,MusPtr_WFZ
+zMusIDPtr_HPZ:		music_metadata 1,0,0,MusPtr_HPZ
+zMusIDPtr_Options:	music_metadata 1,0,0,MusPtr_Options
+zMusIDPtr_SpecStage:	music_metadata 1,0,0,MusPtr_SpecStage
+zMusIDPtr_Boss:		music_metadata 1,0,0,MusPtr_Boss
+zMusIDPtr_EndBoss:	music_metadata 1,0,0,MusPtr_EndBoss
+zMusIDPtr_Ending:	music_metadata 1,0,0,MusPtr_Ending
+zMusIDPtr_SuperSonic:	music_metadata 1,0,0,MusPtr_SuperSonic
+zMusIDPtr_Invincible:	music_metadata 1,0,0,MusPtr_Invincible
+zMusIDPtr_ExtraLife:	music_metadata 1,0,1,MusPtr_ExtraLife
+zMusIDPtr_Title:	music_metadata 1,0,0,MusPtr_Title
+zMusIDPtr_EndLevel:	music_metadata 1,0,0,MusPtr_EndLevel
+zMusIDPtr_GameOver:	music_metadata 1,0,1,MusPtr_GameOver
+zMusIDPtr_Continue:	music_metadata 0,0,0,MusPtr_Continue
+zMusIDPtr_Emerald:	music_metadata 1,0,1,MusPtr_Emerald
+zMusIDPtr_Credits:	music_metadata 1,0,1,MusPtr_Credits
+zMusIDPtr_Countdown:	music_metadata 1,1,0,MusPtr_Drowning
 zMusIDPtr__End:
 
 ; Tempo with speed shoe tempo for each song
@@ -3864,31 +3842,39 @@ zSpedUpTempoTable:
 	db	0CDh,0AAh,0F2h,0DBh
 	db	0D5h,0F0h, 80h
 
-dac_sample_pointer macro label
-label.pointer = $
-	dw	zmake68kPtr(label)
-	dw	label.size
-    endm
-
 	; DAC sample pointers and lengths
-	ensure1byteoffset 2*2*7
+	ensure1byteoffset 1Ch
 
 ; zDACPtr_Index zbyte_1233
 zDACPtrTbl:
-zDACLenTbl = zDACPtrTbl + 2
-	dac_sample_pointer SndDAC_Kick
-	dac_sample_pointer SndDAC_Snare
-	dac_sample_pointer SndDAC_Clap
-	dac_sample_pointer SndDAC_Scratch
-	dac_sample_pointer SndDAC_Timpani
-	dac_sample_pointer SndDAC_Tom
-	dac_sample_pointer SndDAC_Bongo
+zDACPtr_Kick:		dw	zmake68kPtr(SndDAC_Kick)
+; zbyte_1235
+zDACLenTbl:
+			dw	SndDAC_Kick_End-SndDAC_Kick
+
+zDACPtr_Snare:		dw	zmake68kPtr(SndDAC_Snare)
+			dw	SndDAC_Snare_End-SndDAC_Snare
+
+zDACPtr_Clap:		dw	zmake68kPtr(SndDAC_Clap)
+			dw	SndDAC_Clap_End-SndDAC_Clap
+
+zDACPtr_Scratch:	dw	zmake68kPtr(SndDAC_Scratch)
+			dw	SndDAC_Scratch_End-SndDAC_Scratch
+
+zDACPtr_Timpani:	dw	zmake68kPtr(SndDAC_Timpani)
+			dw	SndDAC_Timpani_End-SndDAC_Timpani
+
+zDACPtr_Tom:		dw	zmake68kPtr(SndDAC_Tom)
+			dw	SndDAC_Tom_End-SndDAC_Tom
+
+zDACPtr_Bongo:		dw	zmake68kPtr(SndDAC_Bongo)
+			dw	SndDAC_Bongo_End-SndDAC_Bongo
 
 	; something else for DAC sounds
 	; First byte selects one of the DAC samples. The number that
 	; follows it is a wait time between each nibble written to the DAC
 	; (thus higher = slower)
-	ensure1byteoffset 2*11h
+	ensure1byteoffset 22h
 ; zbyte_124F
 zDACMasterPlaylist:
 
@@ -3897,31 +3883,27 @@ offset :=	zDACPtrTbl
 ptrsize :=	2+2
 idstart :=	81h
 
-dac_sample_metadata macro label,sampleRateScale
-sample_rate_scale := 1.0
-    if "sampleRateScale"<>""
-sample_rate_scale := sampleRateScale
-    endif
-	db	id(label.pointer),dpcmLoopCounter(int(label.sample_rate*sample_rate_scale))
+dac_sample_metadata macro label,sampleRate
+	db	id(label),dpcmLoopCounter(sampleRate)
     endm
 
-	dac_sample_metadata SndDAC_Kick			; 81h
-	dac_sample_metadata SndDAC_Snare,		; 82h
-	dac_sample_metadata SndDAC_Clap,		; 83h
-	dac_sample_metadata SndDAC_Scratch,		; 84h
-	dac_sample_metadata SndDAC_Timpani,		; 85h
-	dac_sample_metadata SndDAC_Tom,			; 86h
-	dac_sample_metadata SndDAC_Bongo,		; 87h
-	dac_sample_metadata SndDAC_Timpani, 1.30	; 88h
-	dac_sample_metadata SndDAC_Timpani, 1.20	; 89h
-	dac_sample_metadata SndDAC_Timpani, 0.97	; 8Ah
-	dac_sample_metadata SndDAC_Timpani, 0.95	; 8Bh
-	dac_sample_metadata SndDAC_Tom,     1.70	; 8Ch
-	dac_sample_metadata SndDAC_Tom,     1.30	; 8Dh
-	dac_sample_metadata SndDAC_Tom,     1.10	; 8Eh
-	dac_sample_metadata SndDAC_Bongo,   2.00	; 8Fh
-	dac_sample_metadata SndDAC_Bongo,   1.75	; 90h
-	dac_sample_metadata SndDAC_Bongo,   1.30	; 91h
+	dac_sample_metadata zDACPtr_Kick,    8250	; 81h
+	dac_sample_metadata zDACPtr_Snare,  24000	; 82h
+	dac_sample_metadata zDACPtr_Clap,   17000	; 83h
+	dac_sample_metadata zDACPtr_Scratch,15000	; 84h
+	dac_sample_metadata zDACPtr_Timpani, 7500	; 85h
+	dac_sample_metadata zDACPtr_Tom,    14000	; 86h
+	dac_sample_metadata zDACPtr_Bongo,   7500	; 87h
+	dac_sample_metadata zDACPtr_Timpani, 9750	; 88h
+	dac_sample_metadata zDACPtr_Timpani, 8750	; 89h
+	dac_sample_metadata zDACPtr_Timpani, 7250	; 8Ah
+	dac_sample_metadata zDACPtr_Timpani, 7000	; 8Bh
+	dac_sample_metadata zDACPtr_Tom,    23000	; 8Ch
+	dac_sample_metadata zDACPtr_Tom,    18000	; 8Dh
+	dac_sample_metadata zDACPtr_Tom,    15000	; 8Eh
+	dac_sample_metadata zDACPtr_Bongo,  15000	; 8Fh
+	dac_sample_metadata zDACPtr_Bongo,  13000	; 90h
+	dac_sample_metadata zDACPtr_Bongo,   9750	; 91h
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 

@@ -1,6 +1,14 @@
 ; >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; simplifying macros and functions
 
+locVRAM:	macro loc,controlport
+		if ("controlport"=="")
+		move.l	#($40000000+(((loc)&$3FFF)<<16)+(((loc)&$C000)>>14)),(VDP_control_port).l
+		else
+		move.l	#($40000000+(((loc)&$3FFF)<<16)+(((loc)&$C000)>>14)),controlport
+		endif
+		endm
+
 ; makes a VDP address difference
 vdpCommDelta function addr,((addr&$3FFF)<<16)|((addr&$C000)>>14)
 
@@ -43,16 +51,16 @@ dmaFillVRAM macro byte,addr,length
     endm
 
 ; calculates initial loop counter value for a dbf loop
-; that writes n bytes total at x bytes per iteration
-bytesToXcnt function n,x,n/x-1
-
-; calculates initial loop counter value for a dbf loop
 ; that writes n bytes total at 4 bytes per iteration
-bytesToLcnt function n,bytesToXcnt(n,4)
+bytesToLcnt function n,n>>2-1
 
 ; calculates initial loop counter value for a dbf loop
 ; that writes n bytes total at 2 bytes per iteration
-bytesToWcnt function n,bytesToXcnt(n,2)
+bytesToWcnt function n,n>>1-1
+
+; calculates initial loop counter value for a dbf loop
+; that writes n bytes total at x bytes per iteration
+bytesToXcnt function n,x,n/x-1
 
 ; fills a region of 68k RAM with 0
 clearRAM macro startaddr,endaddr
@@ -115,7 +123,7 @@ DebugSoundbanks := 0
 
 finishBank macro
 	if * > soundBankStart + $8000
-		fatal "soundBank \{soundBankName} must fit in $8000 bytes but was $\{*-soundBankStart}. Try moving something to the other bank."
+		;fatal "soundBank \{soundBankName} must fit in $8000 bytes but was $\{*-soundBankStart}. Try moving something to the other bank."
 	elseif (DebugSoundbanks<>0)&&(MOMPASS=1)
 		message "soundBank \{soundBankName} has $\{$8000+soundBankStart-*} bytes free at end."
 	endif
@@ -263,8 +271,6 @@ make_art_tile_2p function addr,pal,pri,((pri&1)<<15)|((pal&3)<<13)|((addr&tile_m
 make_block_tile function addr,flx,fly,pal,pri,((pri&1)<<15)|((pal&3)<<13)|((fly&1)<<12)|((flx&1)<<11)|(addr&tile_mask)
 make_block_tile_2p function addr,flx,fly,pal,pri,((pri&1)<<15)|((pal&3)<<13)|((fly&1)<<12)|((flx&1)<<11)|((addr&tile_mask)>>1)
 tiles_to_bytes function addr,((addr&$7FF)<<5)
-tiles_to_words function addr,tiles_to_bytes(addr)/2
-tiles_to_longwords function addr,tiles_to_bytes(addr)/4
 make_block_tile_pair function addr,flx,fly,pal,pri,((make_block_tile(addr,flx,fly,pal,pri)<<16)|make_block_tile(addr,flx,fly,pal,pri))
 make_block_tile_pair_2p function addr,flx,fly,pal,pri,((make_block_tile_2p(addr,flx,fly,pal,pri)<<16)|make_block_tile_2p(addr,flx,fly,pal,pri))
 
@@ -275,7 +281,6 @@ planeLoc function width,col,line,(((width * line) + col) * 2)
 menutxt	macro	text
 	dc.b	strlen(text)-1
 	dc.b	text
-	rev02even
 	endm
 
 childObjectData macro objoff, objectID, subtype
@@ -283,29 +288,17 @@ childObjectData macro objoff, objectID, subtype
 	dc.b	objectID, subtype
 	endm
 
-; macro to simplify editing the demo scripts
-demoinput macro buttons,duration
-btns_mask := 0
-  irpc btn,"buttons"
-    switch "btn"
-    case "U"
-btns_mask := btns_mask|button_up_mask
-    case "D"
-btns_mask := btns_mask|button_down_mask
-    case "L"
-btns_mask := btns_mask|button_left_mask
-    case "R"
-btns_mask := btns_mask|button_right_mask
-    case "A"
-btns_mask := btns_mask|button_A_mask
-    case "B"
-btns_mask := btns_mask|button_B_mask
-    case "C"
-btns_mask := btns_mask|button_C_mask
-    case "S"
-btns_mask := btns_mask|button_start_mask
-    elsecase
-    endcase
-  endm
-	dc.b	btns_mask,duration-1
- endm
+out_of_range:	macro exit,pos
+		if ("pos"<>"")
+		move.w	pos,d0		; get object position (if specified as not obX)
+		else
+		move.w	obX(a0),d0	; get object position
+		endif
+		andi.w	#$FF80,d0	; round down to nearest $80
+		move.w	(Camera_X_Pos).w,d1 ; get screen position
+		subi.w	#128,d1
+		andi.w	#$FF80,d1
+		sub.w	d1,d0		; approx distance between object and screen
+		cmpi.w	#128+320+192,d0
+		bhi.ATTRIBUTE	exit
+		endm
