@@ -25472,14 +25472,14 @@ Obj2E_Raise:
 ; ===========================================================================
 Obj2E_Types:	offsetTable
 		offsetTableEntry.w robotnik_monitor	; 0 - Static
-		offsetTableEntry.w sonic_1up		; 1 - Sonic 1-up
-		offsetTableEntry.w tails_1up		; 2 - Tails 1-up
-		offsetTableEntry.w robotnik_monitor	; 3 - Robotnik
-		offsetTableEntry.w super_ring		; 4 - Super Ring
-		offsetTableEntry.w super_shoes		; 5 - Speed Shoes
-		offsetTableEntry.w shield_monitor	; 6 - Shield
+		offsetTableEntry.w robotnik_monitor		; 1 - Sonic 1-up
+		offsetTableEntry.w sonic_1up		; 2 - Tails 1-up
+		offsetTableEntry.w super_shoes	; 3 - Robotnik
+		offsetTableEntry.w shield_monitor		; 4 - Super Ring
+		offsetTableEntry.w invincible_monitor		; 5 - Speed Shoes
+		offsetTableEntry.w super_ring	; 6 - Shield
 		offsetTableEntry.w invincible_monitor	; 7 - Invincibility
-		offsetTableEntry.w teleport_monitor	; 8 - Teleport
+		offsetTableEntry.w shield_monitor	; 8 - Teleport
 		offsetTableEntry.w qmark_monitor	; 9 - Question mark
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -25850,15 +25850,15 @@ Obj2E_Wait:
 ; off_12CCE:
 Ani_obj26:	offsetTable
 		offsetTableEntry.w Ani_obj26_Static		;  0
-		offsetTableEntry.w Ani_obj26_Sonic		;  1
-		offsetTableEntry.w Ani_obj26_Tails		;  2
-		offsetTableEntry.w Ani_obj26_Eggman		;  3
-		offsetTableEntry.w Ani_obj26_Ring		;  4
-		offsetTableEntry.w Ani_obj26_Shoes		;  5
-		offsetTableEntry.w Ani_obj26_Shield		;  6
+		offsetTableEntry.w Ani_obj26_Eggman		;  1
+		offsetTableEntry.w Ani_obj26_Sonic		;  2
+		offsetTableEntry.w Ani_obj26_Shoes		;  3
+		offsetTableEntry.w Ani_obj26_Shield		;  4
+		offsetTableEntry.w Ani_obj26_Invincibility		;  5
+		offsetTableEntry.w Ani_obj26_Ring		;  6
 		offsetTableEntry.w Ani_obj26_Invincibility	;  7
 		offsetTableEntry.w Ani_obj26_Teleport		;  8
-		offsetTableEntry.w Ani_obj26_QuestionMark	;  9
+		offsetTableEntry.w Ani_obj26_Broken	;  9
 		offsetTableEntry.w Ani_obj26_Broken		; $A
 ; byte_12CE4:
 Ani_obj26_Static:
@@ -44741,92 +44741,104 @@ JmpTo7_Adjust2PArtPointer ; JmpTo
 ; ----------------------------------------------------------------------------
 ; Sprite_2009C:
 Obj0B:
-	moveq	#0,d0
-	move.b	routine(a0),d0
-	move.w	Obj0B_Index(pc,d0.w),d1
-	jmp	Obj0B_Index(pc,d1.w)
+		moveq	#0,d0
+		move.b	obRoutine(a0),d0
+		move.w	Pole_Index(pc,d0.w),d1
+		jmp	Pole_Index(pc,d1.w)
 ; ===========================================================================
-; off_200AA:
-Obj0B_Index:	offsetTable
-		offsetTableEntry.w Obj0B_Init	; 0
-		offsetTableEntry.w loc_20104	; 2
-		offsetTableEntry.w loc_20112	; 4
+Pole_Index:	dc.w Pole_Main-Pole_Index
+		dc.w Pole_Action-Pole_Index
+		dc.w Pole_Display-Pole_Index
+
+pole_time = objoff_30		; time between grabbing the pole & breaking
+pole_grabbed = objoff_32		; flag set when Sonic grabs the pole
 ; ===========================================================================
 
-obj0B_duration_current = objoff_30
-obj0B_duration_initial = objoff_32
-obj0B_delay = objoff_36
+Pole_Main:	; Routine 0
+		addq.b	#2,obRoutine(a0)
+		move.l	#Map_Pole,obMap(a0)
+		move.w	#make_art_tile(ArtTile_LZ_Pole,2,0),obGfx(a0)
+		move.b	#4,obRender(a0)
+		move.b	#8,obActWid(a0)
+		move.b	#4,obPriority(a0)
+		move.b	#$E1,obColType(a0)
+		moveq	#0,d0
+		move.b	obSubtype(a0),d0 ; get object type
+		mulu.w	#60,d0		; multiply by 60 (1 second)
+		move.w	d0,pole_time(a0) ; set breakage time
 
-; loc_200B0:
-Obj0B_Init:
-	addq.b	#2,routine(a0)
-	move.l	#Obj0B_MapUnc_201A0,mappings(a0)
-	move.w	#make_art_tile(ArtTile_ArtNem_CPZAnimatedBits,3,1),art_tile(a0)
-	jsrto	Adjust2PArtPointer, JmpTo8_Adjust2PArtPointer
-	ori.b	#4,render_flags(a0)
-	move.b	#$10,width_pixels(a0)
-	move.b	#4,priority(a0)
-	moveq	#0,d0
-	move.b	subtype(a0),d0
-	andi.w	#$F0,d0
-	addi.w	#$10,d0
-	move.w	d0,d1
-	subq.w	#1,d0
-	move.w	d0,obj0B_duration_current(a0)
-	move.w	d0,obj0B_duration_initial(a0)
-	moveq	#0,d0
-	move.b	subtype(a0),d0
-	andi.w	#$F,d0
-	addq.w	#1,d0
-	lsl.w	#4,d0
-	move.b	d0,obj0B_delay(a0)
+Pole_Action:	; Routine 2
+		tst.b	pole_grabbed(a0) ; has pole already been grabbed?
+		beq.s	.grab		; if not, branch
+		tst.w	pole_time(a0)
+		beq.s	.moveup
+		subq.w	#1,pole_time(a0) ; decrement time until break
+		bne.s	.moveup
+		move.b	#1,obFrame(a0)	; break the pole
+		bra.s	.release
+; ===========================================================================
 
-loc_20104:
-	move.b	(Vint_runcount+3).w,d0
-	add.b	obj0B_delay(a0),d0
-	bne.s	loc_2013C
-	addq.b	#2,routine(a0)
+.moveup:
+		lea	(v_player).w,a1
+		move.w	obY(a0),d0
+		subi.w	#$18,d0
+		btst	#bitUp,(Ctrl_1_Held).w ; is "up" pressed?
+		beq.s	.movedown	; if not, branch
+		subq.w	#1,obY(a1)	; move Sonic up
+		cmp.w	obY(a1),d0
+		blo.s	.movedown
+		move.w	d0,obY(a1)
 
-loc_20112:
-	subq.w	#1,obj0B_duration_current(a0)
-	bpl.s	loc_20130
-	move.w	#$7F,obj0B_duration_current(a0)
-	tst.b	anim(a0)
-	beq.s	+
-	move.w	obj0B_duration_initial(a0),obj0B_duration_current(a0)
-+
-	bchg	#0,anim(a0)
+.movedown:
+		addi.w	#$24,d0
+		btst	#bitDn,(Ctrl_1_Held).w ; is "down" pressed?
+		beq.s	.letgo		; if not, branch
+		addq.w	#1,obY(a1)	; move Sonic down
+		cmp.w	obY(a1),d0
+		bhs.s	.letgo
+		move.w	d0,obY(a1)
 
-loc_20130:
-	lea	(Ani_obj0B).l,a1
-	jsr	(AnimateSprite).l
+.letgo:
+		move.b	(Ctrl_1_Held_Logical).w,d0
+		andi.w	#btnABC,d0	; is A/B/C pressed?
+		beq.s	Pole_Display	; if not, branch
 
-loc_2013C:
-	tst.b	mapping_frame(a0)
-	bne.s	+
-	moveq	#0,d1
-	move.b	width_pixels(a0),d1
-	moveq	#$11,d3
-	move.w	x_pos(a0),d4
-	bsr.w	PlatformObject
-	jmpto	MarkObjGone, JmpTo3_MarkObjGone
-; ---------------------------------------------------------------------------
-+
-	move.b	status(a0),d0
-	andi.b	#standing_mask,d0
-	beq.s	BranchTo_JmpTo3_MarkObjGone
-	bclr	#p1_standing_bit,status(a0)
-	beq.s	+
-	bclr	#3,(MainCharacter+status).w
-	bset	#1,(MainCharacter+status).w
-+
-	bclr	#p2_standing_bit,status(a0)
-	beq.s	BranchTo_JmpTo3_MarkObjGone
-	bclr	#3,(Sidekick+status).w
-	bset	#1,(Sidekick+status).w
+.release:
+		clr.b	obColType(a0)
+		addq.b	#2,obRoutine(a0) ; goto Pole_Display next
+		clr.b	(obj_control+v_player).w
+		clr.b	(WindTunnel_holding_flag).w
+		clr.b	pole_grabbed(a0)
+		bra.s	Pole_Display
+; ===========================================================================
 
-BranchTo_JmpTo3_MarkObjGone ; BranchTo
-	jmpto	MarkObjGone, JmpTo3_MarkObjGone
+.grab:
+		tst.b	obColProp(a0)	; has Sonic touched the pole?
+		beq.s	Pole_Display	; if not, branch
+		lea	(v_player).w,a1
+		move.w	obX(a0),d0
+		addi.w	#$14,d0
+		cmp.w	obX(a1),d0
+		bhs.s	Pole_Display
+		clr.b	obColProp(a0)
+		cmpi.b	#4,obRoutine(a1)
+		bhs.s	Pole_Display
+		clr.w	obVelX(a1)	; stop Sonic moving
+		clr.w	obVelY(a1)	; stop Sonic moving
+		move.w	obX(a0),d0
+		addi.w	#$14,d0
+		move.w	d0,obX(a1)
+		bclr	#0,obStatus(a1)
+		move.b	#id_Hang,obAnim(a1) ; set Sonic's animation to "hanging" ($11)
+		move.b	#1,obj_control(a1) ; lock controls
+		move.b	#1,(WindTunnel_holding_flag).w ; disable wind tunnel
+		move.b	#1,pole_grabbed(a0) ; begin countdown to breakage
+
+Pole_Display:	; Routine 4
+		jmp	(MarkObjGone).l
+
+Map_Pole:	include	"_maps/Pole that Breaks.asm"
+
 ; ===========================================================================
 ; animation script
 ; off_2018C:
@@ -91123,7 +91135,7 @@ Off_Objects: zoneOrderedOffsetTable 2,2
 	zoneOffsetTableEntry.w  Objects_Null	; Act 1
 	zoneOffsetTableEntry.w  Objects_Null	; Act 2
 	; OOZ
-	zoneOffsetTableEntry.w  Objects_Null	; Act 1
+	zoneOffsetTableEntry.w  Objects_OOZ_1	; Act 1
 	zoneOffsetTableEntry.w  Objects_OOZ_2	; Act 2
 	; MCZ
 	zoneOffsetTableEntry.w  Objects_MCZ_1	; Act 1
@@ -91180,7 +91192,7 @@ Objects_HPZ_2:	BINCLUDE	"level/objects/HPZ_2.bin"
 	ObjectLayoutBoundary
 	; Oddly, there's a gap for another layout here
 	ObjectLayoutBoundary
-Objects_OOZ_1:	BINCLUDE	"level/objects/OOZ_1.bin"
+Objects_OOZ_1:	BINCLUDE	"level/objects/lz3.bin"
 	ObjectLayoutBoundary
 Objects_OOZ_2:	BINCLUDE	"level/objects/OOZ_2.bin"
 	ObjectLayoutBoundary

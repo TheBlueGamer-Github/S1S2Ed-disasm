@@ -1,6 +1,27 @@
 ; >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; Equates section - Names for variables.
 
+Camera_X_Pos = Camera_X_pos ; Here so out_of_range.w works
+
+bitUp:		equ 0
+bitDn:		equ 1
+bitL:		equ 2
+bitR:		equ 3
+bitB:		equ 4
+bitC:		equ 5
+bitA:		equ 6
+bitStart:	equ 7
+btnUp:		equ 1<<bitUp			; ($01)
+btnDn:		equ 1<<bitDn			; ($02)
+btnL:		equ 1<<bitL			; ($04)
+btnR:		equ 1<<bitR			; ($08)
+btnB:		equ 1<<bitB			; ($10)
+btnC:		equ 1<<bitC			; ($20)
+btnA:		equ 1<<bitA			; ($40)
+btnStart:	equ 1<<bitStart			; ($80)
+btnDir:		equ btnUp|btnDn|btnL|btnR	; ($0F)
+btnABC:		equ btnA|btnB|btnC		; ($70)
+
 ; ---------------------------------------------------------------------------
 ; size variables - you'll get an informational error if you need to change these...
 ; they are all in units of bytes
@@ -1220,7 +1241,7 @@ Verti_block_crossed_flag:	ds.b	1	; toggles between 0 and $10 when you cross a bl
 Horiz_block_crossed_flag_BG:	ds.b	1	; toggles between 0 and $10 when background camera crosses a block boundary horizontally
 Verti_block_crossed_flag_BG:	ds.b	1	; toggles between 0 and $10 when background camera crosses a block boundary vertically
 Horiz_block_crossed_flag_BG2:	ds.b	1	; used in CPZ
-				ds.b	1	; $FFFFEE45 ; seems unused
+f_wtunnelallow:				ds.b	1	; $FFFFEE45 ; seems unused
 Horiz_block_crossed_flag_BG3:	ds.b	1
 				ds.b	1	; $FFFFEE47 ; seems unused
 Block_Crossed_Flags_End:
@@ -2521,6 +2542,8 @@ ArtTile_ArtNem_CPZMetalBlock          = $0430
 ArtTile_ArtNem_CPZDroplet             = $043C
 ArtTile_ArtNem_Grabber                = $0500
 ArtTile_ArtNem_Spiny                  = $052D
+ArtTile_LZ_Spikeball_Chain:	equ $310
+ArtTile_LZ_Flapping_Door:	equ $328
 ArtTile_Burrobot:		equ $04A6
 ArtTile_LZ_Moving_Block:	equ $3BC
 ArtTile_LZ_Door:		equ $3C4
@@ -2533,7 +2556,8 @@ ArtTile_LZ_Sonic_Drowning:	equ $440
 ArtTile_LZ_Rising_Platform:	equ ArtTile_LZ_Blocks+$69
 ArtTile_LZ_Orbinaut:		equ $467
 ArtTile_LZ_Cork:		equ ArtTile_LZ_Blocks+$11A
-
+ArtTile_Jaws:			equ $486
+ArtTile_LZ_Splash:		equ $25F
 ; DEZ
 ArtTile_ArtUnc_DEZAnimBack            = $0326
 ArtTile_ArtNem_ConstructionStripes_1  = $0328
