@@ -6643,7 +6643,7 @@ SpecialStage:
 	bra.s	-
 ; ===========================================================================
 +
-	andi.b	#7,(Emerald_count).w
+	andi.b	#6,(Emerald_count).w
 	tst.b	(SS_2p_Flag).w
 	beq.s	+
 	lea	(SS2p_RingBuffer).w,a0
@@ -9695,11 +9695,15 @@ id_EndChaos = $88
 id_EndSTH = $89
 echa_radius = $3C
 Obj87:
+		cmpi.b	#GameModeID_SpecialStage,(Game_Mode).w ; => SpecialStage
+		beq.s	+
 		moveq	#0,d0
 		move.b	ob2ndRout(a0),d0
 		move.w	ESon_Index(pc,d0.w),d1
 		jsr	ESon_Index(pc,d1.w)
 		jmp	(DisplaySprite).l
++
+		rts
 ; ===========================================================================
 ESon_Index:	dc.w ESon_Main-ESon_Index, ESon_MakeEmeralds-ESon_Index
 		dc.w Obj87_Animate-ESon_Index,	Obj87_LookUp-ESon_Index
@@ -12670,7 +12674,7 @@ CheckCheats:	; This is called from 2 places: the options screen and the level se
 	bra.s	++
 ; ===========================================================================
 +
-	move.w	#7,(Got_Emerald).w		; Give 7 emeralds to the player
+	move.w	#6,(Got_Emerald).w		; Give 7 emeralds to the player
 	move.b	#MusID_Emerald,d0		; Play the emerald jingle
 	jsrto	PlayMusic, JmpTo_PlayMusic
 +
@@ -12796,7 +12800,7 @@ EndingSequence:
 	move.w	#$8ADF,(Hint_counter_reserve).w	; H-INT every 224th scanline
 	move.w	(Hint_counter_reserve).w,(a6)
 	clr.b	(Super_Sonic_flag).w
-	cmpi.b	#7,(Emerald_count).w
+	cmpi.b	#6,(Emerald_count).w
 	bne.s	+
 	cmpi.w	#2,(Player_mode).w
 	beq.s	+
@@ -19801,8 +19805,10 @@ DynamicLevelEventIndex: zoneOrderedOffsetTable 2,1
 ; ===========================================================================
 ; loc_E658:
 LevEvents_EHZ:
-	tst.b	(Current_Act).w
-	bne.s	LevEvents_EHZ2
+	cmpi.b	#1,(Current_Act).w
+	beq.s	LevEvents_EHZ2
+	cmpi.b	#2,(Current_Act).w
+	beq.w	LevEvents_001
 	bra.s	LevEvents_EHZ1
 	rts
 ; ---------------------------------------------------------------------------
@@ -20040,7 +20046,7 @@ LevEvents_MTZ:
 ; ===========================================================================
 DLE_SBZx:	dc.w DLE_SBZ1-DLE_SBZx
 		dc.w DLE_SBZ2-DLE_SBZx
-		;dc.w DLE_FZ-DLE_SBZx
+		dc.w DLE_FZ-DLE_SBZx
 ; ===========================================================================
 
 DLE_SBZ1:
@@ -20124,6 +20130,7 @@ loc_72C2:
 ; ===========================================================================
 ; loc_E75A:
 LevEvents_MTZ3:
+DLE_FZ:
 		moveq	#0,d0
 		move.b	(Dynamic_Resize_Routine).w,d0
 		move.w	off_72D8(pc,d0.w),d0
@@ -26907,6 +26914,8 @@ return_14138:
 ; ===========================================================================
 
 loc_1413A:
+	cmpi.w	#metropolis_zone_act_2,(Current_ZoneAndAct).w
+	beq.w	loc_C766
 	tst.w	(Perfect_rings_left).w
 	bne.w	DeleteObject
 
@@ -26978,6 +26987,11 @@ loc_141E6:
 	move.w	#SndID_TallyEnd,d0
 	jsr	(PlaySound).l
 	addq.b	#2,routine(a0)
+	cmpi.w	#metropolis_zone_act_2,(Current_ZoneAndAct).w
+	bne.s	Got_SetDelay
+	addq.b	#4,routine(a0)
+
+Got_SetDelay:
 	move.w	#$B4,anim_frame_duration(a0)
 	cmpi.w	#1000,(Total_Bonus_Countdown).w
 	blo.s	return_14254
@@ -27052,6 +27066,8 @@ Got_Display2:
 ; ===========================================================================
 
 loc_142B0:
+	cmpi.w	#metropolis_zone_act_2,(Current_ZoneAndAct).w
+	beq.w	loc_1419C
 	tst.w	anim_frame_duration(a0)
 	beq.s	loc_142BC
 	subq.w	#1,anim_frame_duration(a0)
@@ -27064,6 +27080,8 @@ loc_142BC:
 	jsr	(PlaySound).l
 
 loc_142CC:
+	cmpi.w	#metropolis_zone_act_2,(Current_ZoneAndAct).w
+	beq.w	Got_Move2
 	subq.w	#1,anim_frame_duration(a0)
 	bpl.s	loc_142E2
 	move.w	#$13,anim_frame_duration(a0)
@@ -27077,6 +27095,43 @@ loc_142E2:
 	btst	#4,(Level_frame_counter+1).w
 	bne.w	DisplaySprite
 	rts
+Got_Move2:	; Routine $E
+	moveq	#$20,d0
+	move.w	x_pixel(a0),d1
+	cmp.w	titlecard_x_source(a0),d1
+	beq.s	Got_SBZ2
+	bge.s	Got_ChgPos2
+	neg.w	d0
+
+Got_ChgPos2:
+		add.w	d0,x_pixel(a0)	; change item's position
+		move.w	x_pixel(a0),d0
+		bmi.s	locret_C748
+		cmpi.w	#$200,d0	; has item moved beyond $200 on x-axis?
+		bhs.s	locret_C748	; if yes, branch
+		bra.w	DisplaySprite
+; ===========================================================================
+
+locret_C748:
+		rts	
+; ===========================================================================
+
+Got_SBZ2:
+		cmpi.b	#4,obFrame(a0)
+		bne.w	DeleteObject
+		addq.b	#2,obRoutine(a0)
+		;clr.b	(f_lockctrl).w	; unlock controls
+		;move.w	#bgm_FZ,d0
+		;jmp	(QueueSound1).l	; play FZ music
+		rts
+; ===========================================================================
+
+loc_C766:	; Routine $10
+		;addq.w	#2,(v_limitright2).w
+		;cmpi.w	#$2100,(v_limitright2).w
+		;beq.w	DeleteObject
+		rts	
+got_finalX = objoff_32		; position for card to finish on
 ; ===========================================================================
 ; -------------------------------------------------------------------------------
 ; Main game level order
@@ -27285,7 +27340,7 @@ Obj6F_InitEmeraldText:
 	beq.s	+
 	move.b	#4,mapping_frame(a0)		; "Chaos Emerald"
 +
-	cmpi.b	#7,(Emerald_count).w
+	cmpi.b	#6,(Emerald_count).w
 	bne.s	+
 	move.b	#$19,mapping_frame(a0)		; "Chaos Emeralds"
 +
@@ -27300,7 +27355,7 @@ BranchTo2_Obj34_MoveTowardsTargetPosition
 ; ===========================================================================
 ;loc_14484
 Obj6F_InitResultTitle:
-	cmpi.b	#7,(Emerald_count).w
+	cmpi.b	#6,(Emerald_count).w
 	bne.s	+
 	moveq	#$16,d0		; "Sonic has all the"
 	bra.s	++
@@ -27451,7 +27506,7 @@ Obj6F_TallyScore:
 	beq.s	++		; rts
 	tst.b	(Got_Emerald).w
 	beq.s	++		; rts
-	cmpi.b	#7,(Emerald_count).w
+	cmpi.b	#6,(Emerald_count).w
 	bne.s	++		; rts
 	move.b	#$30,routine(a0)	; => Obj6F_InitAndMoveSuperMsg
 	rts
@@ -27503,7 +27558,7 @@ Obj6F_TallyPerfect:
 	beq.s	+		; rts
 	tst.b	(Got_Emerald).w
 	beq.s	+		; rts
-	cmpi.b	#7,(Emerald_count).w
+	cmpi.b	#6,(Emerald_count).w
 	bne.s	+		; rts
 	move.b	#$30,routine(a0)	; => Obj6F_InitAndMoveSuperMsg
 +
@@ -36394,7 +36449,7 @@ return_1AB36:
 Sonic_CheckGoSuper:
 	tst.b	(Super_Sonic_flag).w	; is Sonic already Super?
 	bne.w	return_1ABA4		; if yes, branch
-	cmpi.b	#7,(Emerald_count).w	; does Sonic have exactly 7 emeralds?
+	cmpi.b	#6,(Emerald_count).w	; does Sonic have exactly 7 emeralds?
 	bne.w	return_1ABA4		; if not, branch
 	cmpi.w	#50,(Ring_count).w	; does Sonic have at least 50 rings?
 	blo.w	return_1ABA4		; if not, branch
@@ -43583,7 +43638,7 @@ Obj79_CheckActivation:
 	move.w	a0,parent(a1)
 	tst.w	(Two_player_mode).w
 	bne.s	loc_1F206
-	cmpi.b	#7,(Emerald_count).w
+	cmpi.b	#6,(Emerald_count).w
 	beq.s	loc_1F206
 	cmpi.w	#50,(Ring_count).w
 	blo.s	loc_1F206
@@ -48607,173 +48662,163 @@ JmpTo4_SolidObject ; JmpTo
 ; ----------------------------------------------------------------------------
 ; Sprite_23E40:
 Obj43:
-	moveq	#0,d0
-	move.b	routine(a0),d0
-	move.w	Obj43_Index(pc,d0.w),d1
-	jmp	Obj43_Index(pc,d1.w)
+		moveq	#0,d0
+		move.b	obRoutine(a0),d0
+		move.w	Roll_Index(pc,d0.w),d1
+		jmp	Roll_Index(pc,d1.w)
 ; ===========================================================================
-; off_23E4E:
-Obj43_Index:	offsetTable
-		offsetTableEntry.w Obj43_Init	; 0
-		offsetTableEntry.w loc_23F0A	; 2
-		offsetTableEntry.w loc_23F5C	; 4
-; ---------------------------------------------------------------------------
-byte_23E54:
-	dc.b   0
-	dc.b $68	; 1
-	dc.b   0	; 2
-	dc.b   0	; 3
-	dc.b   0	; 4
-	dc.b   0	; 5
-	dc.b   1	; 6
-	dc.b $E8	; 7
-	dc.b $FF	; 8
-	dc.b $E8	; 9
-	dc.b   0	; 10
-	dc.b $18	; 11
-	dc.b   1	; 12
-	dc.b $A8	; 13
-	dc.b $FF	; 14
-	dc.b $A8	; 15
-	dc.b $FF	; 16
-	dc.b $D8	; 17
-	even
-; ===========================================================================
-; loc_23E66:
-Obj43_Init:
-	addq.b	#2,routine(a0)
-	move.w	#make_art_tile(ArtTile_ArtNem_SpikyThing,2,1),art_tile(a0)
-	jsrto	Adjust2PArtPointer, JmpTo19_Adjust2PArtPointer
-	moveq	#0,d1
-	move.b	subtype(a0),d1
-	lea	byte_23E54(pc,d1.w),a2
-	move.b	(a2)+,d1
-	movea.l	a0,a1
-	bra.s	loc_23EA8
+Roll_Index:	dc.w Roll_Main-Roll_Index
+		dc.w Roll_Action-Roll_Index
 ; ===========================================================================
 
-loc_23E84:
-	jsrto	AllocateObjectAfterCurrent, JmpTo8_AllocateObjectAfterCurrent
-	bne.s	loc_23ED4
-	_move.b	id(a0),id(a1) ; load obj43
-	move.b	#4,routine(a1)
-	move.w	x_pos(a0),x_pos(a1)
-	move.w	y_pos(a0),y_pos(a1)
-	move.b	#1,objoff_36(a1)
+Roll_Main:	; Routine 0
+		move.b	#$E,obHeight(a0)
+		move.b	#8,obWidth(a0)
+		jsr	(ObjectMoveAndFall).l
+		jsr	(ObjCheckFloorDist).l
+		tst.w	d1
+		bpl.s	locret_E052
+		add.w	d1,obY(a0)	; match roller's position with the floor
+		move.w	#0,obVelY(a0)
+		addq.b	#2,obRoutine(a0)
+		move.l	#Map_Roll,obMap(a0)
+		move.w	#make_art_tile(ArtTile_Roller,0,0),obGfx(a0)
+		move.b	#4,obRender(a0)
+		move.b	#4,obPriority(a0)
+		move.b	#$10,obActWid(a0)
 
-loc_23EA8:
-	move.l	#Obj43_MapUnc_23FE0,mappings(a1)
-	move.w	art_tile(a0),art_tile(a1)
-	move.b	#4,render_flags(a1)
-	move.b	#4,priority(a1)
-	move.b	#$18,width_pixels(a1)
-	move.b	#$A5,collision_flags(a1)
-	move.w	x_pos(a1),objoff_30(a1)
-
-loc_23ED4:
-	dbf	d1,loc_23E84
-	move.l	a0,objoff_3C(a1)
-	move.l	a1,objoff_3C(a0)
-	moveq	#0,d1
-	move.b	(a2)+,d1
-	move.w	objoff_30(a0),d0
-	sub.w	d1,d0
-	move.w	d0,objoff_32(a0)
-	move.w	d0,objoff_32(a1)
-	add.w	d1,d0
-	add.w	d1,d0
-	move.w	d0,objoff_34(a0)
-	move.w	d0,objoff_34(a1)
-	move.w	(a2)+,d0
-	add.w	d0,x_pos(a0)
-	move.w	(a2)+,d0
-	add.w	d0,x_pos(a1)
-
-loc_23F0A:
-	bsr.s	loc_23F66
-	move.w	objoff_32(a0),d0
-	andi.w	#$FF80,d0
-	sub.w	(Camera_X_pos_coarse).w,d0
-	cmpi.w	#$280,d0
-	bls.s	JmpTo13_DisplaySprite
-	move.w	objoff_34(a0),d0
-	andi.w	#$FF80,d0
-	sub.w	(Camera_X_pos_coarse).w,d0
-	cmpi.w	#$280,d0
-	bhi.s	loc_23F36
-
-JmpTo13_DisplaySprite ; JmpTo
-	jmp	(DisplaySprite).l
+locret_E052:
+		rts	
 ; ===========================================================================
 
-loc_23F36:
-	movea.l	objoff_3C(a0),a1 ; a1=object
-	cmpa.l	a0,a1
-	beq.s	loc_23F44
-	jsr	(DeleteObject2).l
-
-loc_23F44:
-	lea	(Object_Respawn_Table).w,a2
-	moveq	#0,d0
-	move.b	respawn_index(a0),d0
-	beq.s	JmpTo24_DeleteObject
-	bclr	#7,Obj_respawn_data-Object_Respawn_Table(a2,d0.w)
-
-JmpTo24_DeleteObject ; JmpTo
-	jmp	(DeleteObject).l
+Roll_Action:	; Routine 2
+		moveq	#0,d0
+		move.b	ob2ndRout(a0),d0
+		move.w	Roll_Index2(pc,d0.w),d1
+		jsr	Roll_Index2(pc,d1.w)
+		lea	(Ani_Roll).l,a1
+		jsr	(AnimateSprite).l
+		move.w	obX(a0),d0
+		andi.w	#$FF80,d0
+		move.w	(Camera_X_pos).w,d1
+		subi.w	#$80,d1
+		andi.w	#$FF80,d1
+		sub.w	d1,d0
+		cmpi.w	#$280,d0
+		bgt.w	Roll_ChkGone
+		jmp	(DisplaySprite).l
 ; ===========================================================================
 
-loc_23F5C:
-	bsr.s	loc_23F66
-	bsr.s	loc_23FB0
-	jmp	(DisplaySprite).l
+Roll_ChkGone:
+		lea	(Object_Respawn_Table).w,a2
+		moveq	#0,d0
+		move.b	obRespawnNo(a0),d0
+		beq.s	Roll_Delete
+		bclr	#7,2(a2,d0.w)
+
+Roll_Delete:
+		jmp	(DeleteObject).l
+; ===========================================================================
+Roll_Index2:	dc.w Roll_RollChk-Roll_Index2
+		dc.w Roll_RollNoChk-Roll_Index2
+		dc.w Roll_ChkJump-Roll_Index2
+		dc.w Roll_MatchFloor-Roll_Index2
 ; ===========================================================================
 
-loc_23F66:
-	tst.b	objoff_36(a0)
-	bne.s	loc_23F8E
-	move.w	x_pos(a0),d1
-	subq.w	#1,d1
-	cmp.w	objoff_32(a0),d1
-	bne.s	loc_23F88
-	move.b	#1,objoff_36(a0)
-	move.w	#SndID_SlidingSpike,d0
-	jsr	(PlaySoundLocal).l
+Roll_RollChk:
+		move.w	(v_player+obX).w,d0
+		subi.w	#$100,d0
+		bcs.s	loc_E0D2
+		sub.w	obX(a0),d0	; check distance between Roller and Sonic
+		bcs.s	loc_E0D2
+		addq.b	#4,ob2ndRout(a0)
+		move.b	#2,obAnim(a0)
+		move.w	#$700,obVelX(a0) ; move Roller horizontally
+		move.b	#$8E,obColType(a0) ; make Roller invincible
 
-loc_23F88:
-	move.w	d1,x_pos(a0)
-	rts
+loc_E0D2:
+		addq.l	#4,sp
+		rts	
 ; ===========================================================================
 
-loc_23F8E:
-	move.w	x_pos(a0),d1
-	addq.w	#1,d1
-	cmp.w	objoff_34(a0),d1
-	bne.s	loc_23FAA
-	move.b	#0,objoff_36(a0)
-	move.w	#SndID_SlidingSpike,d0
-	jsr	(PlaySoundLocal).l
+Roll_RollNoChk:
+		cmpi.b	#2,obAnim(a0)
+		beq.s	loc_E0F8
+		subq.w	#1,objoff_30(a0)
+		bpl.s	locret_E0F6
+		move.b	#1,obAnim(a0)
+		move.w	#$700,obVelX(a0)
+		move.b	#$8E,obColType(a0)
 
-loc_23FAA:
-	move.w	d1,x_pos(a0)
-	rts
+locret_E0F6:
+		rts	
 ; ===========================================================================
 
-loc_23FB0:
-	movea.l	objoff_3C(a0),a1 ; a1=object
-	move.w	x_pos(a0),d0
-	subi.w	#$18,d0
-	move.w	x_pos(a1),d2
-	addi.w	#$18,d2
-	cmp.w	d0,d2
-	bne.s	return_23FDE
-	eori.b	#1,objoff_36(a0)
-	eori.b	#1,objoff_36(a1)
-	move.w	#SndID_SlidingSpike,d0
-	jsr	(PlaySoundLocal).l
+loc_E0F8:
+		addq.b	#2,ob2ndRout(a0)
+		rts	
+; ===========================================================================
 
-return_23FDE:
-	rts
+Roll_ChkJump:
+		bsr.w	Roll_Stop
+		jsr	(ObjectMove).l
+		jsr	(ObjCheckFloorDist).l
+		cmpi.w	#-8,d1
+		blt.s	Roll_Jump
+		cmpi.w	#$C,d1
+		bge.s	Roll_Jump
+		add.w	d1,obY(a0)
+		rts	
+; ===========================================================================
+
+Roll_Jump:
+		addq.b	#2,ob2ndRout(a0)
+		bset	#0,objoff_32(a0)
+		beq.s	locret_E12E
+		move.w	#-$600,obVelY(a0)	; move Roller vertically
+
+locret_E12E:
+		rts	
+; ===========================================================================
+
+Roll_MatchFloor:
+		jsr	(ObjectMoveAndFall).l
+		tst.w	obVelY(a0)
+		bmi.s	locret_E150
+		jsr	(ObjCheckFloorDist).l
+		tst.w	d1
+		bpl.s	locret_E150
+		add.w	d1,obY(a0)	; match Roller's position with the floor
+		subq.b	#2,ob2ndRout(a0)
+		move.w	#0,obVelY(a0)
+
+locret_E150:
+		rts	
+
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+
+
+Roll_Stop:
+		tst.b	objoff_32(a0)
+		bmi.s	locret_E188
+		move.w	(v_player+obX).w,d0
+		subi.w	#$30,d0
+		sub.w	obX(a0),d0
+		bcc.s	locret_E188
+		move.b	#0,obAnim(a0)
+		move.b	#$E,obColType(a0)
+		clr.w	obVelX(a0)
+		move.w	#120,objoff_30(a0)	; set waiting time to 2 seconds
+		move.b	#2,ob2ndRout(a0)
+		bset	#7,objoff_32(a0)
+
+locret_E188:
+		rts	
+; End of function Roll_Stop
+
+		include	"_anim/Roller.asm"
+Map_Roll:	include	"_maps/Roller.asm"
+
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; sprite mappings
@@ -61116,7 +61161,33 @@ Obj50_unkown5		= objoff_3A	; word
 Obj50_timer		= objoff_3C	; byte	; time spent following the player before shooting and time to wait before actually shooting
 
 Yad_ChkWall:
-	rts
+		move.w	(Level_frame_counter).w,d0
+		add.w	d7,d0
+		andi.w	#3,d0
+		bne.s	loc_F836
+		moveq	#0,d3
+		move.b	obActWid(a0),d3
+		tst.w	obVelX(a0)
+		bmi.s	loc_F82C
+		jsr	(ObjCheckRightWallDist).l
+		tst.w	d1
+		bpl.s	loc_F836
+
+loc_F828:
+		moveq	#1,d0
+		rts	
+; ===========================================================================
+
+loc_F82C:
+		not.w	d3
+		jsr	(ObjCheckLeftWallDist).l
+		tst.w	d1
+		bmi.s	loc_F828
+
+loc_F836:
+		moveq	#0,d0
+		rts	
+; End of function Yad_ChkWall
 ; Sprite_2CCC8:
 Obj50:
 		moveq	#0,d0
@@ -61302,8 +61373,8 @@ GRing_Collect:	; Routine 4
 		bset	#0,obRender(a1)	; reverse flash object
 
 GRing_PlaySnd:
-		;move.w	#sfx_GiantRing,d0
-		;jsr	(QueueSound2).l	; play giant ring sound
+		move.w	#SndID_EnterGiantRing,d0
+		jsr	(PlaySound2).l	; play giant ring sound
 		bra.s	GRing_Animate
 ; ===========================================================================
 
@@ -89988,7 +90059,7 @@ Off_Objects: zoneOrderedOffsetTable 2,2
 	zoneOffsetTableEntry.w  Objects_MCZ_1	; Act 1
 	zoneOffsetTableEntry.w  Objects_MCZ_2	; Act 2
 	; CNZ
-	zoneOffsetTableEntry.w  Objects_Null	; Act 1
+	zoneOffsetTableEntry.w  Objects_CNZ_1	; Act 1
 	zoneOffsetTableEntry.w  Objects_Null	; Act 2
 	; CPZ
 	zoneOffsetTableEntry.w  Objects_CPZ_1	; Act 1
@@ -90054,7 +90125,7 @@ Objects_CNZ_1:	BINCLUDE	"level/objects/CNZ_1 (REV00).bin"
 	ObjectLayoutBoundary
 Objects_CNZ_2:	BINCLUDE	"level/objects/CNZ_2 (REV00).bin"
     else
-Objects_CNZ_1:	BINCLUDE	"level/objects/CNZ_1.bin"
+Objects_CNZ_1:	BINCLUDE	"level/objects/syz1.bin"
 	ObjectLayoutBoundary
 Objects_CNZ_2:	BINCLUDE	"level/objects/CNZ_2.bin"
     endif
