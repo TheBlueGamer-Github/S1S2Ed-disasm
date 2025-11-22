@@ -43636,13 +43636,6 @@ Obj79_CheckActivation:
 	move.b	#2,mapping_frame(a1)
 	move.w	#$20,objoff_36(a1)
 	move.w	a0,parent(a1)
-	tst.w	(Two_player_mode).w
-	bne.s	loc_1F206
-	cmpi.b	#6,(Emerald_count).w
-	beq.s	loc_1F206
-	cmpi.w	#50,(Ring_count).w
-	blo.s	loc_1F206
-	bsr.w	Obj79_MakeSpecialStars
 
 loc_1F206:
 	move.b	#1,anim(a0)
