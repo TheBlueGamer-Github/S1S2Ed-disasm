@@ -302,3 +302,11 @@ out_of_range:	macro exit,pos
 		cmpi.w	#128+320+192,d0
 		bhi.ATTRIBUTE	exit
 		endm
+
+copyTilemap:	macro source,destination,width,height
+		lea	(source).l,a1
+		locVRAM	destination,d0
+		moveq	#(width)-1,d1
+		moveq	#(height)-1,d2
+		bsr.w	TilemapToVRAM
+		endm

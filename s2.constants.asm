@@ -29,6 +29,8 @@ Size_of_DAC_samples =		$2F00
 Size_of_SEGA_sound =		$6174
 Size_of_Snd_driver_guess =	$F64 ; approximate post-compressed size of the Z80 sound driver
 
+tile_size:	equ 8*8/2
+
 ; ---------------------------------------------------------------------------
 ; Object Status Table offsets (for everything between Object_RAM and Primary_Collision)
 ; ---------------------------------------------------------------------------
@@ -1124,6 +1126,7 @@ Endemeralds:
 				ds.b	object_size
 Endemeralds_end:
 				ds.b	object_size
+Object56:
 				ds.b	object_size
 				ds.b	object_size
 
@@ -1391,7 +1394,8 @@ Ctrl_1_Press:			ds.b	1	; 1 byte
 Ctrl_2:						; 2 bytes
 Ctrl_2_Held:			ds.b	1	; 1 byte
 Ctrl_2_Press:			ds.b	1	; 1 byte
-				ds.b	4	; $FFFFF608-$FFFFF60B ; seems unused
+v_gfxbigring:		ds.w	1		; settings for giant ring graphics loading
+				ds.b	2	; $FFFFF608-$FFFFF60B ; seems unused
 VDP_Reg1_val:			ds.w	1	; normal value of VDP register #1 when display is disabled
 				ds.b	6	; $FFFFF60E-$FFFFF613 ; seems unused
 Demo_Time_left:			ds.w	1	; 2 bytes
@@ -2279,8 +2283,8 @@ ArtTile_ArtNem_Trails                 = $0080
 ArtTile_ArtUnc_Giant_Sonic            = $0088
 
 ; Title screen
-ArtTile_ArtNem_Title                  = $0000
-ArtTile_ArtNem_TitleSprites           = $0150
+ArtTile_ArtNem_Title                  = $200
+ArtTile_ArtNem_TitleSprites           = $300
 ArtTile_ArtNem_MenuJunk               = $03F2
 ArtTile_ArtNem_Player1VS2             = $0402
 ArtTile_ArtNem_CreditText             = $0500
@@ -2377,11 +2381,11 @@ ArtTile_ArtKos_NumTiles_DEZ           = $0326 ; Skips several CPZ tiles.
 ArtTile_ArtNem_WaterSurface           = $0300
 ArtTile_ArtNem_Button                 = $0424
 ArtTile_ArtNem_HorizSpike             = $042C
-ArtTile_ArtNem_Spikes                 = $0516
+ArtTile_ArtNem_Spikes                 = $51B
 ArtTile_ArtNem_DignlSprng             = $043C
 ArtTile_ArtNem_LeverSpring            = $0440
-ArtTile_ArtNem_VrtclSprng             = $045C
-ArtTile_ArtNem_HrzntlSprng            = $0470
+ArtTile_ArtNem_VrtclSprng             = $523
+ArtTile_ArtNem_HrzntlSprng            = $533
 
 ; EHZ, HTZ
 ArtTile_ArtKos_Checkers               = ArtTile_ArtKos_LevelArt+$0158
@@ -2389,10 +2393,12 @@ ArtTile_ArtUnc_Flowers1               = $0394
 ArtTile_ArtUnc_Flowers2               = $0396
 ArtTile_ArtUnc_Flowers3               = $0398
 ArtTile_ArtUnc_Flowers4               = $039A
-ArtTile_ArtNem_Buzzer                 = $03E0
-ArtTile_Crabmeat                 	  = $0418
-ArtTile_Newtron                 	  = $0492
-ArtTile_GreenNewtron                  = $2492
+ArtTile_ArtNem_Buzzer                 = $444
+ArtTile_Crabmeat                 	  = $400
+ArtTile_Newtron                 	  = $49B
+ArtTile_GreenNewtron                  = $249B
+
+ArtTile_Roller:			equ $4B8
 
 ; WFZ, SCZ
 ArtTile_ArtNem_WfzHrzntlPrpllr        = $03CD
@@ -2409,8 +2415,14 @@ ArtTile_ArtNem_Waterfall              = $039E
 ArtTile_ArtNem_EHZ_Bridge             = $038E
 ArtTile_ArtNem_Buzzer_Fireball        = $03BE	; Actually unused
 ArtTile_ArtNem_Coconuts               = $03EE
-ArtTile_ArtNem_Masher                 = $047C
+ArtTile_ArtNem_Masher                 = $47B
 ArtTile_ArtUnc_EHZMountains           = $0500
+
+
+; Spring Yard Zone
+ArtTile_SYZ_Bumper:		equ $380
+ArtTile_SYZ_Big_Spikeball:	equ $396
+ArtTile_SYZ_Spikeball_Chain:	equ $3BA
 
 ; MTZ
 ArtTile_ArtNem_Shellcracker           = $031C
@@ -2647,13 +2659,14 @@ ArtTile_ArtNem_TitleCard              = $0580
 ArtTile_LevelName                     = $05DE
 
 ; End of level.
-ArtTile_ArtNem_Signpost               = $0434
+ArtTile_ArtNem_Signpost               = $4DA
 ArtTile_HUD_Bonus_Score               = $0520
 ArtTile_ArtNem_Perfect                = $0540
 ArtTile_ArtNem_ResultsText            = $05B0
 ArtTile_ArtUnc_Signpost               = $05E8
 ArtTile_ArtNem_MiniCharacter          = $05F4
 ArtTile_ArtNem_Capsule                = $0680
+ArtTile_Hidden_Points:		equ $4B6
 ArtTile_GHZ_Giant_Ball:		equ $3AA
 
 ; Tornado.
@@ -2666,15 +2679,15 @@ ArtTile_ArtNem_Bubbles                = $05E8
 ArtTile_ArtNem_SuperSonic_stars       = $05F2
 
 ; Universal (used on all standard levels).
-ArtTile_ArtNem_Checkpoint             = $0506
+ArtTile_ArtNem_Checkpoint             = $6B0
 ArtTile_ArtNem_TailsDust              = $055F
 ArtTile_ArtNem_SonicDust              = $056F
 ArtTile_ArtNem_Numbers                = $03AA
-ArtTile_ArtNem_Shield                 = $051E
+ArtTile_ArtNem_Shield                 = $541
 ArtTile_ArtNem_Invincible_stars       = $053E
 ArtTile_ArtNem_Powerups               = $0680
-ArtTile_ArtNem_Ring                   = $06BC
-ArtTile_ArtNem_HUD                    = ArtTile_ArtNem_Powerups + $4A
+ArtTile_ArtNem_Ring                   = $6BA
+ArtTile_ArtNem_HUD                    = $6CA
 ArtTile_ArtUnc_Sonic                  = $0780
 ArtTile_ArtUnc_Tails                  = $07A0
 ArtTile_ArtUnc_Tails_Tails            = $07B0
@@ -2740,9 +2753,9 @@ ArtTile_ArtNem_BigRing                = $0400
 ArtTile_ArtNem_FloatPlatform          = $0418
 ArtTile_ArtNem_BigRing_Flash          = $0462
 ArtTile_ArtNem_EndPoints              = $04B6
-ArtTile_ArtNem_BreakWall              = $0340
-ArtTile_ArtNem_GHZ_Purple_Rock        = $03BC
-ArtTile_ArtNem_GHZ_Motobug        = $04E9
+ArtTile_ArtNem_BreakWall              = $50F
+ArtTile_ArtNem_GHZ_Purple_Rock        = $3D0
+ArtTile_ArtNem_GHZ_Motobug        = $4F0
 ArtTile_GHZ_Flower_4:		equ ArtTile_ArtKos_LevelArt+$340
 ArtTile_GHZ_Edge_Wall:		equ $34C
 ArtTile_GHZ_Flower_Stalk:	equ ArtTile_ArtKos_LevelArt+$358
@@ -2755,6 +2768,8 @@ ArtTile_MZ_Animated_Lava:	equ ArtTile_ArtKos_LevelArt+$2E2
 ArtTile_MZ_Torch:		equ ArtTile_ArtKos_LevelArt+$2F2
 ArtTile_SBZ_Smoke_Puff_1:	equ ArtTile_ArtKos_LevelArt+$448
 ArtTile_SBZ_Smoke_Puff_2:	equ ArtTile_ArtKos_LevelArt+$454
+ArtTile_GHZ_Bridge:		equ $38E
+
 
 ; Ending
 ArtTile_Ending_Flowers:		equ $3A0
@@ -2771,3 +2786,8 @@ ArtTile_Ending_Squirrel:	equ $5B3
 ArtTile_Ending_STH:		equ $5C5
 
 ArtTile_SBZ_Orbinaut:		equ $429
+ArtTile_Giant_Ring:		equ $400
+ArtTile_Giant_Ring_Flash:	equ $462
+ArtTile_SBZ_Moving_Block_Short:	equ $2C0
+ArtTile_SBZ_Moving_Block_Long:	equ $460
+ArtTile_Yadrin:			equ $47B
