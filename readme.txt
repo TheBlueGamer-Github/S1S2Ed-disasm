@@ -11,4 +11,4 @@ You assume any and all responsibility for using this content responsibly. I clai
 
 Usage:
 You are allowed to use anything from this disasm with proper credit which includes ported code, ported music, and ported art. 
-Although the one exception is that I don't allow Mildanner to use anything from this hack for any of his projects
+Although the one exception is that I don't allow Mildanner to use anything from this hack for any of his projects or else...
