@@ -1,63 +1,55 @@
-; ---------------------------------------------------------------------------
-; Sprite mappings - shield and invincibility stars
-; ---------------------------------------------------------------------------
-Map_Shield_internal:	mappingsTable
-	mappingsTableEntry.w	.shield1
-	mappingsTableEntry.w	.shield2
-	mappingsTableEntry.w	.shield3
-	mappingsTableEntry.w	.shield4
-	mappingsTableEntry.w	.stars1
-	mappingsTableEntry.w	.stars2
-	mappingsTableEntry.w	.stars3
-	mappingsTableEntry.w	.stars4
+Map_Shield_internal:
+	dc.w	.shield1-Map_Shield_internal
+	dc.w	.shield2-Map_Shield_internal
+	dc.w	.shield3-Map_Shield_internal
+	dc.w	.shield4-Map_Shield_internal
+	dc.w	.stars1-Map_Shield_internal
+	dc.w	.stars2-Map_Shield_internal
+	dc.w	.stars3-Map_Shield_internal
+	dc.w	.stars4-Map_Shield_internal
 
-.shield2:	spriteHeader
-	spritePiece	-$18, -$18, 3, 3, 0, 0, 0, 0, 0
-	spritePiece	0, -$18, 3, 3, 9, 0, 0, 0, 0
-.shield1:spritePiece	-$18, 0, 3, 3, 0, 0, 1, 0, 0
-	spritePiece	0, 0, 3, 3, 9, 0, 1, 0, 0
-.shield2_End
+.shield1:	dc.w 0
 
-.shield3:	spriteHeader
-	spritePiece	-$17, -$18, 3, 3, $12, 1, 0, 0, 0
-	spritePiece	0, -$18, 3, 3, $12, 0, 0, 0, 0
-	spritePiece	-$17, 0, 3, 3, $12, 1, 1, 0, 0
-	spritePiece	0, 0, 3, 3, $12, 0, 1, 0, 0
-.shield3_End
+.shield2:	dc.w 4
+	dc.w $E80A, 0, 0, $FFE8
+	dc.w $E80A, 9, 4, 0
+	dc.w $A, $1000, $1000, $FFE8
+	dc.w $A, $1009, $1004, 0
 
-.shield4:	spriteHeader
-	spritePiece	-$18, -$18, 3, 3, 9, 1, 0, 0, 0
-	spritePiece	0, -$18, 3, 3, 0, 1, 0, 0, 0
-	spritePiece	-$18, 0, 3, 3, 9, 1, 1, 0, 0
-	spritePiece	0, 0, 3, 3, 0, 1, 1, 0, 0
-.shield4_End
+.shield3:	dc.w 4
+	dc.w $E80A, $812, $809, $FFE9
+	dc.w $E80A, $12, 9, 0
+	dc.w $A, $1812, $1809, $FFE9
+	dc.w $A, $1012, $1009, 0
 
-.stars1:	spriteHeader
-	spritePiece	-$18, -$18, 3, 3, 0, 0, 0, 0, 0
-	spritePiece	0, -$18, 3, 3, 9, 0, 0, 0, 0
-	spritePiece	-$18, 0, 3, 3, 9, 1, 1, 0, 0
-	spritePiece	0, 0, 3, 3, 0, 1, 1, 0, 0
-.stars1_End
+.shield4:	dc.w 4
+	dc.w $E80A, $809, $804, $FFE8
+	dc.w $E80A, $800, $800, 0
+	dc.w $A, $1809, $1804, $FFE8
+	dc.w $A, $1800, $1800, 0
 
-.stars2:	spriteHeader
-	spritePiece	-$18, -$18, 3, 3, 9, 1, 0, 0, 0
-	spritePiece	0, -$18, 3, 3, 0, 1, 0, 0, 0
-	spritePiece	-$18, 0, 3, 3, 0, 0, 1, 0, 0
-	spritePiece	0, 0, 3, 3, 9, 0, 1, 0, 0
-.stars2_End
+.stars1:	dc.w 4
+	dc.w $E80A, 0, 0, $FFE8
+	dc.w $E80A, 9, 4, 0
+	dc.w $A, $1809, $1804, $FFE8
+	dc.w $A, $1800, $1800, 0
 
-.stars3:	spriteHeader
-	spritePiece	-$18, -$18, 3, 3, $12, 0, 0, 0, 0
-	spritePiece	0, -$18, 3, 3, $1B, 0, 0, 0, 0
-	spritePiece	-$18, 0, 3, 3, $1B, 1, 1, 0, 0
-	spritePiece	0, 0, 3, 3, $12, 1, 1, 0, 0
-.stars3_End
+.stars2:	dc.w 4
+	dc.w $E80A, $809, $804, $FFE8
+	dc.w $E80A, $800, $800, 0
+	dc.w $A, $1000, $1000, $FFE8
+	dc.w $A, $1009, $1004, 0
 
-.stars4:	spriteHeader
-	spritePiece	-$18, -$18, 3, 3, $1B, 1, 0, 0, 0
-	spritePiece	0, -$18, 3, 3, $12, 1, 0, 0, 0
-	spritePiece	-$18, 0, 3, 3, $12, 0, 1, 0, 0
-	spritePiece	0, 0, 3, 3, $1B, 0, 1, 0, 0
-.stars4_End
+.stars3:	dc.w 4
+	dc.w $E80A, $12, 9, $FFE8
+	dc.w $E80A, $1B, $D, 0
+	dc.w $A, $181B, $180D, $FFE8
+	dc.w $A, $1812, $1809, 0
+
+.stars4:	dc.w 4
+	dc.w $E80A, $81B, $80D, $FFE8
+	dc.w $E80A, $812, $809, 0
+	dc.w $A, $1012, $1009, $FFE8
+	dc.w $A, $101B, $100D, 0
 
 	even
