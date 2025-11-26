@@ -288,21 +288,17 @@ childObjectData macro objoff, objectID, subtype
 	dc.b	objectID, subtype
 	endm
 
-out_of_range:	macro exit,pos
-		if ("pos"<>"")
-		move.w	pos,d0		; get object position (if specified as not obX)
+out_of_range:	macro exit,position
+		if ("position"<>"")
+		move.w	position,d0		; get object position (if specified as not obX)
 		else
 		move.w	obX(a0),d0	; get object position
 		endif
 		andi.w	#$FF80,d0	; round down to nearest $80
-		move.w	(Camera_X_Pos).w,d1 ; get screen position
-		subi.w	#128,d1
-		andi.w	#$FF80,d1
-		sub.w	d1,d0		; approx distance between object and screen
-		cmpi.w	#128+320+192,d0
+		sub.w	(Camera_X_pos_coarse).w,d0
+		cmpi.w	#$80+320+$40+$80,d0	; This gives an object $80 pixels of room offscreen before being unloaded (the $40 is there to round up 320 to a multiple of $80)
 		bhi.ATTRIBUTE	exit
 		endm
-
 copyTilemap:	macro source,destination,width,height
 		lea	(source).l,a1
 		locVRAM	destination,d0

@@ -3797,44 +3797,34 @@ music_metadata macro bank,pal,uncompressed,label
 	db	(bank<<7)|(pal<<6)|(uncompressed<<5)|((label-.base)/2)
     endm
 
-zMusIDPtr_2PResult:	music_metadata 1,0,0,MusPtr_2PResult
 zMusIDPtr_EHZ:		music_metadata 1,0,0,MusPtr_EHZ
-zMusIDPtr_MCZ_2P:	music_metadata 1,0,0,MusPtr_MCZ_2P
-zMusIDPtr_OOZ:		music_metadata 1,0,0,MusPtr_OOZ
-zMusIDPtr_MTZ:		music_metadata 1,0,0,MusPtr_MTZ
-zMusIDPtr_HTZ:		music_metadata 1,0,0,MusPtr_HTZ
-zMusIDPtr_ARZ:		music_metadata 1,0,0,MusPtr_ARZ
-zMusIDPtr_CNZ_2P:	music_metadata 1,0,0,MusPtr_CNZ_2P
-zMusIDPtr_CNZ:		music_metadata 1,0,0,MusPtr_CNZ
-zMusIDPtr_DEZ:		music_metadata 1,0,0,MusPtr_DEZ
-zMusIDPtr_MCZ:		music_metadata 1,0,0,MusPtr_MCZ
-zMusIDPtr_EHZ_2P:	music_metadata 1,0,0,MusPtr_EHZ_2P
-zMusIDPtr_SCZ:		music_metadata 1,0,0,MusPtr_SCZ
 zMusIDPtr_CPZ:		music_metadata 1,0,0,MusPtr_CPZ
-zMusIDPtr_WFZ:		music_metadata 1,0,0,MusPtr_WFZ
-zMusIDPtr_HPZ:		music_metadata 1,0,0,MusPtr_HPZ
-zMusIDPtr_Options:	music_metadata 1,0,0,MusPtr_Options
-zMusIDPtr_SpecStage:	music_metadata 1,0,0,MusPtr_SpecStage
-zMusIDPtr_Boss:		music_metadata 1,0,0,MusPtr_Boss
-zMusIDPtr_EndBoss:	music_metadata 1,0,0,MusPtr_EndBoss
-zMusIDPtr_Ending:	music_metadata 1,0,0,MusPtr_Ending
-zMusIDPtr_SuperSonic:	music_metadata 1,0,0,MusPtr_SuperSonic
+zMusIDPtr_ARZ:		music_metadata 1,0,0,MusPtr_ARZ
+zMusIDPtr_HTZ:		music_metadata 1,0,0,MusPtr_HTZ
+zMusIDPtr_CNZ:		music_metadata 1,0,0,MusPtr_CNZ
+zMusIDPtr_MTZ:		music_metadata 1,0,0,MusPtr_MTZ
 zMusIDPtr_Invincible:	music_metadata 1,0,0,MusPtr_Invincible
 zMusIDPtr_ExtraLife:	music_metadata 1,0,1,MusPtr_ExtraLife
+zMusIDPtr_SpecStage:	music_metadata 1,0,0,MusPtr_SpecStage
 zMusIDPtr_Title:	music_metadata 1,0,0,MusPtr_Title
+zMusIDPtr_Ending:	music_metadata 1,0,0,MusPtr_Ending
+zMusIDPtr_Boss:		music_metadata 1,0,0,MusPtr_Boss
+zMusIDPtr_DEZ:		music_metadata 1,0,0,MusPtr_DEZ
 zMusIDPtr_EndLevel:	music_metadata 1,0,0,MusPtr_EndLevel
 zMusIDPtr_GameOver:	music_metadata 1,0,1,MusPtr_GameOver
 zMusIDPtr_Continue:	music_metadata 0,0,0,MusPtr_Continue
-zMusIDPtr_Emerald:	music_metadata 1,0,1,MusPtr_Emerald
 zMusIDPtr_Credits:	music_metadata 1,0,1,MusPtr_Credits
 zMusIDPtr_Countdown:	music_metadata 1,1,0,MusPtr_Drowning
+zMusIDPtr_Emerald:	music_metadata 1,0,1,MusPtr_Emerald
+zMusIDPtr_Options:	music_metadata 1,0,0,MusPtr_Options
+zMusIDPtr_SuperSonic:	music_metadata 1,0,0,MusPtr_SuperSonic
 zMusIDPtr__End:
 
 ; Tempo with speed shoe tempo for each song
 ; zbyte_1214
 zSpedUpTempoTable:
-	db	 68h,0BEh,0FFh,0F0h
-	db	0FFh,0DEh,0FFh,0DDh
+	db	 7h,72h,73h,26h
+	db	15h,8h,0FFh,5h
 	db	 68h, 80h,0D6h, 7Bh
 	db	 7Bh,0FFh,0A8h,0FFh
 	db	 87h,0FFh,0FFh,0C9h

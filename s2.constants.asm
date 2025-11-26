@@ -440,7 +440,7 @@ GameModeID_Demo =		id(GameMode_Demo) ; 8
 GameModeID_Level =		id(GameMode_Level) ; C
 GameModeID_SpecialStage =	id(GameMode_SpecialStage) ; 10
 GameModeID_ContinueScreen =	id(GameMode_ContinueScreen) ; 14
-GameModeID_2PResults =		$18 ; 18
+GameModeID_2PResults =		id(GameMode_2PResults) ; 1C ; 18
 GameModeID_2PLevelSelect =	id(GameMode_2PLevelSelect) ; 1C
 GameModeID_EndingSequence =	id(GameMode_EndingSequence) ; 20
 GameModeID_OptionsMenu =	id(GameMode_OptionsMenu) ; 24
@@ -816,26 +816,26 @@ idstart :=	$81
 ; you may need to insert a dummy zMusIDPtr in the $80 slot
 
 MusID__First = idstart
-MusID_2PResult =	id(zMusIDPtr_2PResult)	; 81
+MusID_2PResult =	id(zMusIDPtr_EHZ)	; 81
 MusID_EHZ =		id(zMusIDPtr_EHZ)	; 82
-MusID_MCZ_2P =		id(zMusIDPtr_MCZ_2P)	; 83
-MusID_OOZ =		id(zMusIDPtr_OOZ)	; 84
+MusID_MCZ_2P =		id(zMusIDPtr_EHZ)	; 83
+MusID_OOZ =		id(zMusIDPtr_CPZ)	; 84
 MusID_MTZ =		id(zMusIDPtr_MTZ)	; 85
 MusID_HTZ =		id(zMusIDPtr_HTZ)	; 86
 MusID_ARZ =		id(zMusIDPtr_ARZ)	; 87
-MusID_CNZ_2P =		id(zMusIDPtr_CNZ_2P)	; 88
+MusID_CNZ_2P =		id(zMusIDPtr_CNZ)	; 88
 MusID_CNZ =		id(zMusIDPtr_CNZ)	; 89
 MusID_DEZ =		id(zMusIDPtr_DEZ)	; 8A
-MusID_MCZ =		id(zMusIDPtr_MCZ)	; 8B
-MusID_EHZ_2P =		id(zMusIDPtr_EHZ_2P)	; 8C
-MusID_SCZ =		id(zMusIDPtr_SCZ)	; 8D
+MusID_MCZ =		id(zMusIDPtr_CPZ)	; 8B
+MusID_EHZ_2P =		id(zMusIDPtr_EHZ)	; 8C
+MusID_SCZ =		id(zMusIDPtr_Ending)	; 8D
 MusID_CPZ =		id(zMusIDPtr_CPZ)	; 8E
-MusID_WFZ =		id(zMusIDPtr_WFZ)	; 8F
-MusID_HPZ =		id(zMusIDPtr_HPZ)	; 90
+MusID_WFZ =		id(zMusIDPtr_CNZ)	; 8F
+MusID_HPZ =		id(zMusIDPtr_MTZ)	; 90
 MusID_Options =		id(zMusIDPtr_Options)	; 91
 MusID_SpecStage =	id(zMusIDPtr_SpecStage)	; 92
 MusID_Boss =		id(zMusIDPtr_Boss)	; 93
-MusID_EndBoss =		id(zMusIDPtr_EndBoss)	; 94
+MusID_EndBoss =		id(zMusIDPtr_Boss)	; 94
 MusID_Ending =		id(zMusIDPtr_Ending)	; 95
 MusID_SuperSonic =	id(zMusIDPtr_SuperSonic); 96
 MusID_Invincible =	id(zMusIDPtr_Invincible); 97
@@ -2047,7 +2047,7 @@ SSTrack_last_mapping_frame:		ds.b	1
 SSTrack_mappings_RLE:			ds.l	1
 SSDrawRegBuffer:			ds.w	6
 SSDrawRegBuffer_End
-					ds.b	2
+v_obj31ypos:		ds.w	1		; y-position of object 31 (MZ stomper)
 SpecialStage_LastSegment2:		ds.b	1
 SS_unk_DB4D:				ds.b	1	; written but never read
 					ds.b	$14
@@ -2357,6 +2357,7 @@ ArtTile_FZ_Eggman_No_Vehicle:	equ $470
 
 ; Level art stuff.
 ArtTile_ArtKos_LevelArt               = $0000
+ArtTile_Level:			equ $000
 ArtTile_ArtKos_NumTiles_EHZ           = $0393
 ArtTile_ArtKos_NumTiles_CPZ           = $0364
 ArtTile_ArtKos_NumTiles_ARZ           = $03F6
@@ -2398,6 +2399,7 @@ ArtTile_Crabmeat                 	  = $400
 ArtTile_Newtron                 	  = $49B
 ArtTile_GreenNewtron                  = $249B
 
+ArtTile_Basaran:		equ $4B8
 ArtTile_Roller:			equ $4B8
 
 ; WFZ, SCZ
@@ -2406,8 +2408,31 @@ ArtTile_ArtNem_Clouds                 = $054F
 ArtTile_ArtNem_WfzVrtclPrpllr         = $0561
 ArtTile_ArtNem_Balkrie                = $0565
 
+; Scrap Brain Zone
+ArtTile_SBZ_Caterkiller:	equ $2B0
+ArtTile_SBZ_Moving_Block_Short:	equ $2C0
+ArtTile_SBZ_Door:		equ $2E8
+ArtTile_SBZ_Girder:		equ $2F0
+ArtTile_SBZ_Disc:		equ $344
+ArtTile_SBZ_Junction:		equ $348
+ArtTile_SBZ_Swing:		equ $391
+ArtTile_SBZ_Saw:		equ $3B5
+ArtTile_SBZ_Flamethrower:	equ $3D9
+ArtTile_SBZ_Collapsing_Floor:	equ $3F5
+ArtTile_SBZ_Orbinaut:		equ $429
+ArtTile_SBZ_Smoke_Puff_1:	equ ArtTile_ArtKos_LevelArt+$448
+ArtTile_SBZ_Smoke_Puff_2:	equ ArtTile_ArtKos_LevelArt+$454
+ArtTile_SBZ_Moving_Block_Long:	equ $460
+ArtTile_SBZ_Horizontal_Door:	equ $46F
+ArtTile_SBZ_Electric_Orb:	equ $47E
+ArtTile_SBZ_Trap_Door:		equ $492
+ArtTile_SBZ_Vanishing_Block:	equ $4C3
+ArtTile_SBZ_Spinning_Platform:	equ $4DF
+
 ; ---------------------------------------------------------------------------
 ; Level-specific objects and badniks.
+
+ArtTile_MZ_SYZ_Caterkiller:	equ $4FF
 
 ; EHZ
 ArtTile_ArtUnc_EHZPulseBall           = $039C
@@ -2465,6 +2490,17 @@ ArtTile_ArtNem_BreakPanels            = $048C
 ; SCZ
 ArtTile_ArtNem_Turtloid               = $038A
 ArtTile_ArtNem_Nebula                 = $036E
+
+; Star Light Zone
+ArtTile_SLZ_Seesaw:		equ $374
+ArtTile_SLZ_Fan:		equ $3A0
+ArtTile_SLZ_Pylon:		equ $3CC
+ArtTile_SLZ_Swing:		equ $3DC
+ArtTile_SLZ_Orbinaut:		equ $429
+ArtTile_SLZ_Fireball:		equ $480
+ArtTile_SLZ_Fireball_Launcher:	equ $4D8
+ArtTile_SLZ_Collapsing_Floor:	equ $4E0
+ArtTile_SLZ_Spikeball:		equ $4F0
 
 ; HTZ
 ArtTile_ArtNem_Rexon                  = $037E
@@ -2730,15 +2766,6 @@ ArtTile_MZ_Fireball:		equ $345
 ArtTile_MZ_Glass_Pillar:	equ $38E
 ArtTile_MZ_Lava:		equ $3A8
 
-ArtTile_SLZ_Seesaw:		equ $374
-ArtTile_SLZ_Fan:		equ $3A0
-ArtTile_SLZ_Pylon:		equ $3CC
-ArtTile_SLZ_Swing:		equ $3DC
-ArtTile_SLZ_Orbinaut:		equ $429
-ArtTile_SLZ_Fireball:		equ $480
-ArtTile_SLZ_Fireball_Launcher:	equ $4D8
-ArtTile_SLZ_Collapsing_Floor:	equ $4E0
-ArtTile_SLZ_Spikeball:		equ $4F0
 ArtTile_ArtUnc_HPZPulseOrb_1          = $02E8
 ArtTile_ArtUnc_HPZPulseOrb_2          = $02F0
 ArtTile_ArtUnc_HPZPulseOrb_3          = $02F8
@@ -2766,8 +2793,6 @@ ArtTile_GHZ_Flower_3:		equ ArtTile_ArtKos_LevelArt+$380
 ArtTile_MZ_Animated_Magma:	equ ArtTile_ArtKos_LevelArt+$2D2
 ArtTile_MZ_Animated_Lava:	equ ArtTile_ArtKos_LevelArt+$2E2
 ArtTile_MZ_Torch:		equ ArtTile_ArtKos_LevelArt+$2F2
-ArtTile_SBZ_Smoke_Puff_1:	equ ArtTile_ArtKos_LevelArt+$448
-ArtTile_SBZ_Smoke_Puff_2:	equ ArtTile_ArtKos_LevelArt+$454
 ArtTile_GHZ_Bridge:		equ $38E
 
 
@@ -2785,9 +2810,9 @@ ArtTile_Ending_Flicky:		equ $5A5
 ArtTile_Ending_Squirrel:	equ $5B3
 ArtTile_Ending_STH:		equ $5C5
 
-ArtTile_SBZ_Orbinaut:		equ $429
 ArtTile_Giant_Ring:		equ $400
 ArtTile_Giant_Ring_Flash:	equ $462
-ArtTile_SBZ_Moving_Block_Short:	equ $2C0
-ArtTile_SBZ_Moving_Block_Long:	equ $460
 ArtTile_Yadrin:			equ $47B
+
+ArtTile_Ball_Hog:		equ $302
+ArtTile_Bomb:			equ $400
