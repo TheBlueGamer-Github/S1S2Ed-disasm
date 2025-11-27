@@ -9484,7 +9484,7 @@ Obj14_Index:	offsetTable
 Obj14_Init:
 	addq.b	#2,routine(a0)
 	move.l	#Map_Seesaw,mappings(a0)
-	move.w	#make_art_tile(ArtTile_SLZ_Seesaw,2,0),art_tile(a0)
+	move.w	#make_art_tile(ArtTile_SLZ_Seesaw,0,0),art_tile(a0)
 	;jsrto	JmpTo13_Adjust2PArtPointer
 	ori.b	#4,render_flags(a0)
 	move.b	#4,priority(a0)
