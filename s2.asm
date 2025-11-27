@@ -9459,11 +9459,345 @@ SSAllocateObjectAfterCurrent:
 ; ----------------------------------------------------------------------------
 ; Object 5E - HUD from Special Stage
 ; ----------------------------------------------------------------------------
+
 ; Sprite_6FC0:
 Obj5E:
 	cmpi.b	#GameModeID_SpecialStage,(Game_Mode).w
+	beq.w	+
+	moveq	#0,d0
+	move.b	routine(a0),d0
+	move.w	Obj14_Index(pc,d0.w),d1
+	jsr	Obj14_Index(pc,d1.w)
+	move.w	objoff_30(a0),d0
+	jmp	(MarkObjGone2).l
+; ===========================================================================
+; off_2193E:
+Obj14_Index:	offsetTable
+		offsetTableEntry.w Obj14_Init		;  0
+		offsetTableEntry.w Obj14_Main		;  2
+		offsetTableEntry.w return_21A74		;  4
+		offsetTableEntry.w Obj14_Ball_Init	;  6
+		offsetTableEntry.w Obj14_Ball_Main	;  8
+		offsetTableEntry.w Obj14_Ball_Fly	; $A
+; ===========================================================================
+; loc_2194A:
+Obj14_Init:
+	addq.b	#2,routine(a0)
+	move.l	#Map_Seesaw,mappings(a0)
+	move.w	#make_art_tile(ArtTile_SLZ_Seesaw,2,0),art_tile(a0)
+	;jsrto	JmpTo13_Adjust2PArtPointer
+	ori.b	#4,render_flags(a0)
+	move.b	#4,priority(a0)
+	move.b	#$30,width_pixels(a0)
+	move.w	x_pos(a0),objoff_30(a0)
+	tst.b	subtype(a0)
+	bne.s	loc_219A4
+	jsr	(AllocateObjectAfterCurrent).l
+	bne.s	loc_219A4
+	_move.b	#ObjID_Seesaw,id(a1) ; load obj14
+	addq.b	#6,routine(a1)
+	move.w	x_pos(a0),x_pos(a1)
+	move.w	y_pos(a0),y_pos(a1)
+	move.b	status(a0),status(a1)
+	move.l	a0,objoff_3C(a1)
+
+loc_219A4:
+	btst	#status.npc.x_flip,status(a0)
+	beq.s	loc_219B2
+	move.b	#2,mapping_frame(a0)
+
+loc_219B2:
+	move.b	mapping_frame(a0),objoff_3A(a0)
+
+Obj14_Main:
+	move.b	objoff_3A(a0),d1
+	btst	#p1_standing_bit,status(a0)
+	beq.s	loc_21A12
+	moveq	#2,d1
+	lea	(MainCharacter).w,a1 ; a1=character
+	move.w	x_pos(a0),d0
+	sub.w	x_pos(a1),d0
+	bcc.s	+
+	neg.w	d0
+	moveq	#0,d1
++
+	cmpi.w	#8,d0
+	bhs.s	+
+	moveq	#1,d1
++
+	btst	#p2_standing_bit,status(a0)
+	beq.s	Obj14_UpdateMappingAndCollision
+	moveq	#2,d2
+	lea	(Sidekick).w,a1 ; a1=character
+	move.w	x_pos(a0),d0
+	sub.w	x_pos(a1),d0
+	bcc.s	+
+	neg.w	d0
+	moveq	#0,d2
++
+	cmpi.w	#8,d0
+	bhs.s	+
+	moveq	#1,d2
++
+	add.w	d2,d1
+	cmpi.w	#3,d1
+	bne.s	+
+	addq.w	#1,d1
++
+	lsr.w	#1,d1
+	bra.s	Obj14_UpdateMappingAndCollision
+; ===========================================================================
+
+loc_21A12:
+	btst	#p2_standing_bit,status(a0)
+	beq.s	loc_21A38
+	moveq	#2,d1
+	lea	(Sidekick).w,a1 ; a1=character
+	move.w	x_pos(a0),d0
+	sub.w	x_pos(a1),d0
+	bcc.s	+
+	neg.w	d0
+	moveq	#0,d1
++
+	cmpi.w	#8,d0
+	bhs.s	Obj14_UpdateMappingAndCollision
+	moveq	#1,d1
+	bra.s	Obj14_UpdateMappingAndCollision
+; ===========================================================================
+
+loc_21A38:
+	move.w	(MainCharacter+y_vel).w,d0
+	move.w	(Sidekick+y_vel).w,d2
+	cmp.w	d0,d2
+	blt.s	+
+	move.w	d2,d0
++
+	move.w	d0,objoff_38(a0)
+
+; loc_21A4A:
+Obj14_UpdateMappingAndCollision:
+	bsr.w	Obj14_SetMapping
+	lea	(byte_21C8E).l,a2
+	btst	#0,mapping_frame(a0)
 	beq.s	+
+	lea	(byte_21CBF).l,a2
++
+	move.w	x_pos(a0),-(sp)
+	moveq	#0,d1
+	move.b	width_pixels(a0),d1
+	moveq	#8,d3
+	move.w	(sp)+,d4
+	jmp	(SlopedPlatform).l
+; ===========================================================================
+
+return_21A74:
 	rts
+; ===========================================================================
+
+; loc_21A76:
+Obj14_SetMapping:
+	move.b	mapping_frame(a0),d0
+	cmp.b	d1,d0
+	beq.s	return_21AA0
+	bhs.s	+
+	addq.b	#2,d0
++
+	subq.b	#1,d0
+	move.b	d0,mapping_frame(a0)
+	move.b	d1,objoff_3A(a0)
+	bclr	#render_flags.x_flip,render_flags(a0)
+	btst	#1,mapping_frame(a0)
+	beq.s	return_21AA0
+	bset	#render_flags.x_flip,render_flags(a0)
+
+return_21AA0:
+	rts
+; ===========================================================================
+; loc_21AA2:
+Obj14_Ball_Init:
+	addq.b	#2,routine(a0)
+	move.l	#Map_SSawBall,mappings(a0)
+	move.w	#make_art_tile(ArtTile_SLZ_Spikeball,0,0),art_tile(a0)
+	;jsrto	JmpTo13_Adjust2PArtPointer
+	ori.b	#4,render_flags(a0)
+	move.b	#4,priority(a0)
+	move.b	#$8B,collision_flags(a0)
+	move.b	#$C,width_pixels(a0)
+	move.w	x_pos(a0),objoff_30(a0) ; save seesaw x position
+	addi.w	#$28,x_pos(a0)
+	;addi.w	#$10,y_pos(a0)
+	move.w	y_pos(a0),objoff_34(a0) ; save bottom of seesaw y position
+	move.b	#1,obFrame(a0)
+	btst	#status.npc.x_flip,status(a0)
+	beq.s	Obj14_Ball_Main
+	subi.w	#$50,x_pos(a0)
+	move.b	#2,objoff_3A(a0)
+; loc_21AFC:
+Obj14_Ball_Main:
+	bsr.w	Obj14_Animate
+	movea.l	objoff_3C(a0),a1 ; a1=parent object (seesaw)
+	moveq	#0,d0
+	move.b	objoff_3A(a0),d0 ; d0 = ball angle - seesaw angle
+	sub.b	objoff_3A(a1),d0
+	beq.s	Obj14_SetBallToRestOnSeeSaw
+	bcc.s	+
+	neg.b	d0
++
+	move.w	#-$818,d1
+	move.w	#-$114,d2
+	cmpi.b	#1,d0
+	beq.s	+
+	move.w	#-$AF0,d1
+	move.w	#-$CC,d2
+	cmpi.w	#$A00,objoff_38(a1) ; check if character y_vel that jumped on
+	blt.s	+                   ; seesaw > 2560
+	move.w	#-$E00,d1
+	move.w	#-$A0,d2
++
+	move.w	d1,y_vel(a0)
+	move.w	d2,x_vel(a0)
+	move.w	x_pos(a0),d0
+	sub.w	objoff_30(a0),d0
+	bcc.s	+
+	neg.w	x_vel(a0)
++
+	addq.b	#2,routine(a0)
+	bra.s	Obj14_Ball_Fly
+; ===========================================================================
+
+; loc_21B56:
+Obj14_SetBallToRestOnSeeSaw:
+	lea	(Obj14_YOffsets).l,a2
+	moveq	#0,d0
+	move.b	mapping_frame(a1),d0
+	move.w	#$28,d2
+	move.w	x_pos(a0),d1
+	sub.w	objoff_30(a0),d1
+	bcc.s	+
+	neg.w	d2
+	addq.w	#2,d0
++
+	add.w	d0,d0
+	move.w	objoff_34(a0),d1 ; d1 = bottom of seesaw y position
+	add.w	(a2,d0.w),d1     ;    + offset for current angle
+	move.w	d1,y_pos(a0)     ; set y position so ball rests on seesaw
+	add.w	objoff_30(a0),d2
+	move.w	d2,x_pos(a0)
+	clr.w	y_sub(a0)
+	clr.w	x_sub(a0)
+	rts
+; ===========================================================================
+
+Obj14_Ball_Fly:
+
+	bsr.w	Obj14_Animate
+	tst.w	y_vel(a0)
+	bpl.s	loc_21BB6
+	jsr	(ObjectMoveAndFall).l
+	move.w	objoff_34(a0),d0 ; d0 = bottom of seesaw y position
+	subi.w	#$2F,d0
+	cmp.w	y_pos(a0),d0
+	bgt.s	return_21BB4
+	jsr	(ObjectMoveAndFall).l
+
+return_21BB4:
+	rts
+; ===========================================================================
+
+loc_21BB6:
+	jsr	(ObjectMoveAndFall).l
+	movea.l	objoff_3C(a0),a1 ; a1=parent object (seesaw)
+	lea	(Obj14_YOffsets).l,a2
+	moveq	#0,d0
+	move.b	mapping_frame(a1),d0
+	move.w	x_pos(a0),d1
+	sub.w	objoff_30(a0),d1
+	bcc.s	+
+	addq.w	#2,d0
++
+	add.w	d0,d0
+	move.w	objoff_34(a0),d1 ; d1 = bottom of seesaw y position
+	add.w	(a2,d0.w),d1     ;    + offset for current angle
+	cmp.w	y_pos(a0),d1     ; return if y position < d1
+	bgt.s	return_21C2A
+	movea.l	objoff_3C(a0),a1 ; a1=parent object (seesaw)
+	moveq	#2,d1            ; d1 = x_vel >= 0 ? 0 : 2
+	tst.w	x_vel(a0)
+	bmi.s	+
+	moveq	#0,d1
++
+	move.b	d1,objoff_3A(a1) ; set seesaw angle to d1
+	move.b	d1,objoff_3A(a0) ; set ball angle to d1
+	cmp.b	mapping_frame(a1),d1
+	beq.s	loc_21C1E
+
+	; launch main character if stood on seesaw
+	lea	(MainCharacter).w,a2 ; a2=character
+	bclr	#p1_standing_bit,status(a1)
+	beq.s	+
+	bsr.s	Obj14_LaunchCharacter
++
+    ; launch sidekick if stood on seesaw
+	lea	(Sidekick).w,a2 ; a2=character
+	bclr	#p2_standing_bit,status(a1)
+	beq.s	loc_21C1E
+	bsr.s	Obj14_LaunchCharacter
+
+loc_21C1E:
+	clr.w	x_vel(a0)      ; clear ball velocity
+	clr.w	y_vel(a0)
+	subq.b	#2,routine(a0) ; set ball to main state
+
+return_21C2A:
+	rts
+; ===========================================================================
+
+; loc_21C2C:
+Obj14_LaunchCharacter:
+	move.w	y_vel(a0),y_vel(a2) ; set character y velocity to inverse of sol
+	neg.w	y_vel(a2)           ; y velocity
+	bset	#status.player.in_air,status(a2)	; set character airborne flag
+	bclr	#status.player.on_object,status(a2)	; clear character on object flag
+	clr.b	jumping(a2)         ; clear character jumping flag
+	move.b	#AniIDSonAni_Spring,anim(a2) ; set character to spring animation
+	move.b	#2,routine(a2)      ; set character to airborne state
+    if fixBugs
+	; If the player charges a Spin Dash on a seesaw, and gets launched by
+	; it, they will retain their Spin Dash state in the air. This fixes
+	; that.
+	clr.b	spindash_flag(a2)
+    endif
+	move.w	#SndID_Spring,d0    ; play spring sound
+	jmp	(PlaySound).l
+; ===========================================================================
+; heights of the contact point of the ball on the seesaw
+; word_21C5C:
+Obj14_YOffsets:
+	dc.w -8, -28, -47, -28, -8 ; low, balanced, high, balanced, low
+; ===========================================================================
+
+; loc_21C66:
+Obj14_Animate:
+	move.b	(Level_frame_counter+1).w,d0
+	andi.b	#3,d0
+	bne.s	Obj14_SetSolToFaceMainCharacter
+	bchg	#palette_bit_0,art_tile(a0)
+
+Obj14_SetSolToFaceMainCharacter:
+	andi.b	#~(1<<render_flags.x_flip),render_flags(a0)
+	move.w	(MainCharacter+x_pos).w,d0
+	sub.w	x_pos(a0),d0
+	bcs.s	return_21C8C
+	ori.b	#1<<render_flags.x_flip,render_flags(a0)
+
+return_21C8C:
+	rts
+; ===========================================================================
+byte_21C8E:	binclude	"misc/slzssaw1.bin"
+		even
+byte_21CBF:	binclude	"misc/slzssaw2.bin"
+		even
+
 +
 	move.b	routine(a0),d0
     if fixBugs
@@ -45977,7 +46311,7 @@ Obj27_InitWithAnimal:
 ; loc_210BE: Obj27_Init2:
 Obj27_Init:
 	addq.b	#2,routine(a0) ; => Obj27_Main
-	move.l	#Obj27_MapUnc_21120,mappings(a0)
+	move.l	#Map_ExplodeItem,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_Explosion,0,0),art_tile(a0)
 	jsrto	Adjust2PArtPointer, JmpTo12_Adjust2PArtPointer
 	move.b	#4,render_flags(a0)
@@ -59045,221 +59379,31 @@ JmpTo8_MarkObjGone2 ; JmpTo
 ; ----------------------------------------------------------------------------
 ; Sprite_2A7B0:
 Obj3F:
+		moveq	#0,d0
+		move.b	obRoutine(a0),d0
+		move.w	ExBom_Index(pc,d0.w),d1
+		jmp	ExBom_Index(pc,d1.w)
+; ===========================================================================
+ExBom_Index:	dc.w ExBom_Main-ExBom_Index
+		dc.w ExItem_Animate-ExBom_Index
+; ===========================================================================
+
+ExBom_Main:	; Routine 0
+		addq.b	#2,obRoutine(a0)
+		move.l	#Map_ExplodeBomb,obMap(a0)
+		move.w	#make_art_tile(ArtTile_ArtNem_Explosion,0,0),obGfx(a0)
+		move.b	#4,obRender(a0)
+		move.b	#1,obPriority(a0)
+		move.b	#0,obColType(a0)
+		move.b	#$C,obActWid(a0)
+		move.b	#7,obTimeFrame(a0)
+		move.b	#0,obFrame(a0)
+		;move.w	#sfx_Bomb,d0
+		;jmp	(QueueSound2).l	; play exploding bomb sound
 	rts
-	moveq	#0,d0
-	move.b	routine(a0),d0
-	move.w	Obj3F_Index(pc,d0.w),d1
-	jmp	Obj3F_Index(pc,d1.w)
-; ===========================================================================
-; off_2A7BE:
-Obj3F_Index:	offsetTable
-		offsetTableEntry.w Obj3F_Init		; 0
-		offsetTableEntry.w Obj3F_Horizontal	; 2 - pushes horizontally
-		offsetTableEntry.w Obj3F_Vertical	; 4 - pushes vertically
-; ===========================================================================
-; loc_2A7C4:
-Obj3F_Init:
-	addq.b	#2,routine(a0)
-	move.l	#Obj3F_MapUnc_2AA12,mappings(a0)
-	move.w	#make_art_tile(ArtTile_ArtNem_OOZFanHoriz,3,0),art_tile(a0)
-	jsrto	Adjust2PArtPointer, JmpTo48_Adjust2PArtPointer
-	ori.b	#4,render_flags(a0)
-	move.b	#$10,width_pixels(a0)
-	move.b	#4,priority(a0)
-	tst.b	subtype(a0)
-	bpl.s	Obj3F_Horizontal
-	addq.b	#2,routine(a0)
-	move.l	#Obj3F_MapUnc_2AAC4,mappings(a0)
-	bra.w	Obj3F_Vertical
-; ===========================================================================
-; loc_2A802:
-Obj3F_Horizontal:
-	btst	#1,subtype(a0)
-	bne.s	loc_2A82A
-	subq.w	#1,objoff_30(a0)
-	bpl.s	loc_2A82A
-	move.w	#0,objoff_34(a0)
-	move.w	#$78,objoff_30(a0)
-	bchg	#0,objoff_32(a0)
-	beq.s	loc_2A82A
-	move.w	#$B4,objoff_30(a0)
-
-loc_2A82A:
-	tst.b	objoff_32(a0)
-	beq.w	loc_2A84E
-	subq.b	#1,anim_frame_duration(a0)
-	bpl.s	BranchTo_JmpTo26_MarkObjGone
-	cmpi.w	#$400,objoff_34(a0)
-	bhs.s	BranchTo_JmpTo26_MarkObjGone
-	addi.w	#$2A,objoff_34(a0)
-	move.b	objoff_34(a0),anim_frame_duration(a0)
-	bra.s	loc_2A86A
-; ===========================================================================
-
-loc_2A84E:
-	lea	(MainCharacter).w,a1 ; a1=character
-	bsr.w	loc_2A894
-	lea	(Sidekick).w,a1 ; a1=character
-	bsr.w	loc_2A894
-	subq.b	#1,anim_frame_duration(a0)
-	bpl.s	BranchTo_JmpTo26_MarkObjGone
-	move.b	#0,anim_frame_duration(a0)
-
-loc_2A86A:
-	addq.b	#1,anim_frame(a0)
-	cmpi.b	#6,anim_frame(a0)
-	blo.s	loc_2A87C
-	move.b	#0,anim_frame(a0)
-
-loc_2A87C:
-	moveq	#0,d0
-	btst	#0,subtype(a0)
-	beq.s	loc_2A888
-	moveq	#5,d0
-
-loc_2A888:
-	add.b	anim_frame(a0),d0
-	move.b	d0,mapping_frame(a0)
-
-BranchTo_JmpTo26_MarkObjGone ; BranchTo
-	jmpto	MarkObjGone, JmpTo26_MarkObjGone
-; ===========================================================================
-
-loc_2A894:
-	cmpi.b	#4,routine(a1)
-	bhs.s	return_2A8FC
-	tst.b	obj_control(a1)
-	bne.s	return_2A8FC
-	move.w	x_pos(a1),d0
-	sub.w	x_pos(a0),d0
-	btst	#0,status(a0)
-	bne.s	loc_2A8B4
-	neg.w	d0
-
-loc_2A8B4:
-	addi.w	#$50,d0
-	cmpi.w	#$F0,d0
-	bhs.s	return_2A8FC
-	move.w	y_pos(a1),d1
-	addi.w	#$60,d1
-	sub.w	y_pos(a0),d1
-	bcs.s	return_2A8FC
-	cmpi.w	#$70,d1
-	bhs.s	return_2A8FC
-	subi.w	#$50,d0
-	bcc.s	loc_2A8DC
-	not.w	d0
-	add.w	d0,d0
-
-loc_2A8DC:
-	addi.w	#$60,d0
-	btst	#0,status(a0)
-	bne.s	loc_2A8EA
-	neg.w	d0
-
-loc_2A8EA:
-	neg.b	d0
-	asr.w	#4,d0
-	btst	#0,subtype(a0)
-	beq.s	loc_2A8F8
-	neg.w	d0
-
-loc_2A8F8:
-	add.w	d0,x_pos(a1)
-
-return_2A8FC:
-	rts
-; ===========================================================================
-; loc_2A8FE:
-Obj3F_Vertical:
-	btst	#1,subtype(a0)
-	bne.s	loc_2A926
-	subq.w	#1,objoff_30(a0)
-	bpl.s	loc_2A926
-	move.w	#0,objoff_34(a0)
-	move.w	#$78,objoff_30(a0)
-	bchg	#0,objoff_32(a0)
-	beq.s	loc_2A926
-	move.w	#$B4,objoff_30(a0)
-
-loc_2A926:
-	tst.b	objoff_32(a0)
-	beq.w	loc_2A94A
-	subq.b	#1,anim_frame_duration(a0)
-	bpl.s	BranchTo2_JmpTo26_MarkObjGone
-	cmpi.w	#$400,objoff_34(a0)
-	bhs.s	BranchTo2_JmpTo26_MarkObjGone
-	addi.w	#$2A,objoff_34(a0)
-	move.b	objoff_34(a0),anim_frame_duration(a0)
-	bra.s	loc_2A966
-; ===========================================================================
-
-loc_2A94A:
-	lea	(MainCharacter).w,a1 ; a1=character
-	bsr.w	loc_2A990
-	lea	(Sidekick).w,a1 ; a1=character
-	bsr.w	loc_2A990
-	subq.b	#1,anim_frame_duration(a0)
-	bpl.s	BranchTo2_JmpTo26_MarkObjGone
-	move.b	#0,anim_frame_duration(a0)
-
-loc_2A966:
-	addq.b	#1,anim_frame(a0)
-	cmpi.b	#6,anim_frame(a0)
-	blo.s	+
-	move.b	#0,anim_frame(a0)
-+
-	moveq	#0,d0
-	btst	#0,subtype(a0)
-	beq.s	+
-	moveq	#5,d0
-+
-	add.b	anim_frame(a0),d0
-	move.b	d0,mapping_frame(a0)
-
-BranchTo2_JmpTo26_MarkObjGone
-	jmpto	MarkObjGone, JmpTo26_MarkObjGone
-; ===========================================================================
-
-loc_2A990:
-	cmpi.b	#4,routine(a1)
-	bhs.s	return_2AA10
-	tst.b	obj_control(a1)
-	bne.s	return_2AA10
-	move.w	x_pos(a1),d0
-	sub.w	x_pos(a0),d0
-	addi.w	#$40,d0
-	cmpi.w	#$80,d0
-	bhs.s	return_2AA10
-	moveq	#0,d1
-	move.b	(Oscillating_Data+$14).w,d1
-	add.w	y_pos(a1),d1
-	addi.w	#$60,d1
-	sub.w	y_pos(a0),d1
-	bcs.s	return_2AA10
-	cmpi.w	#$90,d1
-	bhs.s	return_2AA10
-	subi.w	#$60,d1
-	bcs.s	+
-	not.w	d1
-	add.w	d1,d1
-+
-	addi.w	#$60,d1
-	neg.w	d1
-	asr.w	#4,d1
-	add.w	d1,y_pos(a1)
-	bset	#1,status(a1)
-	move.w	#0,y_vel(a1)
-	move.w	#1,inertia(a1)
-	tst.b	flip_angle(a1)
-	bne.s	return_2AA10
-	move.b	#1,flip_angle(a1)
-	move.b	#AniIDSonAni_Walk,anim(a1)
-	move.b	#$7F,flips_remaining(a1)
-	move.b	#8,flip_speed(a1)
-
-return_2AA10:
-	rts
+		include	"_maps/Explosions.asm"
+ExItem_Animate:
+		jmp	(Obj27_Main).l
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; sprite mappings
@@ -87028,8 +87172,8 @@ PlrList_Std2_End
 ;---------------------------------------------------------------------------------------
 PlrList_StdWtr:	plrlistheader
 	plreq ArtTile_ArtNem_Explosion, ArtNem_Explosion
-	plreq ArtTile_ArtNem_SuperSonic_stars, ArtNem_SuperSonic_stars
-	plreq ArtTile_ArtNem_Bubbles, ArtNem_Bubbles
+	;plreq ArtTile_ArtNem_SuperSonic_stars, ArtNem_SuperSonic_stars
+	;plreq ArtTile_ArtNem_Bubbles, ArtNem_Bubbles
 PlrList_StdWtr_End
 ;---------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
@@ -87180,22 +87324,45 @@ PlrList_Wfz2_End
 ; Hill Top Zone primary
 ;---------------------------------------------------------------------------------------
 PlrList_Htz1: plrlistheader
-	plreq ArtTile_ArtNem_HtzSeeSaw, ArtNem_HtzSeeSaw
-	plreq ArtTile_ArtNem_Sol, ArtNem_Sol
-	plreq ArtTile_ArtNem_Rexon, ArtNem_Rexon
-	plreq ArtTile_ArtNem_Spiker, ArtNem_Spiker
+	plreq	ArtTile_Bomb,      Nem_Bomb                     ; bomb enemy
+	plreq	ArtTile_SLZ_Orbinaut,  Nem_Orbinaut             ; orbinaut enemy
+	plreq	ArtTile_SLZ_Fireball,    Nem_MzFire             ; fireballs
+	plreq	ArtTile_SLZ_Collapsing_Floor,  Nem_SlzBlock     ; block
+	plreq	ArtTile_GHZ_SLZ_Smashable_Wall+4,    Nem_SlzWall; breakable wall
 	plreq ArtTile_ArtNem_Spikes, ArtNem_Spikes
 	plreq ArtTile_ArtNem_VrtclSprng, ArtNem_VrtclSprng
 	plreq ArtTile_ArtNem_HrzntlSprng, ArtNem_HrzntlSprng
 PlrList_Htz1_End
+; ---------------------------------------------------------------------------
+; Compressed graphics - SLZ stuff
+; ---------------------------------------------------------------------------
+Nem_Seesaw:	binclude	"artnem/SLZ Seesaw.nem"
+		even
+Nem_SlzSpike:	binclude	"artnem/SLZ Little Spikeball.nem"
+		even
+Nem_Fan:	binclude	"artnem/SLZ Fan.nem"
+		even
+Nem_SlzWall:	binclude	"artnem/SLZ Breakable Wall.nem"
+		even
+Nem_Pylon:	binclude	"artnem/SLZ Pylon.nem"
+		even
+Nem_SlzSwing:	binclude	"artnem/SLZ Swinging Platform.nem"
+		even
+Nem_SlzBlock:	binclude	"artnem/SLZ 32x32 Block.nem"
+		even
+Nem_SlzCannon:	binclude	"artnem/SLZ Cannon.nem"
+		even
 ;---------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Hill Top Zone secondary
 ;---------------------------------------------------------------------------------------
 PlrList_Htz2: plrlistheader
-	plreq ArtTile_ArtNem_HtzZipline, ArtNem_HtzZipline
-	plreq ArtTile_ArtNem_HtzFireball2, ArtNem_HtzFireball2
-	plreq ArtTile_ArtNem_HtzValveBarrier, ArtNem_HtzValveBarrier
+		plreq	ArtTile_SLZ_Seesaw,    Nem_Seesaw                ; seesaw
+		plreq	ArtTile_SLZ_Fan,       Nem_Fan                   ; fan
+		plreq	ArtTile_SLZ_Pylon,     Nem_Pylon                 ; foreground pylon
+		plreq	ArtTile_SLZ_Swing,  Nem_SlzSwing                 ; swinging platform
+		plreq	ArtTile_SLZ_Fireball_Launcher, Nem_SlzCannon     ; fireball launcher
+		plreq	ArtTile_SLZ_Spikeball,  Nem_SlzSpike             ; spikeball
 PlrList_Htz2_End
 ;---------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
@@ -88391,7 +88558,7 @@ ArtUnc_Countdown:		BINCLUDE	"art/uncompressed/Numbers for drowning countdown.bin
 	even
 ArtNem_Game_Over:		BINCLUDE	"art/nemesis/Game and Time Over text.nem"
 	even
-ArtNem_Explosion:		BINCLUDE	"art/nemesis/Explosion.nem"
+ArtNem_Explosion:		BINCLUDE	"artnem/Explosion.nem"
 	even
 ArtNem_MilesLife:		BINCLUDE	"art/nemesis/Miles life counter.nem"
 	even

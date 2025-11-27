@@ -595,7 +595,7 @@ ObjID_TailsSS =			id(ObjPtr_TailsSS)		; 10
 ObjID_Bridge =			id(ObjPtr_Bridge)		; 11
 ObjID_HPZEmerald =		id(ObjPtr_HPZEmerald)		; 12
 ObjID_HPZWaterfall =		id(ObjPtr_HPZWaterfall)		; 13
-ObjID_Seesaw =			id(ObjPtr_Seesaw)		; 14
+ObjID_Seesaw =			$5E		; 14
 ObjID_SwingingPlatform =	id(ObjPtr_SwingingPlatform)	; 15
 ObjID_HTZLift =			id(ObjPtr_HTZLift)		; 16
 ObjID_ARZPlatform =		id(ObjPtr_ARZPlatform)		; 18
@@ -2432,7 +2432,10 @@ ArtTile_SBZ_Spinning_Platform:	equ $4DF
 ; ---------------------------------------------------------------------------
 ; Level-specific objects and badniks.
 
+; Shared
+ArtTile_GHZ_MZ_Swing:		equ $380
 ArtTile_MZ_SYZ_Caterkiller:	equ $4FF
+ArtTile_GHZ_SLZ_Smashable_Wall:	equ $50F
 
 ; EHZ
 ArtTile_ArtUnc_EHZPulseBall           = $039C
@@ -2710,7 +2713,7 @@ ArtTile_ArtNem_Tornado                = $0500
 ArtTile_ArtNem_TornadoThruster        = $0561
 
 ; Some common objects; these are loaded on all aquatic levels.
-ArtTile_ArtNem_Explosion              = $05A4
+ArtTile_ArtNem_Explosion              =  $5A0
 ArtTile_ArtNem_Bubbles                = $05E8
 ArtTile_ArtNem_SuperSonic_stars       = $05F2
 
@@ -2816,3 +2819,41 @@ ArtTile_Yadrin:			equ $47B
 
 ArtTile_Ball_Hog:		equ $302
 ArtTile_Bomb:			equ $400
+
+; ---------------------------------------------------------------------------
+; render_flags bitfield
+
+render_flags.x_flip		= 0 ; Sprite mirrored horizontally.
+render_flags.y_flip		= 1 ; Sprite mirrored vertically.
+render_flags.level_fg		= 2 ; Move with level foreground.
+render_flags.level_bg		= 3 ; Move with level background; leftover from Sonic 1.
+render_flags.explicit_height	= 4 ; Draw culling uses `y_radius` instead of guessing a height.
+render_flags.static_mappings	= 5 ; Mappings pointer points directly to a lone sprite piece instead of a list of sprites.
+render_flags.multi_sprite	= 6 ; Object SST holds metadata for multiple sprites.
+render_flags.on_screen		= 7 ; Object is on-screen and was rendered on the previous frame.
+
+; ---------------------------------------------------------------------------
+; status bitfield
+
+status.player.x_flip			= render_flags.x_flip ; Facing left.
+status.player.in_air			= 1 ; Airborne. 
+status.player.rolling			= 2 ; Spinning, i.e. jumping or rolling.
+status.player.on_object			= 3 ; Stood on an object rather than the level.
+status.player.rolljumping		= 4 ; Jumping whilst rolling; locks the player's controls.
+status.player.pushing			= 5 ; Pressing against an object.
+status.player.underwater		= 6 ; Submersed.
+status.player.prevent_tails_respawn	= 7 ; Prevents AI Tails from respawning.
+
+status.player.ss.x_flip		= render_flags.x_flip ; Sprite mirrored horizontally.
+status.player.ss.y_flip		= render_flags.y_flip ; Sprite mirrored vertically.
+status.player.ss.jumping	= 2 ; Jumping.
+status.player.ss.slowing	= 6 ; Coming to a stop after moving or landing.
+
+status.npc.x_flip		= render_flags.x_flip ; Facing right.
+status.npc.y_flip		= render_flags.y_flip ; Facing up.
+status.npc.misc			= 2 ; Used for various purposes by bosses.
+status.npc.p1_standing		= 3 ; Stood on by player 1.
+status.npc.p2_standing		= 4 ; Stood on by player 2.
+status.npc.p1_pushing		= 5 ; Pushed by player 1.
+status.npc.p2_pushing		= 6 ; Pushed by player 2.
+status.npc.no_balancing		= 7 ; Prevents player from performing their balancing animation whilst stood upon this object. Also set when the object is destroyed by the player.
