@@ -390,7 +390,7 @@ oil_ocean_zone_act_1 =		(oil_ocean_zone<<8)|$00
 oil_ocean_zone_act_2 =		(oil_ocean_zone<<8)|$01
 metropolis_zone_act_1 =		(metropolis_zone<<8)|$00
 metropolis_zone_act_2 =		(metropolis_zone<<8)|$01
-metropolis_zone_act_3 =		(metropolis_zone_2<<8)|$00
+metropolis_zone_act_3 =		(metropolis_zone<<8)|$02
 sky_chase_zone_act_1 =		(sky_chase_zone<<8)|$00
 wing_fortress_zone_act_1 =	(wing_fortress_zone<<8)|$00
 death_egg_zone_act_1 =		(death_egg_zone<<8)|$00
@@ -1598,7 +1598,7 @@ PalChangeSpeed:			ds.w	1
 Collision_addr:			ds.l	1
 				ds.b	$D	; $FFFFF79A-$FFFFF7A6 ; seems unused
 Boss_defeated_flag:		ds.b	1
-				ds.b	2	; $FFFFF7A8-$FFFFF7A9 ; seems unused
+v_unused11:				ds.w	1	; $FFFFF7A8-$FFFFF7A9 ; seems unused
 Current_Boss_ID:		ds.b	1
 				ds.b	5	; $FFFFF7AB-$FFFFF7AF ; seems unused
 v_lani0_frame:		ds.b	1		; level graphics animation 0 - current frame
