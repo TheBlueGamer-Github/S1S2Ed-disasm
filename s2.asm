@@ -85,8 +85,8 @@ StartOfRom:
     endif
 Vectors:
 	dc.l System_Stack , EntryPoint , DontDoErrorMaybe , DontDoErrorMaybe ; 4
-	dc.l DontDoErrorMaybe , DontDoErrorMaybe, DontDoErrorMaybe, DontDoErrorMaybe ; 8
-	dc.l DontDoErrorMaybe, DontDoErrorMaybe , DontDoErrorMaybe , DontDoErrorMaybe ; 12
+	dc.l IllegalInstrError , ZeroDivideError, CHKExceptionError, TRAPVError ; 8
+	dc.l PrivilegeViolation, TraceError , LineAEmulation , LineFEmulation ; 12
 	dc.l ErrorTrap , ErrorTrap , ErrorTrap , ErrorTrap ; 16
 	dc.l ErrorTrap , ErrorTrap , ErrorTrap , ErrorTrap ; 20
 	dc.l ErrorTrap , ErrorTrap , ErrorTrap , ErrorTrap ; 24
@@ -135,9 +135,9 @@ EndOfHeader:
 ; Crash/Freeze the 68000. Note that the Z80 continues to run, so the music keeps playing.
 ; loc_200:
 ErrorTrap:
-	;nop	; delay
-	;nop	; delay
-	bra.s	DontDoErrorMaybe	; Loop indefinitely.
+	nop	; delay
+	nop	; delay
+	bra.s	ErrorTrap	; Loop indefinitely.
 DontDoErrorMaybe:
 	rts
 ; ===========================================================================
