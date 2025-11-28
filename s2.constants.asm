@@ -372,18 +372,25 @@ sky_chase_zone zoneID		$10
 ; set the number of zones
 no_of_zones = cur_zone_id
 
+emerald_hill_zone_act_3 = zone_1_act_1
+
 ; Zone and act IDs
 emerald_hill_zone_act_1 =	(emerald_hill_zone<<8)|$00
 emerald_hill_zone_act_2 =	(emerald_hill_zone<<8)|$01
-zone_1_act_1 =	(zone_1<<8)|$00
+zone_1_act_1 =	(emerald_hill_zone<<8)|$02
 chemical_plant_zone_act_1 =	(chemical_plant_zone<<8)|$00
 chemical_plant_zone_act_2 =	(chemical_plant_zone<<8)|$01
+chemical_plant_zone_act_3 =	(chemical_plant_zone<<8)|$02
+chemical_plant_zone_act_4 =	(chemical_plant_zone<<8)|$03
 aquatic_ruin_zone_act_1 =	(aquatic_ruin_zone<<8)|$00
 aquatic_ruin_zone_act_2 =	(aquatic_ruin_zone<<8)|$01
+aquatic_ruin_zone_act_3 =	(aquatic_ruin_zone<<8)|$02
 casino_night_zone_act_1 =	(casino_night_zone<<8)|$00
 casino_night_zone_act_2 =	(casino_night_zone<<8)|$01
+casino_night_zone_act_3 =	(casino_night_zone<<8)|$02
 hill_top_zone_act_1 =		(hill_top_zone<<8)|$00
 hill_top_zone_act_2 =		(hill_top_zone<<8)|$01
+hill_top_zone_act_3 =		(hill_top_zone<<8)|$02
 mystic_cave_zone_act_1 =	(mystic_cave_zone<<8)|$00
 mystic_cave_zone_act_2 =	(mystic_cave_zone<<8)|$01
 oil_ocean_zone_act_1 =		(oil_ocean_zone<<8)|$00
@@ -1598,7 +1605,7 @@ PalChangeSpeed:			ds.w	1
 Collision_addr:			ds.l	1
 				ds.b	$D	; $FFFFF79A-$FFFFF7A6 ; seems unused
 Boss_defeated_flag:		ds.b	1
-v_unused11:				ds.w	1	; $FFFFF7A8-$FFFFF7A9 ; seems unused
+					ds.b	2	; $FFFFF7A8-$FFFFF7A9 ; seems unused
 Current_Boss_ID:		ds.b	1
 				ds.b	5	; $FFFFF7AB-$FFFFF7AF ; seems unused
 v_lani0_frame:		ds.b	1		; level graphics animation 0 - current frame
@@ -1739,7 +1746,6 @@ Saved_Extra_life_flags:		ds.b	1
 Saved_Extra_life_flags_2P:	ds.b	1	; stored, but never restored
 Saved_Camera_Max_Y_pos:		ds.w	1
 Saved_Dynamic_Resize_Routine:	ds.b	1
-
 				ds.b	5	; $FFFFFE59-$FFFFFE5D ; seems unused
 Oscillating_Numbers:
 Oscillation_Control:		ds.w	1
@@ -2089,7 +2095,8 @@ SS_Horiz_Scroll_Buf_1:		HorizontalScrollBuffer
 	dephase
 
 	phase	ramaddr(Boss_variables)	; Still in SS RAM
-				ds.b	4 ; unused
+v_unused11:				ds.w	1
+				ds.b	2 ; unused
 SS_Offset_X:			ds.w	1
 SS_Offset_Y:			ds.w	1
 SS_Swap_Positions_Flag:		ds.b	1

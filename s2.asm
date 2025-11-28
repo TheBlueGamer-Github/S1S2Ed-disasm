@@ -4579,7 +4579,7 @@ Level_LoadPal:
 	tst.b	(Water_flag).w	; does level have water?
 	beq.s	Level_GetBgm	; if not, branch
 	moveq	#PalID_HPZ_U,d0	; palette number $15
-	cmpi.b	#hidden_palace_zone,(Current_Zone).w
+	cmpi.w	#chemical_plant_zone_act_4,(Current_ZoneAndAct).w
 	beq.s	Level_WaterPal ; branch if level is HPZ
 	moveq	#PalID_CPZ_U,d0	; palette number $16
 	;cmpi.b	#chemical_plant_zone,(Current_Zone).w
@@ -4597,6 +4597,15 @@ Level_GetBgm:
 	bmi.s	noLevel_TtlCard
 	moveq	#0,d0
 	move.b	(Current_Zone).w,d0
+		cmpi.w	#chemical_plant_zone_act_4,(Current_ZoneAndAct).w ; is level SBZ3?
+		bne.s	Level_BgmNotLZ4	; if not, branch
+		moveq	#4,d0		; use 5th music (SBZ)
+
+Level_BgmNotLZ4:
+		cmpi.w	#metropolis_zone_act_3,(Current_ZoneAndAct).w ; is level FZ?
+		bne.s	Level_PlayBgmS1	; if not, branch
+		moveq	#5,d0		; use 6th music (FZ)
+Level_PlayBgmS1:
 	lea_	MusicList,a1
 	tst.w	(Two_player_mode).w
 	beq.s	Level_PlayBgm
@@ -4729,11 +4738,11 @@ Level_FromCheckpoint:
 	tst.b	(Water_flag).w
 	beq.s	++
 	moveq	#PalID_HPZ_U,d0
-	cmpi.b	#hidden_palace_zone,(Current_Zone).w
+	cmpi.w	#chemical_plant_zone_act_4,(Current_ZoneAndAct).w
 	beq.s	+
-	moveq	#PalID_CPZ_U,d0
-	cmpi.b	#chemical_plant_zone,(Current_Zone).w
-	beq.s	+
+	;moveq	#PalID_CPZ_U,d0
+	;cmpi.b	#chemical_plant_zone,(Current_Zone).w
+	;beq.s	+
 	moveq	#PalID_CPZ_U,d0
 +
 	bsr.w	PalLoad_Water_ForFade
@@ -6220,16 +6229,8 @@ nosignpost macro actid
 ; sub_4BD2:
 SetLevelEndType:
 	move.w	#0,(Level_Has_Signpost).w	; set level type to non-signpost
-	;tst.w	(Two_player_mode).w	; is it two-player competitive mode?
-	;bne.s	LevelEnd_SetSignpost	; if yes, branch
-	nosignpost.w zone_1_act_1
-	nosignpost.w wood_zone_act_1
-	nosignpost.w wing_fortress_zone_act_1
-	nosignpost.w oil_ocean_zone_act_1
-	nosignpost.s sky_chase_zone_act_1
-	nosignpost.s death_egg_zone_act_1
-	nosignpost.w metropolis_zone_act_3
-
+	cmpi.b	#2,(Current_Act).w
+	beq.s	+
 ; loc_4C40:
 LevelEnd_SetSignpost:
 	move.w	#1,(Level_Has_Signpost).w	; set level type to signpost
@@ -12837,27 +12838,27 @@ LevelSelect_Return:
 LevelSelect_Order:
 	dc.w	emerald_hill_zone_act_1
 	dc.w	emerald_hill_zone_act_2	; 1
-	dc.w	$0100	; 1
+	dc.w	zone_1_act_1	; 1
 	dc.w	chemical_plant_zone_act_1	; 2
 	dc.w	chemical_plant_zone_act_2	; 3
-	dc.w	oil_ocean_zone_act_1
+	dc.w	chemical_plant_zone_act_3
 	dc.w	aquatic_ruin_zone_act_1	; 4
 	dc.w	aquatic_ruin_zone_act_2	; 5
-	dc.w	$0200
+	dc.w	aquatic_ruin_zone_act_3
 	dc.w	casino_night_zone_act_1	; 6
 	dc.w	casino_night_zone_act_2	; 7
-	dc.w	$0600
+	dc.w	casino_night_zone_act_3
 	dc.w	hill_top_zone_act_1	; 8
 	dc.w	hill_top_zone_act_2	; 9
-	dc.w	sky_chase_zone_act_1
-	dc.w	mystic_cave_zone_act_1	; 10
-	dc.w	mystic_cave_zone_act_2	; 11
+	dc.w	hill_top_zone_act_3
+	dc.w	$5555	; 10
+	dc.w	$5555	; 11
 	dc.w	$5555	; 12
 	dc.w	$5555	; 13
 	dc.w	metropolis_zone_act_1	; 14
 	dc.w	metropolis_zone_act_2	; 15
-	dc.w	hidden_palace_zone_act_1	; 16
-	dc.w	$0500	; 17
+	dc.w	chemical_plant_zone_act_4	; 16
+	dc.w	metropolis_zone_act_3	; 17
 	dc.w	$5555	; 18
 	dc.w	$0900	; 19
 	dc.w	$4000	; 20 - special stage
@@ -20184,6 +20185,11 @@ loadZoneBlockMaps:
 	addq.w	#4,a2
 	moveq	#0,d0
 	move.b	(a2),d0	; palette ID
+		cmpi.w	#chemical_plant_zone_act_4,(Current_ZoneAndAct).w ; is level SBZ3 (LZ4) ?
+		bne.s	.notSBZ3	; if not, branch
+		moveq	#PalID_HPZ,d0	; use SB3 palette
+
+.notSBZ3:
 		;cmpi.w	#metropolis_zone_act_2,(Current_ZoneAndAct).w ; is level SBZ2?
 		;bne.s	.normalpal	; if yes, branch
 		cmpi.w	#metropolis_zone_act_2,(Current_ZoneAndAct).w ; is level SBZ2?
@@ -27224,6 +27230,15 @@ Obj34_LeftPartIn:	; the red part on the left, coming in
 Obj34_ZoneName:		; the name of the zone, coming in
 	jsr	Obj34_Wait(pc)
 	move.b	(Current_Zone).w,mapping_frame(a0)
+		cmpi.w	#chemical_plant_zone_act_4,(Current_ZoneAndAct).w ; is level SBZ3?
+		bne.s	Obj34_ZoneNameNotLZ4	; if not, branch
+		move.b	#4,mapping_frame(a0)		; use 5th music (SBZ)
+
+Obj34_ZoneNameNotLZ4:
+		cmpi.w	#metropolis_zone_act_3,(Current_ZoneAndAct).w ; is level FZ?
+		bne.s	+	; if not, branch
+		move.b	#5,mapping_frame(a0)		; use 6th music (FZ)
++
 	bra.s	Obj34_MoveTowardsTargetPosition
 ; ===========================================================================
 ; loc_13DE8:
@@ -27237,22 +27252,13 @@ Obj34_ActNumber:	; the act number, coming in
 	move.b	(Current_Zone).w,d0	; get the current zone
 	move.b	(Current_Act).w,d1	; get the current act
 	addi.b	#$12,d1			; add $12 to it (this is the index of the "1" frame in the mappings)
-	cmpi.b	#zone_1,d0	; are we in Metropolis Zone Act 3?
-	beq.s	++			; if not, branch
-	cmpi.b	#wood_zone,d0	; are we in Metropolis Zone Act 3?
-	beq.s	++			; if not, branch
-	cmpi.b	#oil_ocean_zone,d0	; are we in Metropolis Zone Act 3?
-	beq.s	++			; if not, branch
-	cmpi.b	#wing_fortress_zone,d0	; are we in Metropolis Zone Act 3?
-	beq.s	++			; if not, branch
-	cmpi.b	#hidden_palace_zone,d0	; are we in Metropolis Zone Act 3?
-	beq.s	++			; if not, branch
-	cmpi.b	#sky_chase_zone,d0	; are we in Metropolis Zone Act 3?
-	bne.s	+			; if not, branch
-	bra.s	++
-+
-	cmpi.b	#metropolis_zone_2,d0	; are we in Metropolis Zone Act 3?
-	beq.s	BranchTo9_DeleteObject	; if yes, branch			; if not, branch
+	cmpi.w	#chemical_plant_zone_act_4,(Current_ZoneAndAct).w ; is level SBZ3?
+	bne.s	Obj34_ActNumberNotLZ4	; if not, branch
+	moveq	#$14,d1			; use the "3" frame instead
+
+Obj34_ActNumberNotLZ4:
+	cmpi.w	#metropolis_zone_act_3,(Current_ZoneAndAct).w ; is level FZ?
+	beq.s	BranchTo9_DeleteObject	; if yes, branch
 	bra.s	++
 +
 	moveq	#$14,d1			; use the "3" frame instead
@@ -27745,15 +27751,14 @@ loc_14256:
 ; ===========================================================================
 
 loc_14270:
-	moveq	#0,d0
+	;moveq	#0,d0
 	move.b	(Current_Zone).w,d0
-	add.w	d0,d0
-	add.b	(Current_Act).w,d0
-	add.w	d0,d0
+	lsl.w	#3,d0
+	move.b	(Current_Act).w,d1
+	andi.w	#3,d1
+	add.w	d1,d1
+	add.w	d1,d0
 	lea	LevelOrder(pc),a1
-	tst.w	(Two_player_mode).w
-	beq.s	loc_1428C
-	lea	LevelOrder_2P(pc),a1
 
 loc_1428C:
 	move.w	(a1,d0.w),d0
@@ -27764,7 +27769,7 @@ loc_1428C:
 ; ===========================================================================
 
 loc_1429C:
-	move.w	d0,(Current_ZoneAndAct).w
+	move.w	d0,(Current_Zone).w
 	clr.b	(Last_star_pole_hit).w
 	clr.b	(Last_star_pole_hit_2P).w
 		tst.b	(f_bigring).w	; has Sonic jumped into a giant ring?
@@ -27854,59 +27859,93 @@ got_finalX = objoff_32		; position for card to finish on
 ; that act finishes.
 ; -------------------------------------------------------------------------------
 ;word_142F8:
-LevelOrder: zoneOrderedTable 2,2	; WrdArr_LevelOrder
+LevelOrder: ;zoneOrderedTable 2,4	; WrdArr_LevelOrder
 	; EHZ
-	zoneTableEntry.w  emerald_hill_zone_act_2	; Act 1
-	zoneTableEntry.w  zone_1_act_1	; Act 2
+	dc.b emerald_hill_zone, 1	; Act 1
+	dc.b emerald_hill_zone, 2	; Act 2
+	dc.b aquatic_ruin_zone, 0				; Act 3
+	dc.b 0,0				; Act 4
 	; Zone 1
-	zoneTableEntry.w  aquatic_ruin_zone_act_1				; Act 1
-	zoneTableEntry.w  0				; Act 2
+	dc.b aquatic_ruin_zone, 1				; Act 1
+	dc.b 0,0				; Act 2
+	dc.b aquatic_ruin_zone, 0				; Act 3
+	dc.b 0,0				; Act 4
 	; WZ
-	zoneTableEntry.w  casino_night_zone_act_1		; Act 1
-	zoneTableEntry.w  metropolis_zone_act_1		; Act 2
+	dc.b casino_night_zone, 1		; Act 1
+	dc.b metropolis_zone, 2		; Act 2
+	dc.b casino_night_zone, 0		; Act 3
+	dc.b metropolis_zone, 0		; Act 4
 	; Zone 3
-	zoneTableEntry.w  0				; Act 1
-	zoneTableEntry.w  0				; Act 2
+	dc.b 0,0				; Act 1
+	dc.b 0,0				; Act 2
+	dc.b 0,0				; Act 3
+	dc.b 0,0				; Act 4
 	; MTZ
-	zoneTableEntry.w  metropolis_zone_act_2		; Act 1
-	zoneTableEntry.w  hidden_palace_zone_act_1		; Act 2
+	dc.b metropolis_zone, 1		; Act 1
+	dc.b hidden_palace_zone, 2		; Act 2
+	dc.b 9,0		; Act 3
+	dc.b 0,0		; Act 4
 	; MTZ
-	zoneTableEntry.w  $900		; Act 3
-	zoneTableEntry.w  0				; Act 4
+	dc.b 9,0		; Act 1
+	dc.b 0,0				; Act 2
+	dc.b 9,0		; Act 3
+	dc.b 0,0				; Act 4
 	; WFZ
-	zoneTableEntry.w  chemical_plant_zone_act_1		; Act 1
-	zoneTableEntry.w  0				; Act 2
+	dc.b chemical_plant_zone, 1		; Act 1
+	dc.b 0,0				; Act 2
+	dc.b metropolis_zone, 0 	; Act 3
+	dc.b 0,0				; Act 4
 	; HTZ
-	zoneTableEntry.w  hill_top_zone_act_2		; Act 1
-	zoneTableEntry.w  sky_chase_zone_act_1	; Act 2
+	dc.b hill_top_zone, 1		; Act 1
+	dc.b hill_top_zone, 2	; Act 2
+	dc.b metropolis_zone, 0 	; Act 3
+	dc.b 0,0				; Act 4
 	; HPZ
-	zoneTableEntry.w  metropolis_zone_act_3 	; Act 1
-	zoneTableEntry.w  oil_ocean_zone_act_1		; Act 2
+	dc.b metropolis_zone, 2 	; Act 1
+	dc.b oil_ocean_zone, 2		; Act 2
+	dc.b metropolis_zone, 0 	; Act 3
+	dc.b oil_ocean_zone, 0		; Act 4
 	; Zone 9
-	zoneTableEntry.w  0				; Act 1
-	zoneTableEntry.w  0				; Act 2
+	dc.b 0,0				; Act 1
+	dc.b 0,0				; Act 2
+	dc.b 0,0				; Act 3
+	dc.b 0,0				; Act 4
 	; OOZ
-	zoneTableEntry.w  hill_top_zone_act_1		; Act 1
-	zoneTableEntry.w  metropolis_zone_act_1		; Act 2
+	dc.b hill_top_zone, 1		; Act 1
+	dc.b metropolis_zone, 2		; Act 2
+	dc.b hill_top_zone, 0		; Act 3
+	dc.b metropolis_zone, 0		; Act 4
 	; MCZ
-	zoneTableEntry.w  mystic_cave_zone_act_2	; Act 1
-	zoneTableEntry.w  oil_ocean_zone_act_1		; Act 2
+	dc.b mystic_cave_zone, 1	; Act 1
+	dc.b oil_ocean_zone, 2		; Act 2
+	dc.b mystic_cave_zone, 0	; Act 3
+	dc.b oil_ocean_zone, 0		; Act 4
 	; CNZ
-	zoneTableEntry.w  casino_night_zone_act_2	; Act 1
-	zoneTableEntry.w  wing_fortress_zone_act_1		; Act 2
+	dc.b casino_night_zone, 1	; Act 1
+	dc.b casino_night_zone, 2		; Act 2
+	dc.b chemical_plant_zone, 0		; Act 3
+	dc.b 0,0				; Act 4
 	; CPZ
-	zoneTableEntry.w  chemical_plant_zone_act_2	; Act 1
-	zoneTableEntry.w  oil_ocean_zone_act_1	; Act 2
+	dc.b chemical_plant_zone, 1	; Act 1
+	dc.b chemical_plant_zone, 2	; Act 2
+	dc.b hill_top_zone, 0		; Act 1
+	dc.b metropolis_zone, 2 	; Act 4
 	; DEZ
-	zoneTableEntry.w  -1				; Act 1
-	zoneTableEntry.w  0				; Act 2
+	dc.b -1,-1			; Act 1
+	dc.b 0,0				; Act 2
+	dc.b -1,-1				; Act 3
+	dc.b 0,0				; Act 4
 	; ARZ
-	zoneTableEntry.w  aquatic_ruin_zone_act_2	; Act 1
-	zoneTableEntry.w  wood_zone_act_1	; Act 2
+	dc.b aquatic_ruin_zone, 1	; Act 1
+	dc.b aquatic_ruin_zone, 2	; Act 2
+	dc.b casino_night_zone, 0		; Act 3
+	dc.b metropolis_zone, 0		; Act 4
 	; SCZ
-	zoneTableEntry.w  metropolis_zone_act_1 	; Act 1
-	zoneTableEntry.w  0				; Act 2
-    zoneTableEnd
+	dc.b metropolis_zone, 0 	; Act 1
+	dc.b 0,0				; Act 2
+	dc.b metropolis_zone, 0 	; Act 3
+	dc.b 0,0				; Act 4
+  ;  zoneTableEnd
 
 ;word_1433C:
 LevelOrder_2P: zoneOrderedTable 2,2	; WrdArr_LevelOrder_2P
@@ -28956,6 +28995,15 @@ LoadTitleCard:
 	jsr	LoadPLC2
 	moveq	#0,d0
 	move.b	(Current_Zone).w,d0
+		cmpi.w	#chemical_plant_zone_act_4,(Current_ZoneAndAct).w ; is level SBZ3?
+		bne.s	LoadTitleCardNotLZ4	; if not, branch
+		move.b	#4,d0		; use 5th music (SBZ)
+
+LoadTitleCardNotLZ4:
+		cmpi.w	#metropolis_zone_act_3,(Current_ZoneAndAct).w ; is level FZ?
+		bne.s	+	; if not, branch
+		move.b	#5,d0		; use 6th music (FZ)
++
 	move.b	Off_TitleCardLetters(pc,d0.w),d0
 	lea	TitleCardLetters(pc),a0
 	lea	(a0,d0.w),a0
