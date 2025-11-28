@@ -63,6 +63,7 @@ function M.get_os_name()
         ['^x86$']           = 'x86',
         ['i[%d]86']         = 'x86',
         ['amd64']           = 'x86_64',
+        ['x86_64']          = 'x86_64',
         ['x64']             = 'x86_64',
         ['power macintosh'] = 'powerpc',
         ['^arm']            = 'arm',
@@ -70,7 +71,7 @@ function M.get_os_name()
         ['i86pc']           = 'x86',
     }
 
-    local os_name, arch_name = raw_os_name, raw_arch_name
+    local os_name, arch_name = 'unknown', 'unknown'
 
     for pattern, name in pairs(os_patterns) do
         if raw_os_name:match(pattern) then

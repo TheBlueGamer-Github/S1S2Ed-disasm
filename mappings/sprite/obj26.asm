@@ -1,73 +1,72 @@
-Map_obj26:	mappingsTable
-	mappingsTableEntry.w	Map_obj26_0018
-	mappingsTableEntry.w	Map_obj26_0022
-	mappingsTableEntry.w	Map_obj26_0034
-	mappingsTableEntry.w	Map_obj26_0046
-	mappingsTableEntry.w	Map_obj26_0058
-	mappingsTableEntry.w	Map_obj26_006A
-	mappingsTableEntry.w	Map_obj26_007C
-	mappingsTableEntry.w	Map_obj26_008E
-	mappingsTableEntry.w	Map_obj26_00A0
-	mappingsTableEntry.w	Map_obj26_00B2
-	mappingsTableEntry.w	Map_obj26_00C4
-	mappingsTableEntry.w	Map_obj26_00D6
+sonic.asm: mappingsTable
+	mappingsTableEntry.w	sonic.asm_0
+	mappingsTableEntry.w	sonic.asm_1
+	mappingsTableEntry.w	sonic.asm_2
+	mappingsTableEntry.w	sonic.asm_3
+	mappingsTableEntry.w	sonic.asm_4
+	mappingsTableEntry.w	sonic.asm_5
+	mappingsTableEntry.w	sonic.asm_6
+	mappingsTableEntry.w	sonic.asm_7
+	mappingsTableEntry.w	sonic.asm_8
+	mappingsTableEntry.w	sonic.asm_9
+	mappingsTableEntry.w	sonic.asm_10
+	mappingsTableEntry.w	sonic.asm_11
 
-Map_obj26_0018:	spriteHeader
-	spritePiece	-$10, -$11, 4, 4, 0, 0, 0, 0, 0
-Map_obj26_0018_End
+sonic.asm_0:	spriteHeader
+ spritePiece -$10, -$11, 4, 4, 0, 0, 0, 0, 0
+sonic.asm_0_End
 
-Map_obj26_0022:	spriteHeader
-	spritePiece	-8, -$B, 2, 2, $18, 0, 0, 0, 0
-	spritePiece	-$10, -$11, 4, 4, 0, 0, 0, 0, 0
-Map_obj26_0022_End
+sonic.asm_1:	spriteHeader
+ spritePiece -8, -$B, 2, 2, $18, 0, 0, 0, 0
+ spritePiece -$10, -$11, 4, 4, 0, 0, 0, 0, 0
+sonic.asm_1_End
 
-Map_obj26_0034:	spriteHeader
-	spritePiece	-8, -$B, 2, 2, $154, 0, 0, 0, 0
-	spritePiece	-$10, -$11, 4, 4, 0, 0, 0, 0, 0
-Map_obj26_0034_End
+sonic.asm_2:	spriteHeader
+ spritePiece -8, -$B, 2, 2, $150, 0, 0, 0, 0
+ spritePiece -$10, -$11, 4, 4, 0, 0, 0, 0, 0
+sonic.asm_2_End
 
-Map_obj26_0046:	spriteHeader
-	spritePiece	-8, -$B, 2, 2, $1C, 0, 0, 0, 0
-	spritePiece	-$10, -$11, 4, 4, 0, 0, 0, 0, 0
-Map_obj26_0046_End
+sonic.asm_3:	spriteHeader
+ spritePiece -$10, -$11, 4, 4, 0, 0, 0, 0, 0
+sonic.asm_3_End
 
-Map_obj26_0058:	spriteHeader
-	spritePiece	-8, -$B, 2, 2, $20, 0, 0, 0, 0
-	spritePiece	-$10, -$11, 4, 4, 0, 0, 0, 0, 0
-Map_obj26_0058_End
+sonic.asm_4:	spriteHeader
+ spritePiece -8, -$B, 2, 2, $1C, 0, 0, 0, 0
+ spritePiece -$10, -$11, 4, 4, 0, 0, 0, 0, 0
+sonic.asm_4_End
 
-Map_obj26_006A:	spriteHeader
-	spritePiece	-8, -$B, 2, 2, $24, 0, 0, 1, 0
-	spritePiece	-$10, -$11, 4, 4, 0, 0, 0, 0, 0
-Map_obj26_006A_End
+sonic.asm_5:	spriteHeader
+ spritePiece -8, -$B, 2, 2, $20, 0, 0, 1, 0
+ spritePiece -$10, -$11, 4, 4, 0, 0, 0, 0, 0
+sonic.asm_5_End
 
-Map_obj26_007C:	spriteHeader
-	spritePiece	-8, -$B, 2, 2, $28, 0, 0, 0, 0
-	spritePiece	-$10, -$11, 4, 4, 0, 0, 0, 0, 0
-Map_obj26_007C_End
+sonic.asm_6:	spriteHeader
+ spritePiece -8, -$B, 2, 2, $24, 0, 0, 0, 0
+ spritePiece -$10, -$11, 4, 4, 0, 0, 0, 0, 0
+sonic.asm_6_End
 
-Map_obj26_008E:	spriteHeader
-	spritePiece	-8, -$B, 2, 2, $2C, 0, 0, 0, 0
-	spritePiece	-$10, -$11, 4, 4, 0, 0, 0, 0, 0
-Map_obj26_008E_End
+sonic.asm_7:	spriteHeader
+ spritePiece -8, -$B, 2, 2, $28, 0, 0, 0, 0
+ spritePiece -$10, -$11, 4, 4, 0, 0, 0, 0, 0
+sonic.asm_7_End
 
-Map_obj26_00A0:	spriteHeader
-	spritePiece	-8, -$B, 2, 2, $30, 0, 0, 0, 0
-	spritePiece	-$10, -$11, 4, 4, 0, 0, 0, 0, 0
-Map_obj26_00A0_End
+sonic.asm_8:	spriteHeader
+ spritePiece -8, -$B, 2, 2, $2C, 0, 0, 0, 0
+ spritePiece -$10, -$11, 4, 4, 0, 0, 0, 0, 0
+sonic.asm_8_End
 
-Map_obj26_00B2:	spriteHeader
-	spritePiece	-8, -$B, 2, 2, $38, 0, 0, 0, 0
-	spritePiece	-$10, -$11, 4, 4, 0, 0, 0, 0, 0
-Map_obj26_00B2_End
+sonic.asm_9:	spriteHeader
+ spritePiece -8, -$B, 2, 2, $34, 0, 0, 0, 0
+ spritePiece -$10, -$11, 4, 4, 0, 0, 0, 0, 0
+sonic.asm_9_End
 
-Map_obj26_00C4:	spriteHeader
-	spritePiece	-8, -$B, 2, 2, $34, 0, 0, 0, 0
-	spritePiece	-$10, -$11, 4, 4, 0, 0, 0, 0, 0
-Map_obj26_00C4_End
+sonic.asm_10:	spriteHeader
+ spritePiece -8, -$B, 2, 2, $30, 0, 0, 0, 0
+ spritePiece -$10, -$11, 4, 4, 0, 0, 0, 0, 0
+sonic.asm_10_End
 
-Map_obj26_00D6:	spriteHeader
-	spritePiece	-$10, -1, 4, 2, $10, 0, 0, 0, 0
-Map_obj26_00D6_End
+sonic.asm_11:	spriteHeader
+ spritePiece -$10, -1, 4, 2, $10, 0, 0, 0, 0
+sonic.asm_11_End
 
 	even
