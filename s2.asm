@@ -20926,6 +20926,20 @@ DLE_SYZ3end:
 ; ===========================================================================
 ; loc_E986:
 LevEvents_HTZ:
+		moveq	#0,d0
+		move.b	(Current_Act).w,d0
+		add.w	d0,d0
+		move.w	DLE_SLZx(pc,d0.w),d0
+		jmp	DLE_SLZx(pc,d0.w)
+; ===========================================================================
+DLE_SLZx:	dc.w DLE_SLZ12-DLE_SLZx
+		dc.w DLE_SLZ12-DLE_SLZx
+		dc.w LevEvents_SCZ-DLE_SLZx
+; ===========================================================================
+
+DLE_SLZ12:
+		rts	
+; ===========================================================================
 	tst.b	(Current_Act).w
 	bne.w	LevEvents_HTZ2
 	moveq	#0,d0
@@ -59017,7 +59031,7 @@ loc_19F2E:
 		move.w	#$14,d2
 		move.w	#$14,d3
 		move.w	obX(a0),d4
-		jsr	(SolidObject).l
+		jsr	(SolidObject_Swapped).l
 		tst.w	d4
 		bgt.s	loc_19F50
 
