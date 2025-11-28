@@ -28,3 +28,4 @@ sound/PCM/generated/hashes.lua
 
 # Typical CMake build directory.
 build_tools/source_code/build
+/sound/music/Sonic 1 Songs
