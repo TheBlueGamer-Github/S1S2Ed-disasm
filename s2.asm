@@ -21757,9 +21757,32 @@ LevEvents_MCZ2_Routine4:
 ; ===========================================================================
 ; loc_F26A:
 LevEvents_CNZ:
-	;tst.b	(Current_Act).w
-	;bne.s	LevEvents_CNZ2
-	rts			; no events for act 1
+		moveq	#0,d0
+		move.b	(Current_Act).w,d0
+		add.w	d0,d0
+		move.w	DLE_SYZx(pc,d0.w),d0
+		jmp	DLE_SYZx(pc,d0.w)
+; ===========================================================================
+DLE_SYZx:	dc.w DLE_SYZ1-DLE_SYZx
+		dc.w DLE_SYZ2-DLE_SYZx
+		dc.w DLE_SYZ3-DLE_SYZx
+; ===========================================================================
+
+DLE_SYZ1:
+		rts	
+; ===========================================================================
+
+DLE_SYZ2:
+		move.w	#$520,(Camera_Max_Y_pos_target).w
+		cmpi.w	#$25A0,(Camera_X_Pos).w
+		blo.s	locret_71A2
+		move.w	#$420,(Camera_Max_Y_pos_target).w
+		cmpi.w	#$4D0,(v_player+obY).w
+		blo.s	locret_71A2
+		move.w	#$520,(Camera_Max_Y_pos_target).w
+
+locret_71A2:
+		rts	
 ; ===========================================================================
 ; loc_F278:
 LevEvents_CNZ2:
@@ -86910,12 +86933,13 @@ PlrList_Cnz2_End
 ; CPZ Primary
 ;---------------------------------------------------------------------------------------
 PlrList_Cpz1: plrlistheader
-	plreq	ArtTile_LZ_Flapping_Door,    Nem_FlapDoor   ; flapping door
-	plreq ArtTile_ArtNem_Button, ArtNem_Button
 	plreq ArtTile_ArtNem_WaterSurface, ArtNem_WaterSurface
 	plreq	ArtTile_LZ_Block_1,    Nem_LzBlock1         ; block
 	plreq	ArtTile_LZ_Block_2,    Nem_LzBlock2         ; blocks
+	plreq	ArtTile_LZ_Spikeball_Chain, Nem_LzSpikeBall ; spiked ball
 	plreq	ArtTile_LZ_Splash,      Nem_Splash          ; waterfalls and splash
+	plreq	ArtTile_LZ_Flapping_Door,    Nem_FlapDoor   ; flapping door
+	plreq	ArtTile_LZ_Moving_Block,    Nem_LzBlock3    ; block
 	plreq	ArtTile_LZ_Door,     Nem_LzDoor1            ; vertical door
 	plreq	ArtTile_LZ_Harpoon,     Nem_Harpoon         ; harpoon
 	plreq	ArtTile_Burrobot,    Nem_Burrobot           ; burrobot enemy
@@ -86932,11 +86956,17 @@ Nem_Harpoon:	binclude	"artnem/LZ Harpoon.nem"
 		even
 Nem_FlapDoor:	binclude	"artnem/LZ Flapping Door.nem"
 		even
+Nem_LzSpikeBall:binclude	"artnem/LZ Spiked Ball & Chain.nem"
+		even
+Nem_LzBlock3:	binclude	"artnem/LZ 32x16 Block.nem"
+		even
 ;---------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; CPZ Secondary
 ;---------------------------------------------------------------------------------------
 PlrList_Cpz2: plrlistheader
+	plreq ArtTile_ArtNem_Button, ArtNem_Button
+	plreq	ArtTile_LZ_Rising_Platform,    Nem_LzPlatfm ; rising platform
 	plreq	ArtTile_LZ_Pole,      Nem_LzPole            ; pole that breaks
 	plreq	ArtTile_LZ_Orbinaut,    Nem_Orbinaut           ; burrobot enemy
 	plreq	ArtTile_LZ_Cork,        Nem_Cork            ; cork block
@@ -86952,6 +86982,8 @@ Nem_Splash:	binclude	"artnem/LZ Water & Splashes.nem"
 Nem_LzDoor1:	binclude	"artnem/LZ Vertical Door.nem"
 		even
 Nem_LzPole:	binclude	"artnem/LZ Breakable Pole.nem"
+		even
+Nem_LzPlatfm:	binclude	"artnem/LZ Rising Platform.nem"
 		even
 ;---------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
