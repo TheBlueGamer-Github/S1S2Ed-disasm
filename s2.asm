@@ -50794,7 +50794,7 @@ loc_18FD8:				; CODE XREF: ROM:00018FC6j
 loc_18FE0:				; CODE XREF: ROM:00018FC8j
 		clr.w	$12(a0)
 		move.w	#MusID_EHZ,d0	; ''
-		jsr	(PlayMusic).l
+		jsr	(PlaySound).l
 		jsr	LoadPLC_AnimalExplosion
 
 loc_18FEE:				; CODE XREF: ROM:00018FB8j
@@ -86672,37 +86672,6 @@ PlrList_Mtz2: plrlistheader
 	plreq ArtTile_ArtNem_VrtclSprng, ArtNem_VrtclSprng
 	plreq ArtTile_ArtNem_HrzntlSprng, ArtNem_HrzntlSprng
 PlrList_Mtz2_End
-; ---------------------------------------------------------------------------
-; Compressed graphics - SBZ stuff
-; ---------------------------------------------------------------------------
-Nem_SbzWheel1:	binclude	"artnem/SBZ Running Disc.nem"
-		even
-Nem_SbzWheel2:	binclude	"artnem/SBZ Junction Wheel.nem"
-		even
-Nem_Cutter:	binclude	"artnem/SBZ Pizza Cutter.nem"
-		even
-Nem_Stomper:	binclude	"artnem/SBZ Stomper.nem"
-		even
-Nem_SpinPform:	binclude	"artnem/SBZ Spinning Platform.nem"
-		even
-Nem_TrapDoor:	binclude	"artnem/SBZ Trapdoor.nem"
-		even
-Nem_SbzFloor:	binclude	"artnem/SBZ Collapsing Floor.nem"
-		even
-Nem_Electric:	binclude	"artnem/SBZ Electrocuter.nem"
-		even
-Nem_SbzBlock:	binclude	"artnem/SBZ Vanishing Block.nem"
-		even
-Nem_FlamePipe:	binclude	"artnem/SBZ Flaming Pipe.nem"
-		even
-Nem_SbzDoor1:	binclude	"artnem/SBZ Small Vertical Door.nem"
-		even
-Nem_SlideFloor:	binclude	"artnem/SBZ Sliding Floor Trap.nem"
-		even
-Nem_SbzDoor2:	binclude	"artnem/SBZ Large Horizontal Door.nem"
-		even
-Nem_Girder:	binclude	"artnem/SBZ Crushing Girder.nem"
-		even
 ;---------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Wing Fortress Zone primary
@@ -89560,6 +89529,38 @@ Sound6F:	include "sound/sfx/EF - Large Laser.asm"
 Sound70:	include "sound/sfx/F0 - Oil Slide.asm"
 
 	finishBank
+
+; ---------------------------------------------------------------------------
+; Compressed graphics - SBZ stuff
+; ---------------------------------------------------------------------------
+Nem_SbzWheel1:	binclude	"artnem/SBZ Running Disc.nem"
+		even
+Nem_SbzWheel2:	binclude	"artnem/SBZ Junction Wheel.nem"
+		even
+Nem_Cutter:	binclude	"artnem/SBZ Pizza Cutter.nem"
+		even
+Nem_Stomper:	binclude	"artnem/SBZ Stomper.nem"
+		even
+Nem_SpinPform:	binclude	"artnem/SBZ Spinning Platform.nem"
+		even
+Nem_TrapDoor:	binclude	"artnem/SBZ Trapdoor.nem"
+		even
+Nem_SbzFloor:	binclude	"artnem/SBZ Collapsing Floor.nem"
+		even
+Nem_Electric:	binclude	"artnem/SBZ Electrocuter.nem"
+		even
+Nem_SbzBlock:	binclude	"artnem/SBZ Vanishing Block.nem"
+		even
+Nem_FlamePipe:	binclude	"artnem/SBZ Flaming Pipe.nem"
+		even
+Nem_SbzDoor1:	binclude	"artnem/SBZ Small Vertical Door.nem"
+		even
+Nem_SlideFloor:	binclude	"artnem/SBZ Sliding Floor Trap.nem"
+		even
+Nem_SbzDoor2:	binclude	"artnem/SBZ Large Horizontal Door.nem"
+		even
+Nem_Girder:	binclude	"artnem/SBZ Crushing Girder.nem"
+		even
 
 ; end of 'ROM'
 	if padToPowerOfTwo && (*)&(*-1)
