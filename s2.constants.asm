@@ -2616,6 +2616,7 @@ ArtTile_LZ_Orbinaut:		equ $467
 ArtTile_LZ_Cork:		equ ArtTile_LZ_Blocks+$11A
 ArtTile_Jaws:			equ $486
 ArtTile_LZ_Splash:		equ $25F
+ArtTile_LZ_Gargoyle:		equ $2E9
 ; DEZ
 ArtTile_ArtUnc_DEZAnimBack            = $0326
 ArtTile_ArtNem_ConstructionStripes_1  = $0328
