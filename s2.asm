@@ -53038,260 +53038,170 @@ JmpTo3_SolidObject_Always_SingleCharacter ; JmpTo
 
 
 ; ===========================================================================
-; ----------------------------------------------------------------------------
-; Object 67 - Spin tube from MTZ
-; ----------------------------------------------------------------------------
+; ---------------------------------------------------------------------------
+; Object 67 - disc that	you run	around (SBZ)
+; ---------------------------------------------------------------------------
 ; Sprite_2715C:
 Obj67:
-	jmp	(DeleteObject).l
-	moveq	#0,d0
-	move.b	routine(a0),d0
-	move.w	Obj67_Index(pc,d0.w),d1
-	jsr	Obj67_Index(pc,d1.w)
-	move.b	objoff_2C(a0),d0
-	add.b	objoff_36(a0),d0
-	beq.w	JmpTo4_MarkObjGone3
-	lea	(Ani_obj67).l,a1
-	jsrto	AnimateSprite, JmpTo7_AnimateSprite
-	jmpto	DisplaySprite, JmpTo19_DisplaySprite
+		moveq	#0,d0
+		move.b	obRoutine(a0),d0
+		move.w	Disc_Index(pc,d0.w),d1
+		jmp	Disc_Index(pc,d1.w)
 ; ===========================================================================
-; off_27184:
-Obj67_Index:	offsetTable
-		offsetTableEntry.w Obj67_Init	; 0
-		offsetTableEntry.w Obj67_Main	; 2
-; ===========================================================================
-; loc_27188:
-Obj67_Init:
-	addq.b	#2,routine(a0)
-	move.l	#Obj67_MapUnc_27548,mappings(a0)
-	move.w	#make_art_tile(ArtTile_ArtNem_MtzSpinTubeFlash,3,0),art_tile(a0)
-	ori.b	#4,render_flags(a0)
-	move.b	#$10,width_pixels(a0)
-	move.b	#5,priority(a0)
-; loc_271AC:
-Obj67_Main:
-	lea	(MainCharacter).w,a1 ; a1=character
-	lea	objoff_2C(a0),a4
-	bsr.s	loc_271BE
-	lea	(Sidekick).w,a1 ; a1=character
-	lea	objoff_36(a0),a4
+Disc_Index:	dc.w Disc_Main-Disc_Index
+		dc.w Disc_Action-Disc_Index
 
-loc_271BE:
-	moveq	#0,d0
-	move.b	(a4),d0
-	move.w	off_271CA(pc,d0.w),d0
-	jmp	off_271CA(pc,d0.w)
-; ===========================================================================
-off_271CA:	offsetTable
-		offsetTableEntry.w loc_271D0	; 0
-		offsetTableEntry.w loc_27260	; 2
-		offsetTableEntry.w loc_27294	; 4
+disc_origX = objoff_32		; original x-axis position
+disc_origY = objoff_30		; original y-axis position
+disc_spot_distance = objoff_34
+disc_radius = objoff_38
+disc_sonic_attached = objoff_3A
 ; ===========================================================================
 
-loc_271D0:
-	tst.w	(Debug_placement_mode).w
-	bne.w	return_2725E
-	move.w	x_pos(a1),d0
-	sub.w	x_pos(a0),d0
-	addq.w	#3,d0
-	btst	#0,status(a0)
-	beq.s	+
-	addi.w	#$A,d0
-+
-	cmpi.w	#$10,d0
-	bhs.s	return_2725E
-	move.w	y_pos(a1),d1
-	sub.w	y_pos(a0),d1
-	addi.w	#$20,d1
-	cmpi.w	#$40,d1
-	bhs.s	return_2725E
-	tst.b	obj_control(a1)
-	bne.s	return_2725E
-	addq.b	#2,(a4)
-	move.b	#$81,obj_control(a1)
-	move.b	#AniIDSonAni_Roll,anim(a1)
-	move.w	#$800,inertia(a1)
-	move.w	#0,x_vel(a1)
-	move.w	#0,y_vel(a1)
-	bclr	#5,status(a0)
-	bclr	#5,status(a1)
-	bset	#1,status(a1)
-	move.w	x_pos(a0),x_pos(a1)
-	move.w	y_pos(a0),y_pos(a1)
-	clr.b	1(a4)
-	move.w	#SndID_Roll,d0
-	jsr	(PlaySound).l
-	move.w	#(1<<8)|(0<<0),anim(a0)
+Disc_Main:	; Routine 0
+		addq.b	#2,obRoutine(a0)
+		move.l	#Map_Disc,obMap(a0)
+		move.w	#make_art_tile(ArtTile_SBZ_Disc,2,1),obGfx(a0)
+		move.b	#4,obRender(a0)
+		move.b	#4,obPriority(a0)
+		move.b	#8,obActWid(a0)
+		move.w	obX(a0),disc_origX(a0)
+		move.w	obY(a0),disc_origY(a0)
+		move.b	#$18,disc_spot_distance(a0)
+		move.b	#$48,disc_radius(a0)
+		move.b	obSubtype(a0),d1 ; get object type
+		andi.b	#$F,d1		; read only the	2nd digit
+		beq.s	.typeis0	; branch if 0
+		move.b	#$10,disc_spot_distance(a0)
+		move.b	#$38,disc_radius(a0)
 
-return_2725E:
-	rts
+.typeis0:
+		move.b	obSubtype(a0),d1 ; get object type
+		andi.b	#$F0,d1		; read only the	1st digit
+		ext.w	d1
+		asl.w	#3,d1
+		move.w	d1,objoff_36(a0)
+		move.b	obStatus(a0),d0
+		ror.b	#2,d0
+		andi.b	#$C0,d0
+		move.b	d0,obAngle(a0)
+
+Disc_Action:	; Routine 2
+		bsr.w	Disc_MoveSonic
+		bsr.w	Disc_MoveSpot
+		bra.w	Disc_ChkDel
 ; ===========================================================================
 
-loc_27260:
-	move.b	1(a4),d0
-	addq.b	#2,1(a4)
-	jsr	(CalcSine).l
-	asr.w	#5,d0
-	move.w	y_pos(a0),d2
-	sub.w	d0,d2
-	move.w	d2,y_pos(a1)
-	cmpi.b	#$80,1(a4)
-	bne.s	+
-	bsr.w	loc_27310
-	addq.b	#2,(a4)
-	move.w	#SndID_SpindashRelease,d0
-	jsr	(PlaySound).l
-+
-	rts
+Disc_MoveSonic:
+		moveq	#0,d2
+		move.b	disc_radius(a0),d2
+		move.w	d2,d3
+		add.w	d3,d3
+		lea	(v_player).w,a1
+		move.w	obX(a1),d0
+		sub.w	disc_origX(a0),d0
+		add.w	d2,d0
+		cmp.w	d3,d0
+		bhs.s	.detach
+		move.w	obY(a1),d1
+		sub.w	disc_origY(a0),d1
+		add.w	d2,d1
+		cmp.w	d3,d1
+		bhs.s	.detach
+		btst	#1,obStatus(a1)
+		beq.s	.attach
+		clr.b	disc_sonic_attached(a0)
+		rts	
+; ===========================================================================
+; loc_155A8:
+.detach:
+		tst.b	disc_sonic_attached(a0)
+		beq.s	.return
+		clr.b	stick_to_convex(a1)
+		clr.b	disc_sonic_attached(a0)
+; locret_155B6:
+.return:
+		rts	
+; ===========================================================================
+; loc_155B8:
+.attach:
+		tst.b	disc_sonic_attached(a0)
+		bne.s	loc_155E2
+		move.b	#1,disc_sonic_attached(a0)
+		btst	#2,obStatus(a1)
+		bne.s	loc_155D0
+		clr.b	obAnim(a1)
+
+loc_155D0:
+		bclr	#5,obStatus(a1)
+		move.b	#AniIDSonAni_Run,obPrevAni(a1) ; restart Sonic's animation
+		move.b	#1,stick_to_convex(a1)
+
+loc_155E2:
+		move.w	obInertia(a1),d0
+		tst.w	objoff_36(a0)
+		bpl.s	loc_15608
+		cmpi.w	#-$400,d0
+		ble.s	loc_155FA
+		move.w	#-$400,obInertia(a1)
+		rts	
 ; ===========================================================================
 
-loc_27294:
-	subq.b	#1,2(a4)
-	bpl.s	Obj67_MoveCharacter
-	movea.l	6(a4),a2
-	move.w	(a2)+,d4
-	move.w	d4,x_pos(a1)
-	move.w	(a2)+,d5
-	move.w	d5,y_pos(a1)
-	tst.b	subtype(a0)
-	bpl.s	+
-	subq.w	#8,a2
-+
-	move.l	a2,6(a4)
-	subq.w	#4,4(a4)
-	beq.s	loc_272EE
-	move.w	(a2)+,d4
-	move.w	(a2)+,d5
-	move.w	#$1000,d2
-	bra.w	loc_27374
-; ===========================================================================
-; update the position of Sonic/Tails in the MTZ tube
-; loc_272C8:
-Obj67_MoveCharacter:
-	move.l	x_pos(a1),d2
-	move.l	y_pos(a1),d3
-	move.w	x_vel(a1),d0
-	ext.l	d0
-	asl.l	#8,d0
-	add.l	d0,d2
-	move.w	y_vel(a1),d0
-	ext.l	d0
-	asl.l	#8,d0
-	add.l	d0,d3
-	move.l	d2,x_pos(a1)
-	move.l	d3,y_pos(a1)
-	rts
+loc_155FA:
+		cmpi.w	#-$F00,d0
+		bge.s	locret_15606
+		move.w	#-$F00,obInertia(a1)
+
+locret_15606:
+		rts	
 ; ===========================================================================
 
-loc_272EE:
-	andi.w	#$7FF,y_pos(a1)
-	clr.b	(a4)
-	clr.b	obj_control(a1)
-	btst	#4,subtype(a0)
-	bne.s	+
-	move.w	#0,x_vel(a1)
-	move.w	#0,y_vel(a1)
-+
-	rts
+loc_15608:
+		cmpi.w	#$400,d0
+		bge.s	loc_15616
+		move.w	#$400,obInertia(a1)
+		rts	
 ; ===========================================================================
 
-loc_27310:
-	move.b	subtype(a0),d0
-	bpl.s	loc_27344
-	neg.b	d0
-	andi.w	#$F,d0
-	add.w	d0,d0
-	lea	(off_273F2).l,a2
-	adda.w	(a2,d0.w),a2
-	move.w	(a2)+,d0
-	subq.w	#4,d0
-	move.w	d0,4(a4)
-	lea	(a2,d0.w),a2
-	move.w	(a2)+,d4
-	move.w	d4,x_pos(a1)
-	move.w	(a2)+,d5
-	move.w	d5,y_pos(a1)
-	subq.w	#8,a2
-	bra.s	loc_27368
+loc_15616:
+		cmpi.w	#$F00,d0
+		ble.s	locret_15622
+		move.w	#$F00,obInertia(a1)
+
+locret_15622:
+		rts	
 ; ===========================================================================
 
-loc_27344:
-	andi.w	#$F,d0
-	add.w	d0,d0
-	lea	(off_273F2).l,a2
-	adda.w	(a2,d0.w),a2
-	move.w	(a2)+,4(a4)
-	subq.w	#4,4(a4)
-	move.w	(a2)+,d4
-	move.w	d4,x_pos(a1)
-	move.w	(a2)+,d5
-	move.w	d5,y_pos(a1)
-
-loc_27368:
-	move.l	a2,6(a4)
-	move.w	(a2)+,d4
-	move.w	(a2)+,d5
-	move.w	#$1000,d2
-
-loc_27374:
-	moveq	#0,d0
-	move.w	d2,d3
-	move.w	d4,d0
-	sub.w	x_pos(a1),d0
-	bge.s	loc_27384
-	neg.w	d0
-	neg.w	d2
-
-loc_27384:
-	moveq	#0,d1
-	move.w	d5,d1
-	sub.w	y_pos(a1),d1
-	bge.s	loc_27392
-	neg.w	d1
-	neg.w	d3
-
-loc_27392:
-	cmp.w	d0,d1
-	blo.s	loc_273C4
-	moveq	#0,d1
-	move.w	d5,d1
-	sub.w	y_pos(a1),d1
-	swap	d1
-	divs.w	d3,d1
-	moveq	#0,d0
-	move.w	d4,d0
-	sub.w	x_pos(a1),d0
-	beq.s	loc_273B0
-	swap	d0
-	divs.w	d1,d0
-
-loc_273B0:
-	move.w	d0,x_vel(a1)
-	move.w	d3,y_vel(a1)
-	abs.w	d1
-	move.w	d1,2(a4)
-	rts
+Disc_MoveSpot:
+		move.w	objoff_36(a0),d0
+		add.w	d0,obAngle(a0)
+		move.b	obAngle(a0),d0
+		jsr	(CalcSine).l
+		move.w	disc_origY(a0),d2
+		move.w	disc_origX(a0),d3
+		moveq	#0,d4
+		move.b	disc_spot_distance(a0),d4
+		lsl.w	#8,d4
+		move.l	d4,d5
+		muls.w	d0,d4
+		swap	d4
+		muls.w	d1,d5
+		swap	d5
+		add.w	d2,d4
+		add.w	d3,d5
+		move.w	d4,obY(a0)
+		move.w	d5,obX(a0)
+		rts	
 ; ===========================================================================
 
-loc_273C4:
-	moveq	#0,d0
-	move.w	d4,d0
-	sub.w	x_pos(a1),d0
-	swap	d0
-	divs.w	d2,d0
-	moveq	#0,d1
-	move.w	d5,d1
-	sub.w	y_pos(a1),d1
-	beq.s	loc_273DE
-	swap	d1
-	divs.w	d0,d1
+Disc_ChkDel:
+		out_of_range.s	.delete,disc_origX(a0)
+		jmp	(DisplaySprite).l
 
-loc_273DE:
-	move.w	d1,y_vel(a1)
-	move.w	d2,x_vel(a1)
-	abs.w	d0
-	move.w	d0,2(a4)
-	rts
+.delete:
+		jmp	(DeleteObject).l
+		
+Map_Disc:	include	"_maps/Running Disc.asm"
 ; ===========================================================================
 ; MTZ tube position data
 ; off_273F2:
