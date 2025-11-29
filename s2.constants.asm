@@ -2865,3 +2865,9 @@ status.npc.p2_standing		= 4 ; Stood on by player 2.
 status.npc.p1_pushing		= 5 ; Pushed by player 1.
 status.npc.p2_pushing		= 6 ; Pushed by player 2.
 status.npc.no_balancing		= 7 ; Prevents player from performing their balancing animation whilst stood upon this object. Also set when the object is destroyed by the player.
+; Title Screen
+ArtTile_Title_Japanese_Text:	equ $000
+ArtTile_Title_Foreground:	equ $200
+ArtTile_Title_Sonic:		equ $300
+ArtTile_Title_Trademark:	equ $510
+ArtTile_Level_Select_Font:	equ $680

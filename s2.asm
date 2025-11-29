@@ -4096,7 +4096,13 @@ TitleScreen:
 	;clr.w	(Ctrl_1).w
 
 	; Load the object responsible for the intro animation.
-	move.b	#ObjID_TitleIntro,(IntroSonic+id).w
+		move.b	#ObjID_TitleIntro,(IntroSonic+id).w
+	
+		move.b	#ObjID_TitleMenu,(IntroFlashingStar+id).w ; load "TM" object
+		move.b	#3,(IntroFlashingStar+obFrame).w
+.isjap:
+		move.b	#ObjID_TitleMenu,(IntroMaskingSprite+id).w ; load object which hides part of Sonic
+		move.b	#2,(IntroMaskingSprite+obFrame).w
 	;move.b	#2,(IntroSonic+subtype).w
 
 	; Run it for a frame, so that it initialises.
@@ -12816,7 +12822,7 @@ MenuScreen_LevelSelect:
 	ori.b	#$40,d0
 	move.w	d0,(VDP_control_port).l
 
-	bsr.w	Pal_FadeFromBlack
+	jsr	(Pal_FadeFromBlack).l
 
 ;loc_93AC:
 LevelSelect_Main:	; routine running during level select
@@ -22925,7 +22931,7 @@ Obj15_Index:	offsetTable
 		offsetTableEntry.w Obj15_State4		;  6
 		offsetTableEntry.w Obj15_State5		;  8
 		offsetTableEntry.w Obj15_State6		; $A
-		offsetTableEntry.w Obj15_State7		; $C
+		offsetTableEntry.w Obj15_State2		; $C
 ; ===========================================================================
 ; loc_FCCA:
 Obj15_Init:
@@ -22942,8 +22948,9 @@ Obj15_Init:
 	bne.s	+
 	move.l	#Obj15_Obj7A_MapUnc_10256,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_OOZSwingPlat,2,0),art_tile(a0)
-	move.b	#$18,width_pixels(a0)
-	move.b	#8,y_radius(a0)
+		move.b	#$20,obActWid(a0)
+		move.b	#$10,obHeight(a0)
+		move.b	#$99,obColType(a0)
 +
 	cmpi.b	#metropolis_zone,(Current_Zone).w
 	bne.s	+
@@ -27020,6 +27027,39 @@ TitleScreen_InitSprite:
 ; ----------------------------------------------------------------------------
 ; Sprite_13600:
 Obj0F:
+		cmpi.b	#2,obFrame(a0)	; is object "PRESS START"?
+		blo.s	PSB_PrsStart	; if yes, branch
+		moveq	#0,d0
+		move.b	obRoutine(a0),d0
+		move.w	PSB_Index(pc,d0.w),d1
+		jsr	PSB_Index(pc,d1.w)
+		bra.w	DisplaySprite
+; ===========================================================================
+PSB_Index:	dc.w PSB_Main-PSB_Index
+		dc.w PSB_PrsStart-PSB_Index
+		dc.w PSB_Exit-PSB_Index
+; ===========================================================================
+
+PSB_Main:	; Routine 0
+		addq.b	#2,obRoutine(a0)
+		move.w	#$D0,obX(a0)
+		move.w	#$130,obScreenY(a0)
+		move.l	#Obj0F_MapUnc_13B70,obMap(a0)
+		move.w	#make_art_tile(ArtTile_Title_Foreground,0,0),obGfx(a0)
+		;cmpi.b	#2,obFrame(a0)	; is object "PRESS START"?
+		;blo.s	PSB_PrsStart	; if yes, branch
+
+		addq.b	#2,obRoutine(a0)
+		cmpi.b	#3,obFrame(a0)	; is the object "TM"?
+		bne.s	PSB_Exit	; if not, branch
+
+		move.w	#make_art_tile(ArtTile_Title_Trademark,1,0),obGfx(a0) ; "TM" specific code
+		move.w	#$170,obX(a0)
+		move.w	#$F8,obScreenY(a0)
+
+PSB_Exit:	; Routine 4
+		rts	
+PSB_PrsStart:
 	moveq	#0,d0
 	move.b	routine(a0),d0
 	move.w	Obj0F_Index(pc,d0.w),d1
