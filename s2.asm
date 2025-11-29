@@ -2470,6 +2470,10 @@ PalCycle: zoneOrderedOffsetTable 2,1
 ; return_1A16:
 PalCycle_Null:
 	rts
+
+PalCycle_Title:
+		lea	(Pal_TitleCyc).l,a0
+		bra.s	loc_1E7C
 ; ===========================================================================
 
 PalCycle_EHZ:
@@ -4152,7 +4156,7 @@ TitleScreen_Loop:
 	jsr	(RunObjects).l
 	jsr	(DeformBgLayer).l
 	jsr	(BuildSprites).l
-	bsr.w	PalCycle_EHZ
+	bsr.w	PalCycle_Title
 	bsr.w	RunPLC_RAM
 	move.w	(MainCharacter+obX).w,d0
 	addq.w	#2,d0
@@ -4276,7 +4280,7 @@ loc_33B6:
 		move.b	#4,(Vint_routine).w
 		bsr.w	WaitForVint
 		jsr	(DeformBgLayer).l
-		;bsr.w	PaletteCycle
+		bsr.w	PalCycle_Load
 		bsr.w	RunPLC_RAM
 		move.w	(v_player+obX).w,d0
 		addq.w	#2,d0
