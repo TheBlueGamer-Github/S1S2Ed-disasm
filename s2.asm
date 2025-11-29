@@ -5110,7 +5110,7 @@ Ending_MainLoop:
 	jsr	(BuildSprites).l
 	jsr	(ObjectsManager).l
 	cmpi.b	#GameModeID_EndingSequence,(Game_Mode).w	; check if in normal play mode
-	beq.w	Ending_MainLoop
+	beq.w	End_ChkEmerald
 
 	move.b	#GameModeID_2PResults,(Game_Mode).w ; goto credits
 	move.b	#$91,d0
@@ -5163,6 +5163,48 @@ End_MoveSon3:
 End_MoveSonExit:
 		rts	
 ; End of function End_MoveSonic
+
+End_ChkEmerald:
+		tst.w	(Level_Inactive_flag).w	; has Sonic released the emeralds?
+		beq.w	Ending_MainLoop	; if not, branch
+
+		clr.w	(Level_Inactive_flag).w
+		move.w	#$3F,(Palette_fade_start).w
+		clr.w	(PalChangeSpeed).w
+
+End_AllEmlds:
+		bsr.w	PauseGame
+		move.b	#$18,(Vint_routine).w
+		bsr.w	WaitForVint
+		addq.w	#1,(Level_frame_counter).w
+		bsr.w	End_MoveSonic
+		jsr	(RunObjects).l
+		jsr	(DeformBgLayer).l
+		jsr	(BuildSprites).l
+		jsr	(ObjectsManager).l
+		bsr.w	OscillateNumDo
+		bsr.w	ChangeRingFrame
+		subq.w	#1,(PalChangeSpeed).w
+		bpl.s	End_SlowFade
+		move.w	#2,(PalChangeSpeed).w
+		bsr.w	Pal_FadeToWhite.UpdateAllColours
+
+End_SlowFade:
+		tst.w	(Level_Inactive_flag).w
+		beq.w	End_AllEmlds
+		clr.w	(Level_Inactive_flag).w
+		move.l	#$AAABAE9A,(Level_Layout+$200).w ; modify level layout
+		move.l	#$ACADAFB0,(Level_Layout+$300).w
+		lea	(VDP_control_port).l,a5
+		lea	(VDP_data_port).l,a6
+		lea	(Camera_X_Pos).w,a3
+		lea	(Level_Layout).w,a4
+		move.w	#$4000,d2
+		jsr	(DrawChunks).l
+		moveq	#PalID_EHZ,d0
+		bsr.w	PalLoad_ForFade	; load ending palette
+		bsr.w	Pal_FadeFromWhite
+		bra.w	Ending_MainLoop
 ; ---------------------------------------------------------------------------
 ; Subroutine to move the water or oil surface sprites to where the screen is at
 ; (the closest match I could find to this subroutine in Sonic 1 is Obj1B_Action)
