@@ -5141,7 +5141,7 @@ End_MoveSon2:
 		move.b	#3,(MainCharacter+anim_frame_duration).w
 		rts	
 +
-		move.b	#3,(MainCharacter+mapping_frame).w
+		move.b	#4,(MainCharacter+mapping_frame).w
 		bra.s	-
 ; ===========================================================================
 
