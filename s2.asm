@@ -24489,6 +24489,8 @@ JmpTo2_PlatformObject ; JmpTo
 ; Object 1C - Bridge stake in Emerald Hill Zone and Hill Top Zone, falling oil in Oil Ocean Zone
 ; ----------------------------------------------------------------------------
 ; Sprite_111D4:
+Map_Scen:	include	"_maps/Scenery.asm"
+Map_Bri:	include	"_maps/Bridge.asm"
 Obj1C:
 	moveq	#0,d0
 	move.b	routine(a0),d0
@@ -24509,27 +24511,19 @@ objsubdecl macro frame, mapaddr,artaddr,width,priority
 
 ; dword_111E6:
 Obj1C_InitData:
-	objsubdecl 0, Obj1C_MapUnc_11552, make_art_tile(ArtTile_ArtNem_BoltEnd_Rope,2,0), 4, 6
-	objsubdecl 1, Obj1C_MapUnc_11552, make_art_tile(ArtTile_ArtNem_BoltEnd_Rope,2,0), 4, 6
-	objsubdecl 1, Obj11_MapUnc_FC70,  make_art_tile(ArtTile_ArtNem_EHZ_Bridge,2,0), 4, 1
-	objsubdecl 2, Obj1C_MapUnc_11552, make_art_tile(ArtTile_ArtNem_BoltEnd_Rope,2,0), $10, 6
-	objsubdecl 3, Obj16_MapUnc_21F14, make_art_tile(ArtTile_ArtNem_HtzZipline,2,0), 8, 4
-	objsubdecl 4, Obj16_MapUnc_21F14, make_art_tile(ArtTile_ArtNem_HtzZipline,2,0), 8, 4
-	objsubdecl 1, Obj16_MapUnc_21F14, make_art_tile(ArtTile_ArtNem_HtzZipline,2,0), $20, 1
-	objsubdecl 0, Obj1C_MapUnc_113D6, make_art_tile(ArtTile_ArtKos_LevelArt,2,0), 8, 1
-	objsubdecl 1, Obj1C_MapUnc_113D6, make_art_tile(ArtTile_ArtKos_LevelArt,2,0), 8, 1
-	objsubdecl 0, Obj1C_MapUnc_113EE, make_art_tile(ArtTile_ArtUnc_Waterfall3,2,0), 4, 4
-	objsubdecl 0, Obj1C_MapUnc_11406, make_art_tile(ArtTile_ArtNem_Oilfall2,2,0), 4, 4
-	objsubdecl 1, Obj1C_MapUnc_11406, make_art_tile(ArtTile_ArtNem_Oilfall2,2,0), 4, 4
-	objsubdecl 2, Obj1C_MapUnc_11406, make_art_tile(ArtTile_ArtNem_Oilfall2,2,0), 4, 4
-	objsubdecl 3, Obj1C_MapUnc_11406, make_art_tile(ArtTile_ArtNem_Oilfall2,2,0), 4, 4
-	objsubdecl 4, Obj1C_MapUnc_11406, make_art_tile(ArtTile_ArtNem_Oilfall2,2,0), 4, 4
-	objsubdecl 5, Obj1C_MapUnc_11406, make_art_tile(ArtTile_ArtNem_Oilfall2,2,0), 4, 4
-	objsubdecl 0, Obj1C_MapUnc_114AE, make_art_tile(ArtTile_ArtNem_Oilfall2,2,0), $18, 4
-	objsubdecl 1, Obj1C_MapUnc_114AE, make_art_tile(ArtTile_ArtNem_Oilfall2,2,0), $18, 4
-	objsubdecl 2, Obj1C_MapUnc_114AE, make_art_tile(ArtTile_ArtNem_Oilfall2,2,0), 8, 4
-	objsubdecl 3, Obj1C_MapUnc_114AE, make_art_tile(ArtTile_ArtNem_Oilfall2,2,0), 8, 4
-	objsubdecl 4, Obj1C_MapUnc_114AE, make_art_tile(ArtTile_ArtNem_Oilfall2,2,0), 8, 4
+		dc.l Map_Scen                                     ; mappings address
+		dc.w make_art_tile(ArtTile_SLZ_Fireball_Launcher,2,0) ; VRAM setting
+		dc.b 0,	8, 2, 0                                   ; frame, width, priority, collision response
+		dc.l Map_Scen
+		dc.w make_art_tile(ArtTile_SLZ_Fireball_Launcher,2,0)
+		dc.b 0,	8, 2, 0
+		dc.l Map_Scen
+		dc.w make_art_tile(ArtTile_SLZ_Fireball_Launcher,2,0)
+		dc.b 0,	8, 2, 0
+		dc.l Map_Bri
+		dc.w make_art_tile(ArtTile_GHZ_Bridge,2,0)
+		dc.b 1,	$10, 1,	0
+		even
 ; byte_1128E:
 Obj1C_Radii:
 	dc.b   0
@@ -24569,22 +24563,16 @@ Obj1C_Init:
 	addq.b	#2,routine(a0)
 	moveq	#0,d0
 	move.b	subtype(a0),d0
-	move.w	d0,d1
-	lsl.w	#3,d0
+	mulu.w	#$A,d0		; multiply by $A
 	lea	Obj1C_InitData(pc),a1
 	lea	(a1,d0.w),a1
-	move.b	(a1),mapping_frame(a0)
-	move.l	(a1)+,mappings(a0)
-	move.w	(a1)+,art_tile(a0)
-	bsr.w	Adjust2PArtPointer
-	ori.b	#4,render_flags(a0)
-	move.b	(a1)+,width_pixels(a0)
-	move.b	(a1)+,priority(a0)
-	lea	Obj1C_Radii(pc),a1
-	move.b	(a1,d1.w),d1
-	beq.s	BranchTo_MarkObjGone	; if the radius is zero, branch
-	move.b	d1,y_radius(a0)
-	bset	#4,render_flags(a0)
+		move.l	(a1)+,obMap(a0)
+		move.w	(a1)+,obGfx(a0)
+		ori.b	#4,obRender(a0)
+		move.b	(a1)+,obFrame(a0)
+		move.b	(a1)+,obActWid(a0)
+		move.b	(a1)+,obPriority(a0)
+		move.b	(a1)+,obColType(a0)
 
 BranchTo_MarkObjGone ; BranchTo
 	bra.w	MarkObjGone
