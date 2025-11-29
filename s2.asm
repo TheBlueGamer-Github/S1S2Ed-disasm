@@ -5134,10 +5134,15 @@ End_MoveSon2:
 		move.w	d0,(Ctrl_1_Held_Logical).w ; stop Sonic moving
 		move.w	d0,(MainCharacter+inertia).w
 		move.b	#$81,(MainCharacter+obj_control).w ; lock controls and disable object interaction
+		tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
+		beq.s	+			; if it's S2 Final Sonic, branch
 		move.b	#3,(MainCharacter+mapping_frame).w
-		move.w	#(5<<8)+5,(MainCharacter+anim).w ; use "standing" animation
+-		move.w	#(5<<8)+5,(MainCharacter+anim).w ; use "standing" animation
 		move.b	#3,(MainCharacter+anim_frame_duration).w
 		rts	
++
+		move.b	#3,(MainCharacter+mapping_frame).w
+		bra.s	-
 ; ===========================================================================
 
 End_MoveSon3:
