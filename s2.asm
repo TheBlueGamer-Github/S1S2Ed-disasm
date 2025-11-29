@@ -4152,28 +4152,7 @@ TitleScreen_Loop:
 	jsr	(RunObjects).l
 	jsr	(DeformBgLayer).l
 	jsr	(BuildSprites).l
-
-	; Find the masking sprite, and move it to the proper location. The
-	; sprite is normally at X 128+128, but in order to perform masking,
-	; it must be at X 0.
-	; The masking sprite is used to stop Sonic and Tails from overlapping
-	; the emblem.
-	; You might be wondering why it alternates between 0 and 4 for the X
-	; position. That's because masking sprites only work if another
-	; sprite rendered before them (or if the previous scanline reached
-	; its pixel limit). Because of this, a sprite is placed at X 4 before
-	; a second one is placed at X 0.
-;	lea	(Sprite_Table+4).w,a1
-;	moveq	#0,d0
-;
-;	moveq	#(Sprite_Table_End-Sprite_Table)/8-1,d6
-;-	tst.w	(a1)	; The masking sprite has its art-tile set to $0000.
-;	bne.s	+
-;	bchg	#2,d0	; Alternate between X positions of 0 and 4.
-;	move.w	d0,2(a1)
-;+	addq.w	#8,a1
-	;dbf	d6,-
-
+	bsr.w	PalCycle_EHZ
 	bsr.w	RunPLC_RAM
 	move.w	(MainCharacter+obX).w,d0
 	addq.w	#2,d0
@@ -4183,22 +4162,24 @@ TitleScreen_Loop:
 	
 	bsr.w	TailsNameCheat
 
-	; If the timer has run out, go play a demo.
-	tst.w	(Demo_Time_left).w
-	beq.w	TitleScreen_Demo
 
 	; If the intro is still playing, then don't let the start button
 	; begin the game.
-	;cmpi.w	#$1C00,d0	; has Sonic object passed $1C00 on x-axis?
-	;blo.s	TitleScreen_Loop	; if not, branch
-
+	cmpi.w	#$1C00,d0	; has Sonic object passed $1C00 on x-axis?
+	blo.s	+	; if not, branch
+	
+	move.b	#GameModeID_SegaScreen,(Game_Mode).w ; go to Sega screen
+	rts
++
 	; If the start button has not been pressed, then loop back and keep
 	; running the title screen.
 	move.b	(Ctrl_1_Press).w,d0
 	or.b	(Ctrl_2_Press).w,d0
+	; If the timer has run out, go play a demo.
+	tst.w	(Demo_Time_left).w
+	beq.w	TitleScreen_Demo
 	andi.b	#button_start_mask,d0
 	beq.w	TitleScreen_Loop ; loop until Start is pressed
-
 	; At this point, the start button has been pressed and it's time to
 	; enter one player mode, two player mode, or the options menu.
 
@@ -4289,7 +4270,28 @@ TitleScreen_ChoseOptions:
 ; ===========================================================================
 ; loc_3D2E:
 TitleScreen_Demo:
-	move.w	#1,(Player_mode).w	; force Sonic
+		move.w	#30,(Demo_Time_left).w
+
+loc_33B6:
+		move.b	#4,(Vint_routine).w
+		bsr.w	WaitForVint
+		jsr	(DeformBgLayer).l
+		;bsr.w	PaletteCycle
+		bsr.w	RunPLC_RAM
+		move.w	(v_player+obX).w,d0
+		addq.w	#2,d0
+		move.w	d0,(v_player+obX).w
+		cmpi.w	#$1C00,d0
+		blo.s	loc_33E4
+		move.b	#GameModeID_SegaScreen,(Game_Mode).w
+		rts	
+; ===========================================================================
+
+loc_33E4:
+	;andi.b	#button_start_mask,(Ctrl_1_Press).w ; is Start button pressed?
+	;bne.w	Tit_ChkLevSel	; if yes, branch
+	tst.w	(Demo_Time_left).w
+	bne.w	loc_33B6
 	move.b	#MusID_FadeOut,d0
 	bsr.w	PlaySound
 
