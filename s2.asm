@@ -48449,7 +48449,7 @@ Cbal_Explode:
 		_move.b	#$24,obID(a0)
 		_move.b	#$3F,obID(a0)	; change object	to an explosion	($3F)
 		move.b	#0,obRoutine(a0) ; reset routine counter
-		bra.w	ExplosionBomb	; jump to explosion code
+		jmp	(Obj3F).l	; jump to explosion code
 ; ===========================================================================
 
 Cbal_Animate:
@@ -48463,15 +48463,17 @@ Cbal_Display:
 		; Moved to prevent a display-and-delete bug.
 		bsr.w	DisplaySprite
 	endif
-		move.w	(v_limitbtm2).w,d0
+		move.w	(Camera_Max_Y_pos).w,d0
 		addi.w	#$E0,d0
 		cmp.w	obY(a0),d0	; has object fallen off	the level?
-		blo.w	DeleteObject	; if yes, branch
+		blo.w	+	; if yes, branch
 	if fixBugs
-		bra.w	DisplaySprite
+		jmp	(DisplaySprite).l
 	else
 		rts	
 	endif
++
+	jmp	(DeleteObject).l
 	moveq	#0,d0
 	move.b	routine(a0),d0
 	move.w	Obj20_Index(pc,d0.w),d1
