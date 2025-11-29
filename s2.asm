@@ -3939,6 +3939,8 @@ JmpTo_RunObjects ; JmpTo
 
 
 ; ===========================================================================
+Nem_TitleTM:	binclude	"artnem/Title Screen TM.nem"
+		even
 ; loc_3998:
 TitleScreen:
 	; Stop music.
@@ -4009,6 +4011,10 @@ TitleScreen:
 	move.l	#vdpComm(tiles_to_bytes(ArtTile_ArtNem_MenuJunk),VRAM,WRITE),(VDP_control_port).l
 	lea	(ArtNem_MenuJunk).l,a0
 	bsr.w	NemDec
+
+		locVRAM	ArtTile_Title_Trademark*tile_size
+		lea	(Nem_TitleTM).l,a0 ; load "TM" patterns
+		bsr.w	NemDec
 
 	move.l	#vdpComm(tiles_to_bytes(ArtTile_ArtNem_Player1VS2),VRAM,WRITE),(VDP_control_port).l
 	lea	(ArtNem_Player1VS2).l,a0
@@ -26754,7 +26760,7 @@ TSon_Main:	; Routine 0
 		move.w	#$F0,obX(a0)
 		move.w	#$DE,obScreenY(a0) ; position is fixed to screen
 		move.l	#Obj0E_MapUnc_136A8,obMap(a0)
-		move.w	#make_art_tile(ArtTile_ArtNem_TitleSprites,1,0),obGfx(a0)
+		move.w	#make_art_tile(ArtTile_Title_Sonic,1,0),obGfx(a0)
 		move.b	#1,obPriority(a0)
 		move.b	#29,obDelayAni(a0) ; set time delay to 0.5 seconds
 		lea	(Ani_obj0E).l,a1
