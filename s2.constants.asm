@@ -2296,7 +2296,7 @@ ArtTile_ArtNem_MenuJunk               = $03F2
 ArtTile_ArtNem_Player1VS2             = $0402
 ArtTile_ArtNem_CreditText             = $0500
 ArtTile_ArtNem_FontStuff_TtlScr       = $0680
-
+ArtTile_Title_Card:		equ $580
 ; Credits screen
 ArtTile_ArtNem_CreditText_CredScr     = $0001
 ArtTile_Sonic_Team_Font:	equ $0A6

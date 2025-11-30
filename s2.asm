@@ -974,7 +974,6 @@ loc_BD6:
 	dma68kToVDP Sprite_Table,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
 +
 	bsr.w	ProcessDMAQueue
-	jsr	(DrawLevelTitleCard).l
 	jsr	(sndDriverInput).l
 
 	startZ80
@@ -2956,6 +2955,7 @@ CyclingPal_ARZUWTransformation:
 ; sub_23C6: Pal_FadeTo:
 Pal_FadeFromBlack:
 	move.w	#$3F,(Palette_fade_range).w
+PalFadeIn_Alt:
 	moveq	#0,d0
 	lea	(Normal_palette).w,a0
 	move.b	(Palette_fade_start).w,d0
@@ -3994,7 +3994,7 @@ TitleScreen:
 
 	; Fade-in, showing the text that was just loaded.
 	clearRAM Target_palette,Target_palette_End	; fill palette with 0 (black)
-	moveq	#PalID_BGND,d0
+	moveq	#PalID_BGND1,d0
 	bsr.w	PalLoad_ForFade
 	bsr.w	Pal_FadeFromBlack
 
@@ -4012,21 +4012,10 @@ TitleScreen:
 	lea	(ArtNem_TitleSprites).l,a0
 	bsr.w	NemDec
 
-	move.l	#vdpComm(tiles_to_bytes(ArtTile_ArtNem_MenuJunk),VRAM,WRITE),(VDP_control_port).l
-	lea	(ArtNem_MenuJunk).l,a0
-	bsr.w	NemDec
 
 		locVRAM	ArtTile_Title_Trademark*tile_size
 		lea	(Nem_TitleTM).l,a0 ; load "TM" patterns
 		bsr.w	NemDec
-
-	move.l	#vdpComm(tiles_to_bytes(ArtTile_ArtNem_Player1VS2),VRAM,WRITE),(VDP_control_port).l
-	lea	(ArtNem_Player1VS2).l,a0
-	bsr.w	NemDec
-
-	move.l	#vdpComm(tiles_to_bytes(ArtTile_ArtNem_FontStuff_TtlScr),VRAM,WRITE),(VDP_control_port).l
-	lea	(ArtNem_FontStuff).l,a0
-	bsr.w	NemDec
 
 	; Clear some variables.
 	move.b	#0,(Last_star_pole_hit).w
@@ -4107,13 +4096,13 @@ TitleScreen:
 
 	; Load the object responsible for the intro animation.
 		move.b	#ObjID_TitleIntro,(IntroSonic+id).w
+		move.b	#ObjID_TitleMenu,(TitleScreenMenu+id).w
 	
 		move.b	#ObjID_TitleMenu,(IntroFlashingStar+id).w ; load "TM" object
 		move.b	#3,(IntroFlashingStar+obFrame).w
 .isjap:
 		move.b	#ObjID_TitleMenu,(IntroMaskingSprite+id).w ; load object which hides part of Sonic
 		move.b	#2,(IntroMaskingSprite+obFrame).w
-	;move.b	#2,(IntroSonic+subtype).w
 
 	; Run it for a frame, so that it initialises.
 	jsr	(RunObjects).l
@@ -4156,7 +4145,6 @@ TitleScreen_Loop:
 	addq.w	#2,d0
 	move.w	d0,(MainCharacter+obX).w ; move Sonic to the right
 	; Initialise title screen menu object.
-	move.b	#ObjID_TitleMenu,(TitleScreenMenu+id).w
 	
 	bsr.w	TailsNameCheat
 
@@ -4633,8 +4621,8 @@ Level_TtlCard:
 	bne.s	Level_TtlCard		; if not, branch
 	tst.l	(Plc_Buffer).w		; are there any items in the pattern load cue?
 	bne.s	Level_TtlCard		; if yes, branch
-	move.b	#VintID_TitleCard,(Vint_routine).w
-	bsr.w	WaitForVint
+	;move.b	#VintID_TitleCard,(Vint_routine).w
+	;bsr.w	WaitForVint
 	jsr	(Hud_Base).l
 noLevel_TtlCard:
 	moveq	#PalID_BGND1,d0
@@ -4658,9 +4646,9 @@ noLevel_TtlCard:
 	move.w	#0,(Ctrl_2_Logical).w
 	move.w	#0,(Ctrl_1).w
 	move.w	#0,(Ctrl_2).w
-	move.b	#1,(Control_Locked).w
-	move.b	#1,(Control_Locked_P2).w
-	move.b	#0,(Level_started_flag).w
+	move.b	#0,(Control_Locked).w
+	move.b	#0,(Control_Locked_P2).w
+	move.b	#1,(Level_started_flag).w
 ; Level_ChkWater:
 	tst.b	(Water_flag).w	; does level have water?
 	beq.s	Level_ClrHUD	; if not, branch
@@ -4745,37 +4733,28 @@ Level_FromCheckpoint:
 +
 	bsr.w	PalLoad_Water_ForFade
 +
-	move.w	#-1,(TitleCard_ZoneName+titlecard_leaveflag).w
-	move.b	#$E,(TitleCard_Left+routine).w	; make the left part move offscreen
-	move.w	#$A,(TitleCard_Left+titlecard_location).w
 
--	move.b	#VintID_TitleCard,(Vint_routine).w
+	move.w	#4-1,d1
+-	move.b	#$8,(Vint_routine).w
 	bsr.w	WaitForVint
-	jsr	(RunObjects).l
-	jsr	(BuildSprites).l
-	bsr.w	RunPLC_RAM
-	tst.b	(TitleCard_Background+id).w
-	bne.s	-	; loop while the title card background is still loaded
-
+	dbf	d1,-
+	
+	;move.w	#$202F,(Palette_fade_range).w ; fade in 2nd, 3rd & 4th palette lines
+	;bsr.w	PalFadeIn_Alt
 	tst.w	(Demo_mode_flag).w	; is an ending sequence demo running?
 	bmi.w	JmpTo_Level_ClrCardArt ; if yes, branch
 	lea	(TitleCard).w,a1
-	move.b	#$16,TitleCard_ZoneName-TitleCard+routine(a1)
-	move.w	#$2D,TitleCard_ZoneName-TitleCard+anim_frame_duration(a1)
-	move.b	#$16,TitleCard_Zone-TitleCard+routine(a1)
-	move.w	#$2D,TitleCard_Zone-TitleCard+anim_frame_duration(a1)
-	tst.b	TitleCard_ActNumber-TitleCard+id(a1)
-	beq.s	+	; branch if the act number has been unloaded
-	move.b	#$16,TitleCard_ActNumber-TitleCard+routine(a1)
-	move.w	#$2D,TitleCard_ActNumber-TitleCard+anim_frame_duration(a1)
+	addq.b	#2,TitleCard_ZoneName-TitleCard+routine(a1)
+	addq.b	#4,TitleCard_Zone-TitleCard+routine(a1)
+	addq.b	#4,TitleCard_ActNumber-TitleCard+routine(a1)
 	bra.s	+
 JmpTo_Level_ClrCardArt:
 	jmp	(Level_ClrCardArt).l
 Level_StartGame:
-+	move.b	#0,(Control_Locked).w
+	move.b	#0,(Control_Locked).w
 	move.b	#0,(Control_Locked_P2).w
 	move.b	#1,(Level_started_flag).w
-
++
 ; Level_StartGame: loc_435A:
 	bclr	#GameModeFlag_TitleCard,(Game_Mode).w ; clear $80 from the game mode
 
@@ -23424,7 +23403,7 @@ Obj17_Init:
 	moveq	#0,d6
 ; loc_10372:
 Obj17_MakeHelix:
-	bsr.w	AllocateObjectAfterCurrent
+	jsr	(AllocateObjectAfterCurrent).l
 	bne.s	Obj17_Main
 	addq.b	#1,subtype(a0)
     if object_size<>$40
@@ -26805,7 +26784,7 @@ ObjC9_Main:
 ; ===========================================================================
 ; off_1337C:
 PaletteChangerDataIndex: offsetTable
-	offsetTableEntry.w off_1338C	;  0
+	;offsetTableEntry.w off_1338C	;  0
 	offsetTableEntry.w off_13398	;  2
 	offsetTableEntry.w off_133A4	;  4
 	offsetTableEntry.w off_133B0	;  6
@@ -26819,7 +26798,7 @@ C9PalInfo macro codeptr,dataptr,loadtoOffset,length,fadeinTime,fadeinAmount
 	dc.b loadtoOffset, length, fadeinTime, fadeinAmount
     endm
 
-off_1338C:	C9PalInfo Pal_FadeFromBlack.UpdateColour, Pal_1342C, $60, $F,2,$15
+;off_1338C:	C9PalInfo Pal_FadeFromBlack.UpdateColour, Pal_1342C, $60, $F,2,$15
 off_13398:	C9PalInfo                      loc_1344C, Pal_1340C, $40, $F,4,7
 off_133A4:	C9PalInfo                      loc_1344C,  Pal_AD1E,   0, $F,8,7
 off_133B0:	C9PalInfo                      loc_1348A,  Pal_AD1E,   0, $F,8,7
@@ -26970,10 +26949,10 @@ TitleScreen_InitSprite:
 ; ----------------------------------------------------------------------------
 ; Object 0F - Title screen menu
 ; ----------------------------------------------------------------------------
+Map_PSB:	include	"_maps/Press Start and TM.asm"
+		include	"_anim/Press Start and TM.asm"
 ; Sprite_13600:
 Obj0F:
-		cmpi.b	#2,obFrame(a0)	; is object "PRESS START"?
-		blo.s	PSB_PrsStart	; if yes, branch
 		moveq	#0,d0
 		move.b	obRoutine(a0),d0
 		move.w	PSB_Index(pc,d0.w),d1
@@ -26989,10 +26968,10 @@ PSB_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		move.w	#$D0,obX(a0)
 		move.w	#$130,obScreenY(a0)
-		move.l	#Obj0F_MapUnc_13B70,obMap(a0)
+		move.l	#Map_PSB,obMap(a0)
 		move.w	#make_art_tile(ArtTile_Title_Foreground,0,0),obGfx(a0)
-		;cmpi.b	#2,obFrame(a0)	; is object "PRESS START"?
-		;blo.s	PSB_PrsStart	; if yes, branch
+		cmpi.b	#2,obFrame(a0)	; is object "PRESS START"?
+		blo.s	PSB_PrsStart	; if yes, branch
 
 		addq.b	#2,obRoutine(a0)
 		cmpi.b	#3,obFrame(a0)	; is the object "TM"?
@@ -27004,56 +26983,11 @@ PSB_Main:	; Routine 0
 
 PSB_Exit:	; Routine 4
 		rts	
-PSB_PrsStart:
-	moveq	#0,d0
-	move.b	routine(a0),d0
-	move.w	Obj0F_Index(pc,d0.w),d1
-	jsr	Obj0F_Index(pc,d1.w)
-	bra.w	DisplaySprite
 ; ===========================================================================
-; off_13612: Obj0F_States:
-Obj0F_Index:	offsetTable
-		offsetTableEntry.w Obj0F_Init	; 0
-		offsetTableEntry.w Obj0F_Main	; 2
-; ===========================================================================
-; loc_13616:
-Obj0F_Init:
-	addq.b	#2,routine(a0) ; => Obj0F_Main
-	move.w	#128+320/2+8,x_pixel(a0)
-	move.w	#128+224/2+92,y_pixel(a0)
-	move.l	#Obj0F_MapUnc_13B70,mappings(a0)
-	move.w	#make_art_tile(ArtTile_VRAM_Start,0,0),art_tile(a0)
-	bsr.w	Adjust2PArtPointer
-	andi.b	#1,(Title_screen_option).w
-	move.b	(Title_screen_option).w,mapping_frame(a0)
 
-; loc_13644:
-Obj0F_Main:
-	moveq	#0,d2
-	move.b	(Title_screen_option).w,d2
-	move.b	(Ctrl_1_Press).w,d0
-	or.b	(Ctrl_2_Press).w,d0
-	btst	#button_up,d0
-	beq.s	+
-	subq.b	#1,d2
-	bcc.s	+
-	move.b	#1,d2
-+
-	btst	#button_down,d0
-	beq.s	+
-	addq.b	#1,d2
-	cmpi.b	#2,d2
-	blo.s	+
-	moveq	#0,d2
-+
-	move.b	d2,mapping_frame(a0)
-	move.b	d2,(Title_screen_option).w
-	andi.b	#button_up_mask|button_down_mask,d0
-	beq.s	+	; rts
-	moveq	#signextendB(SndID_Blip),d0 ; selection blip sound
-	jsrto	PlaySound, JmpTo4_PlaySound
-+
-	rts
+PSB_PrsStart:	; Routine 2
+		lea	(Ani_PSBTM).l,a1
+		bra.w	AnimateSprite	; "PRESS START" is animated
 ; ===========================================================================
 ; animation script
 ; off_13686:
@@ -27135,54 +27069,164 @@ titlecard_vram_dest    = objoff_36	; target of VRAM write
 titlecard_vram_dest_2P = objoff_38	; target of VRAM write
 titlecard_split_point  = objoff_3A	; point to split drawing for yellow and red portions
 titlecard_leaveflag    = objoff_3E	; whether or not titlecard is leaving screen
+id_TitleCard = $34
 ; Sprite_13C48:
 Obj34: ; (note: screen-space obj)
-	moveq	#0,d0
-	move.b	routine(a0),d0
-	move.w	Obj34_Index(pc,d0.w),d1
-	jmp	Obj34_Index(pc,d1.w)
+		moveq	#0,d0
+		move.b	obRoutine(a0),d0
+		move.w	Card_Index(pc,d0.w),d1
+		jmp	Card_Index(pc,d1.w)
 ; ===========================================================================
-Obj34_Index:	offsetTable
-		offsetTableEntry.w Obj34_Init			;   0 - create all the title card objects
-		offsetTableEntry.w Obj34_BackgroundIn		;   2 - the background, coming in
-		offsetTableEntry.w Obj34_BottomPartIn		;   4 - the yellow part at the bottom, coming in
-		offsetTableEntry.w Obj34_LeftPartIn		;   6 - the red part on the left, coming in
-		offsetTableEntry.w Obj34_ZoneName		;   8 - the name of the zone, coming in
-		offsetTableEntry.w Obj34_Zone			;  $A - the word "ZONE", coming in
-		offsetTableEntry.w Obj34_ActNumber		;  $C - the act number, coming in
-		offsetTableEntry.w Obj34_LeftPartOut		;  $E - red part on the left, going out
-		offsetTableEntry.w Obj34_BottomPartOut		; $10 - yellow part at the bottom, going out
-		offsetTableEntry.w Obj34_BackgroundOutInit	; $12 - the background, going out (first frame)
-		offsetTableEntry.w Obj34_BackgroundOut		; $14 - the background, going out
-		offsetTableEntry.w Obj34_WaitAndGoAway		; $16 - wait and go away, used by the zone name, "ZONE" and the act number
+Card_Index:	dc.w Card_CheckSBZ3-Card_Index
+		dc.w Card_ChkPos-Card_Index
+		dc.w Card_Wait-Card_Index
+		dc.w Card_Wait-Card_Index
+
+card_mainX = objoff_30		; position for card to display on
+card_finalX = objoff_32		; position for card to finish on
 ; ===========================================================================
-; loc_13C6E:
-Obj34_Init:
-	lea	(a0),a1
-	lea	Obj34_TitleCardData(pc),a2
 
-	moveq	#(Obj34_TitleCardData_End-Obj34_TitleCardData)/$A-1,d1
--	_move.b	#ObjID_TitleCard,id(a1) ; load obj34
-	move.b	(a2)+,routine(a1)
-	move.l	#Obj34_MapUnc_147BA,mappings(a1)
-	move.b	(a2)+,mapping_frame(a1)
-	move.b	(a2)+,width_pixels(a1)
-	move.b	(a2)+,anim_frame_duration(a1)
-	move.w	(a2),x_pixel(a1)
-	move.w	(a2)+,titlecard_x_source(a1)
-	move.w	(a2)+,titlecard_x_target(a1)
-	move.w	(a2)+,y_pixel(a1)
-	move.b	#0,render_flags(a1)
-	lea	next_object(a1),a1 ; a1=object
-	dbf	d1,-
+Card_CheckSBZ3:	; Routine 0
+		movea.l	a0,a1
+		moveq	#0,d0
+		move.b	(Current_Zone).w,d0
+		cmpi.w	#(chemical_plant_zone<<8)+3,(Current_ZoneAndAct).w ; check if level is SBZ 3
+		bne.s	Card_CheckFZ
+		moveq	#5,d0		; load title card number 5 (SBZ)
 
-	move.w	#$26,(TitleCard_Bottom+titlecard_location).w
-	clr.w	(Vscroll_Factor_FG).w
-	move.w	#-224,(Vscroll_Factor_P2_FG).w
+Card_CheckFZ:
+		move.w	d0,d2
+		cmpi.w	#(metropolis_zone<<8)+2,(Current_ZoneAndAct).w ; check if level is FZ
+		bne.s	Card_LoadConfig
+		moveq	#6,d0		; load title card number 6 (FZ)
+		moveq	#$B,d2		; use "FINAL" mappings
 
-	clearRAM Horiz_Scroll_Buf,Horiz_Scroll_Buf+HorizontalScrollBuffer.len
+Card_LoadConfig:
+		lea	(Card_ConData).l,a3
+		lsl.w	#4,d0
+		adda.w	d0,a3
+		lea	(Card_ItemData).l,a2
+		moveq	#3,d1
 
-	rts
+Card_Loop:
+		_move.b	#id_TitleCard,obID(a1)
+		move.w	(a3),obX(a1)	; load start x-position
+		move.w	(a3)+,card_finalX(a1) ; load finish x-position (same as start)
+		move.w	(a3)+,card_mainX(a1) ; load main x-position
+		move.w	(a2)+,obScreenY(a1)
+		move.b	(a2)+,obRoutine(a1)
+		move.b	(a2)+,d0
+		bne.s	Card_ActNumber
+		move.b	d2,d0
+
+Card_ActNumber:
+		cmpi.b	#7,d0
+		bne.s	Card_MakeSprite
+		add.b	(Current_Act).w,d0
+		cmpi.b	#3,(Current_Act).w
+		bne.s	Card_MakeSprite
+		subq.b	#1,d0
+
+Card_MakeSprite:
+		move.b	d0,obFrame(a1)	; display frame	number d0
+		move.l	#Map_Card,obMap(a1)
+		move.w	#make_art_tile(ArtTile_Title_Card,0,1),obGfx(a1)
+		move.b	#$78,obActWid(a1)
+		move.b	#0,obRender(a1)
+		move.b	#0,obPriority(a1)
+		move.w	#60,obTimeFrame(a1) ; set time delay to 1 second
+		lea	object_size(a1),a1	; next object
+		dbf	d1,Card_Loop	; repeat sequence another 3 times
+
+Card_ChkPos:	; Routine 2
+		moveq	#$10,d1		; set horizontal speed
+		move.w	card_mainX(a0),d0
+		cmp.w	obX(a0),d0	; has item reached the target position?
+		beq.s	Card_NoMove	; if yes, branch
+		bge.s	Card_Move
+		neg.w	d1
+
+Card_Move:
+		add.w	d1,obX(a0)	; change item's position
+
+Card_NoMove:
+		move.w	obX(a0),d0
+		bmi.s	locret_C3D8
+		cmpi.w	#$200,d0	; has item moved beyond	$200 on	x-axis?
+		bhs.s	locret_C3D8	; if yes, branch
+		bra.w	DisplaySprite
+; ===========================================================================
+
+locret_C3D8:
+		rts	
+; ===========================================================================
+
+Card_Wait:	; Routine 4/6
+		tst.w	obTimeFrame(a0)	; is time remaining zero?
+		beq.s	Card_ChkPos2	; if yes, branch
+		subq.w	#1,obTimeFrame(a0) ; subtract 1 from time
+		bra.w	DisplaySprite
+; ===========================================================================
+
+Card_ChkPos2:
+		tst.b	obRender(a0)
+		bpl.s	Card_ChangeArt
+		moveq	#$20,d1
+		move.w	card_finalX(a0),d0
+		cmp.w	obX(a0),d0	; has item reached the finish position?
+		beq.s	Card_ChangeArt	; if yes, branch
+		bge.s	Card_Move2
+		neg.w	d1
+
+Card_Move2:
+		add.w	d1,obX(a0)	; change item's position
+		move.w	obX(a0),d0
+		bmi.s	locret_C412
+		cmpi.w	#$200,d0	; has item moved beyond	$200 on	x-axis?
+		bhs.s	locret_C412	; if yes, branch
+		bra.w	DisplaySprite
+; ===========================================================================
+
+locret_C412:
+		rts	
+; ===========================================================================
+
+Card_ChangeArt:
+		;cmpi.b	#4,obRoutine(a0)
+		;bne.s	Card_Delete
+		;moveq	#plcid_Explode,d0
+		;jsr	(AddPLC).l	; load explosion patterns
+		;moveq	#0,d0
+		;move.b	(v_zone).w,d0
+		;addi.w	#plcid_GHZAnimals,d0
+		;jsr	(AddPLC).l	; load animal patterns
+
+Card_Delete:
+		bra.w	DeleteObject
+; ===========================================================================
+Card_ItemData:	dc.w $D0	; y-axis position
+		dc.b 2,	0	; routine number, frame	number (changes)
+		dc.w $E4
+		dc.b 2,	6
+		dc.w $EA
+		dc.b 2,	7
+		dc.w $E0
+		dc.b 2,	$A
+; ---------------------------------------------------------------------------
+; Title	card configuration data
+; Format:
+; 4 bytes per item (YYYY XXXX)
+; 4 items per level (GREEN HILL, ZONE, ACT X, oval)
+; ---------------------------------------------------------------------------
+Card_ConData:	dc.w 0,	$120, $FEFC, $13C, $414, $154, $214, $154 ; GHZ
+		dc.w 0,	$120, $FEF4, $134, $40C, $14C, $20C, $14C ; LZ
+		dc.w 0,	$120, $FEE0, $120, $3F8, $138, $1F8, $138 ; MZ
+		dc.w 0,	$120, $FEFC, $13C, $414, $154, $214, $154 ; SLZ
+		dc.w 0,	$120, $FF04, $144, $41C, $15C, $21C, $15C ; SYZ
+		dc.w 0,	$120, $FF04, $144, $41C, $15C, $21C, $15C ; SBZ
+		dc.w 0,	$120, $FEE4, $124, $3EC, $3EC, $1EC, $12C ; FZ
+; ===========================================================================
+
 ; ===========================================================================
 ; This macro declares data for an object. The data includes:
 ; - the initial routine counter (byte)
@@ -27427,7 +27471,7 @@ loc_13EC4:
 Obj34_BackgroundOutInit:	; the background, going out
 	move.l	a0,-(sp)
 	move.l	d7,-(sp)
-	bsr.w	DeformBgLayer
+	jsr	(DeformBgLayer).l
 	move.l	(sp)+,d7
 	movea.l	(sp)+,a0 ; load 0bj address
 	addi_.b	#2,routine(a0)
@@ -27507,6 +27551,146 @@ Animal_PLCTable: zoneOrderedTable 1,1
     zoneTableEnd
 
 	dc.b PLCID_SczAnimals	; level slot $11 (non-existent), not part of main table
+	even
+
+Map_Card:	mappingsTable
+	mappingsTableEntry.w	M_Card_GHZ
+	mappingsTableEntry.w	M_Card_LZ
+	mappingsTableEntry.w	M_Card_MZ
+	mappingsTableEntry.w	M_Card_SLZ
+	mappingsTableEntry.w	M_Card_SYZ
+	mappingsTableEntry.w	M_Card_SBZ
+	mappingsTableEntry.w	M_Card_Zone
+	mappingsTableEntry.w	M_Card_Act1
+	mappingsTableEntry.w	M_Card_Act2
+	mappingsTableEntry.w	M_Card_Act3
+	mappingsTableEntry.w	M_Card_Oval
+	mappingsTableEntry.w	M_Card_FZ
+
+M_Card_GHZ:	spriteHeader		; GREEN HILL
+	spritePiece	-$4C, -8, 2, 2, $18, 0, 0, 0, 0
+	spritePiece	-$3C, -8, 2, 2, $3A, 0, 0, 0, 0
+	spritePiece	-$2C, -8, 2, 2, $10, 0, 0, 0, 0
+	spritePiece	-$1C, -8, 2, 2, $10, 0, 0, 0, 0
+	spritePiece	-$C, -8, 2, 2, $2E, 0, 0, 0, 0
+	spritePiece	$14, -8, 2, 2, $1C, 0, 0, 0, 0
+	spritePiece	$24, -8, 1, 2, $20, 0, 0, 0, 0
+	spritePiece	$2C, -8, 2, 2, $26, 0, 0, 0, 0
+	spritePiece	$3C, -8, 2, 2, $26, 0, 0, 0, 0
+M_Card_GHZ_End
+	even
+
+M_Card_LZ:	spriteHeader		; LABYRINTH
+	spritePiece	-$44, -8, 2, 2, $26, 0, 0, 0, 0
+	spritePiece	-$34, -8, 2, 2, 0, 0, 0, 0, 0
+	spritePiece	-$24, -8, 2, 2, 4, 0, 0, 0, 0
+	spritePiece	-$14, -8, 2, 2, $4A, 0, 0, 0, 0
+	spritePiece	-4, -8, 2, 2, $3A, 0, 0, 0, 0
+	spritePiece	$C, -8, 1, 2, $20, 0, 0, 0, 0
+	spritePiece	$14, -8, 2, 2, $2E, 0, 0, 0, 0
+	spritePiece	$24, -8, 2, 2, $42, 0, 0, 0, 0
+	spritePiece	$34, -8, 2, 2, $1C, 0, 0, 0, 0
+M_Card_LZ_End
+	even
+
+M_Card_MZ:	spriteHeader		; MARBLE
+	spritePiece	-$31, -8, 2, 2, $2A, 0, 0, 0, 0
+	spritePiece	-$20, -8, 2, 2, 0, 0, 0, 0, 0
+	spritePiece	-$10, -8, 2, 2, $3A, 0, 0, 0, 0
+	spritePiece	 0, -8, 2, 2, 4, 0, 0, 0, 0
+	spritePiece	 $10, -8, 2, 2, $26, 0, 0, 0, 0
+	spritePiece	 $20, -8, 2, 2, $10, 0, 0, 0, 0
+M_Card_MZ_End
+	even
+
+M_Card_SLZ:	spriteHeader		; STAR LIGHT
+	spritePiece	-$4C, -8, 2, 2, $3E, 0, 0, 0, 0
+	spritePiece	-$3C, -8, 2, 2, $42, 0, 0, 0, 0
+	spritePiece	-$2C, -8, 2, 2, 0, 0, 0, 0, 0
+	spritePiece	-$1C, -8, 2, 2, $3A, 0, 0, 0, 0
+	spritePiece	4, -8, 2, 2, $26, 0, 0, 0, 0
+	spritePiece	$14, -8, 1, 2, $20, 0, 0, 0, 0
+	spritePiece	$1C, -8, 2, 2, $18, 0, 0, 0, 0
+	spritePiece	$2C, -8, 2, 2, $1C, 0, 0, 0, 0
+	spritePiece	$3C, -8, 2, 2, $42, 0, 0, 0, 0
+M_Card_SLZ_End
+	even
+
+M_Card_SYZ:	spriteHeader		; SPRING YARD
+	spritePiece	-$54, -8, 2, 2, $3E, 0, 0, 0, 0
+	spritePiece	-$44, -8, 2, 2, $36, 0, 0, 0, 0
+	spritePiece	-$34, -8, 2, 2, $3A, 0, 0, 0, 0
+	spritePiece	-$24, -8, 1, 2, $20, 0, 0, 0, 0
+	spritePiece	-$1C, -8, 2, 2, $2E, 0, 0, 0, 0
+	spritePiece	-$C, -8, 2, 2, $18, 0, 0, 0, 0
+	spritePiece	$14, -8, 2, 2, $4A, 0, 0, 0, 0
+	spritePiece	$24, -8, 2, 2, 0, 0, 0, 0, 0
+	spritePiece	$34, -8, 2, 2, $3A, 0, 0, 0, 0
+	spritePiece	$44, -8, 2, 2, $C, 0, 0, 0, 0
+M_Card_SYZ_End
+	even
+
+M_Card_SBZ:	spriteHeader		; SCRAP BRAIN
+	spritePiece	-$54, -8, 2, 2, $3E, 0, 0, 0, 0
+	spritePiece	-$44, -8, 2, 2, 8, 0, 0, 0, 0
+	spritePiece	-$34, -8, 2, 2, $3A, 0, 0, 0, 0
+	spritePiece	-$24, -8, 2, 2, 0, 0, 0, 0, 0
+	spritePiece	-$14, -8, 2, 2, $36, 0, 0, 0, 0
+	spritePiece	$C, -8, 2, 2, 4, 0, 0, 0, 0
+	spritePiece	$1C, -8, 2, 2, $3A, 0, 0, 0, 0
+	spritePiece	$2C, -8, 2, 2, 0, 0, 0, 0, 0
+	spritePiece	$3C, -8, 1, 2, $20, 0, 0, 0, 0
+	spritePiece	$44, -8, 2, 2, $2E, 0, 0, 0, 0
+M_Card_SBZ_End
+	even
+
+M_Card_Zone:	spriteHeader		; ZONE
+	spritePiece	-$20, -8, 2, 2, $4E, 0, 0, 0, 0
+	spritePiece	-$10, -8, 2, 2, $32, 0, 0, 0, 0
+	spritePiece	0, -8, 2, 2, $2E, 0, 0, 0, 0
+	spritePiece	$10, -8, 2, 2, $10, 0, 0, 0, 0
+M_Card_Zone_End
+	even
+
+M_Card_Act1:	spriteHeader		; ACT 1
+	spritePiece	-$14, 4, 4, 1, $53, 0, 0, 0, 0
+	spritePiece	$C, -$C, 1, 3, $57, 0, 0, 0, 0
+M_Card_Act1_End
+
+M_Card_Act2:	spriteHeader		; ACT 2
+	spritePiece	-$14, 4, 4, 1, $53, 0, 0, 0, 0
+	spritePiece	8, -$C, 2, 3, $5A, 0, 0, 0, 0
+M_Card_Act2_End
+
+M_Card_Act3:	spriteHeader		; ACT 3
+	spritePiece	-$14, 4, 4, 1, $53, 0, 0, 0, 0
+	spritePiece	8, -$C, 2, 3, $60, 0, 0, 0, 0
+M_Card_Act3_End
+
+M_Card_Oval:	spriteHeader		; Oval
+	spritePiece	-$C, -$1C, 4, 1, $70, 0, 0, 0, 0
+	spritePiece	$14, -$1C, 1, 3, $74, 0, 0, 0, 0
+	spritePiece	-$14, -$14, 2, 1, $77, 0, 0, 0, 0
+	spritePiece	-$1C, -$C, 2, 2, $79, 0, 0, 0, 0
+	spritePiece	-$14, $14, 4, 1, $70, 1, 1, 0, 0
+	spritePiece	-$1C, 4, 1, 3, $74, 1, 1, 0, 0
+	spritePiece	4, $C, 2, 1, $77, 1, 1, 0, 0
+	spritePiece	$C, -4, 2, 2, $79, 1, 01, 0, 0
+	spritePiece	-4, -$14, 3, 1, $7D, 0, 0, 0, 0
+	spritePiece	-$C, -$C, 4, 1, $7C, 0, 0, 0, 0
+	spritePiece	-$C, -4, 3, 1, $7C, 0, 0, 0, 0
+	spritePiece	-$14, 4, 4, 1, $7C, 0, 0, 0, 0
+	spritePiece	-$14, $C, 3, 1, $7C, 0, 0, 0, 0
+M_Card_Oval_End
+	even
+
+M_Card_FZ:	spriteHeader		; FINAL
+	spritePiece	-$24, -8, 2, 2, $14, 0, 0, 0, 0
+	spritePiece	-$14, -8, 1, 2, $20, 0, 0, 0, 0
+	spritePiece	-$C, -8, 2, 2, $2E, 0, 0, 0, 0
+	spritePiece	4, -8, 2, 2, 0, 0, 0, 0, 0
+	spritePiece	$14, -8, 2, 2, $26, 0, 0, 0, 0
+M_Card_FZ_End
 	even
 
 ; ===========================================================================
@@ -34476,13 +34660,14 @@ obj0D_spinframe		= objoff_30 ; $30(a0)
 obj0D_sparkleframe	= objoff_34 ; $34(a0)
 obj0D_finalanim		= objoff_36 ; $36(a0) ; 4 if Tails only, 3 otherwise (determines what character to show)
 ; ----------------------------------------------------------------------------
-
+		include	"_anim/Signpost.asm"
+Map_Sign:	include	"_maps/Signpost.asm"
 Obj0D:
 	moveq	#0,d0
 	move.b	routine(a0),d0
 	move.w	Obj0D_Index(pc,d0.w),d1
 	jsr	Obj0D_Index(pc,d1.w)
-	lea	(Ani_obj0D).l,a1
+	lea	(Ani_Sign).l,a1
 	bsr.w	AnimateSprite
 	bsr.w	PLCLoad_Signpost
 	bra.w	MarkObjGone
@@ -34496,7 +34681,7 @@ Obj0D_Index:	offsetTable
 Obj0D_Init:
 	tst.w	(Two_player_mode).w
 	beq.s	loc_19208
-	move.l	#Obj0D_MapUnc_19656,mappings(a0)
+	move.l	#Map_Sign,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_2p_Signpost,0,0),art_tile(a0)
 	move.b	#-1,(Signpost_prev_frame).w
 	moveq	#0,d1
@@ -34516,7 +34701,7 @@ loc_19208:
 	rts
 ; ---------------------------------------------------------------------------
 loc_1921E:
-	move.l	#Obj0D_MapUnc_195BE,mappings(a0)
+	move.l	#Map_Sign,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_Signpost,0,0),art_tile(a0)
 
 loc_1922C:
@@ -37475,13 +37660,7 @@ Sonic_CheckSpindash:
 	move.b	(Ctrl_1_Press_Logical).w,d0
 	andi.b	#button_B_mask|button_C_mask|button_A_mask,d0
 	beq.w	return_1AC8C
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if not, branch
 	move.b	#3,anim(a0)
-	bra.s	++
-+
-	move.b	#AniIDSonAni_Spindash,anim(a0)
-+	; keep teleport monitor from causing unwanted effects
 	move.w	#SndID_SpindashRev,d0
 	jsr	(PlaySound).l
 	addq.l	#4,sp
@@ -37596,13 +37775,7 @@ Sonic_ChargingSpindash:			; If still charging the dash...
 	move.b	(Ctrl_1_Press_Logical).w,d0
 	andi.b	#button_B_mask|button_C_mask|button_A_mask,d0
 	beq.w	Obj01_Spindash_ResetScr
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if not, branch
 	move.b	#3,anim(a0)
-	bra.s	++
-+
-	move.w	#(AniIDSonAni_Spindash<<8)|(AniIDSonAni_Walk<<0),anim(a0)
-+	; keep teleport monitor from causing unwanted effects
 	move.w	#SndID_SpindashRev,d0
 	jsr	(PlaySound).l
 	addi.w	#$200,spindash_counter(a0)
@@ -38271,17 +38444,7 @@ Obj01_Respawning:
 
 ; loc_1B350:
 Sonic_Animate:
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if not, branch
 	lea	(SonicAniData1).l,a1
-	bra.s	+++
-+
-	lea	(SonicAniData).l,a1
-+	; keep teleport monitor from causing unwanted effects
-	tst.b	(Super_Sonic_flag).w
-	beq.s	+
-	lea	(SuperSonicAniData).l,a1
-+
 	moveq	#0,d0
 	move.b	anim(a0),d0
 	cmp.b	prev_anim(a0),d0	; has animation changed?
@@ -38384,27 +38547,13 @@ SAnim_WalkRun:
     endif
 	add.w	d2,d2
 +
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if not, branch
 	lea	(SonAni1_Run).l,a1	; use running animation
-	bra.s	++
-+
-	tst.b	(Super_Sonic_flag).w
-	bne.s	SAnim_Super
-	lea	(SonAni_Run).l,a1	; use running animation
-+	; keep teleport monitor from causing unwanted effects
 	cmpi.w	#$600,d2		; is Sonic at running speed?
-	bhs.s	++		; use running animation
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if not, branch
+	bhs.s	+		; use running animation
 	lea	(SonAni1_Walk).l,a1	; if yes, branch
 	move.b	d0,d1
 	lsr.b	#1,d1
 	add.b	d1,d0
-	bra.s	++
-+
-	lea	(SonAni_Walk).l,a1	; if yes, branch
-	add.b	d0,d0
 +
 	add.b	d0,d0
 	move.b	d0,d3
@@ -38524,21 +38673,10 @@ SAnim_Roll:
 	addq.b	#1,d0		; is the start flag = $FE?
 	bne.s	SAnim_Push	; if not, branch
 	mvabs.w	inertia(a0),d2
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if not, branch
 	lea	(SonAni1_Roll2).l,a1
-	bra.s	++
-+
-	lea	(SonAni_Roll2).l,a1
-+
 	cmpi.w	#$600,d2
-	bhs.s	++
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if not, branch
+	bhs.s	+
 	lea	(SonAni1_Roll).l,a1
-	bra.s	++
-+
-	lea	(SonAni_Roll).l,a1
 +
 	neg.w	d2
 	addi.w	#$400,d2
@@ -38567,16 +38705,7 @@ SAnim_Push:
 +
 	lsr.w	#6,d2
 	move.b	d2,anim_frame_duration(a0)
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if not, branch
 	lea	(SonAni1_Push).l,a1	; use running animation
-	bra.s	++
-+
-	lea	(SonAni_Push).l,a1
-	tst.b	(Super_Sonic_flag).w
-	beq.s	+
-	lea	(SupSonAni_Push).l,a1
-+
 	move.b	status(a0),d1
 	andi.b	#1,d1
 	andi.b	#$FC,render_flags(a0)
@@ -38773,13 +38902,7 @@ LoadSonicDynPLC_Part2:
 	cmp.b	(Sonic_LastLoadedDPLC).w,d0
 	beq.s	return_1B89A
 	move.b	d0,(Sonic_LastLoadedDPLC).w
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if not, branch
 	lea	(MapRUnc_Sonic1).l,a2
-	bra.s	++
-+
-	lea	(MapRUnc_Sonic).l,a2
-+	; keep teleport monitor from causing unwanted effects
 	add.w	d0,d0
 	adda.w	(a2,d0.w),a2
 	move.w	(a2)+,d5
@@ -38796,13 +38919,7 @@ SPLC_ReadEntry:
 	addi.w	#$10,d3
 	andi.w	#$FFF,d1
 	lsl.l	#5,d1
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if it's S2 Final Sonic, branch
 	addi.l	#ArtUnc_Sonic1,d1
-	bra.s	++
-+
-	addi.l	#ArtUnc_Sonic,d1
-+
 	move.w	d4,d2
 	add.w	d3,d4
 	add.w	d3,d4
@@ -85535,13 +85652,7 @@ Hud_Base:
 	move.w	#(Hud_TilesBase_End-Hud_TilesBase)-1,d2
 
 loc_41090:
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if it's S2 Final Sonic, branch
     lea Art_HudS1,a1  ; Without (pc)
-	bra.s	++
-+
-	lea	Art_Hud(pc),a1
-+
 
 loc_41094:
 	move.w	#8*hud_letter_num_tiles-1,d1
@@ -85570,13 +85681,7 @@ loc_410B0:
 
 loc_410BC:
 	bsr.w	Hud_Lives2
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if it's S2 Final Sonic, branch
 	move.l	#Art_HudS1,d1 ; source addreses
-	bra.s	++
-+
-	move.l	#Art_Hud,d1 ; source addreses
-+
 	move.w	#tiles_to_bytes(ArtTile_Art_HUD_Numbers_2P),d2 ; destination VRAM address
 	move.w	#tiles_to_bytes(22)/2,d3 ; DMA transfer length (in words)
 	jmp	(QueueDMATransfer).l
@@ -85675,13 +85780,7 @@ Hud_Score:
 ; loc_4114E:
 Hud_LoadArt:
 	moveq	#0,d4
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if it's S2 Final Sonic, branch
     lea Art_HudS1,a1  ; Without (pc)
-	bra.s	++
-+
-	lea	Art_Hud(pc),a1
-+
 ; loc_41154:
 Hud_ScoreLoop:
 	moveq	#0,d2
@@ -85729,13 +85828,7 @@ ContScrCounter:
 	lea	(Hud_10).l,a2
 	moveq	#1,d6
 	moveq	#0,d4
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if it's S2 Final Sonic, branch
     lea Art_HudS1,a1  ; Without (pc)
-	bra.s	++
-+
-	lea	Art_Hud(pc),a1
-+
 ; loc_411C2:
 ContScr_Loop:
 	moveq	#0,d2
@@ -85790,13 +85883,7 @@ Hud_Secs:
 
 loc_41222:
 	moveq	#0,d4
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if it's S2 Final Sonic, branch
     lea Art_HudS1,a1  ; Without (pc)
-	bra.s	++
-+
-	lea	Art_Hud(pc),a1
-+
 ; loc_41228:
 Hud_TimeLoop:
 	moveq	#0,d2
@@ -85837,13 +85924,7 @@ Hud_TimeRingBonus:
 	lea_	Hud_1000,a2
 	moveq	#3,d6
 	moveq	#0,d4
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if it's S2 Final Sonic, branch
     lea Art_HudS1,a1  ; Without (pc)
-	bra.s	++
-+
-	lea	Art_Hud(pc),a1
-+
 ; loc_41280:
 Hud_BonusLoop:
 	moveq	#0,d2
@@ -86196,13 +86277,7 @@ Debug_ExitDebugMode:
 	moveq	#0,d0
 	move.w	d0,(Debug_placement_mode).w
 	lea	(MainCharacter).w,a1 ; a1=character
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if not, branch
 	move.l	#MapUnc_Sonic1,mappings(a0)
-	bra.s	++
-+
-	move.l	#MapUnc_Sonic,mappings(a0)
-+	; keep teleport monitor from causing unwanted effects
 	move.w	#make_art_tile(ArtTile_ArtUnc_Sonic,0,0),art_tile(a1)
 	tst.w	(Two_player_mode).w
 	beq.s	.notTwoPlayerMode
@@ -88250,7 +88325,7 @@ Art_HudS1:		BINCLUDE	"art/uncompressed/HUD Numbers.bin"
 	even
 ArtNem_Checkpoint:		BINCLUDE	"art/nemesis/Star pole.nem"
 	even
-ArtNem_Signpost:		BINCLUDE	"art/nemesis/Signpost.nem" ; For one-player mode.
+ArtNem_Signpost:		BINCLUDE	"artnem/Signpost.nem" ; For one-player mode.
 	even
 ArtUnc_Signpost:		BINCLUDE	"art/uncompressed/Signpost.bin" ; For two-player mode.
 	even
@@ -88292,7 +88367,7 @@ MapEng_MenuBack:		BINCLUDE	"mappings/misc/Sonic and Miles animated background.en
 	even
 ArtUnc_MenuBack:		BINCLUDE	"art/uncompressed/Sonic and Miles animated background.bin"
 	even
-ArtNem_TitleCard:		BINCLUDE	"art/nemesis/Title card.nem"
+ArtNem_TitleCard:		BINCLUDE	"art/nemesis/Title Cards.nem"
 	even
 ArtNem_TitleCard2:		BINCLUDE	"art/nemesis/Font using large broken letters.nem"
 	even
