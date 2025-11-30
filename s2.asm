@@ -4121,13 +4121,7 @@ TitleScreen:
 	jsr	(BuildSprites).l
 
 	; Load some standard sprites.
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if it's S2 Final Sonic, branch
 	moveq	#PLCID_Std1S1,d0
-	bra.s	++
-+
-	moveq	#PLCID_Std1,d0
-+
 	bsr.w	LoadPLC2
 	; Reset the cheat input state.
 	move.w	#0,(Correct_cheat_entries).w
@@ -4585,15 +4579,8 @@ Level_InitWater:
 	move.b	#1,(Water_on).w	; enable water
 ; loc_407C:
 Level_LoadPal:
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if not, branch
 	moveq	#PalID_BGND1,d0
 	bsr.w	PalLoad_Now	; load Sonic's palette line
-	bra.s	++
-+
-	moveq	#PalID_BGND,d0
-	bsr.w	PalLoad_Now	; load Sonic's palette line
-+
 	tst.b	(Water_flag).w	; does level have water?
 	beq.s	Level_GetBgm	; if not, branch
 	moveq	#PalID_HPZ_U,d0	; palette number $15
@@ -4650,15 +4637,8 @@ Level_TtlCard:
 	bsr.w	WaitForVint
 	jsr	(Hud_Base).l
 noLevel_TtlCard:
-+	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if not, branch
 	moveq	#PalID_BGND1,d0
 	bsr.w	PalLoad_ForFade	; load Sonic's palette line
-	bra.s	++
-+
-	moveq	#PalID_BGND,d0
-	bsr.w	PalLoad_ForFade	; load Sonic's palette line
-+
 	jsr	LevelSizeLoad
 	jsrto	DeformBgLayer, JmpTo_DeformBgLayer
 	clr.w	(Vscroll_Factor_FG).w
@@ -5136,15 +5116,10 @@ End_MoveSon2:
 		move.w	d0,(Ctrl_1_Held_Logical).w ; stop Sonic moving
 		move.w	d0,(MainCharacter+inertia).w
 		move.b	#$81,(MainCharacter+obj_control).w ; lock controls and disable object interaction
-		tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-		beq.s	+			; if it's S2 Final Sonic, branch
 		move.b	#3,(MainCharacter+mapping_frame).w
--		move.w	#(5<<8)+5,(MainCharacter+anim).w ; use "standing" animation
+		move.w	#(5<<8)+5,(MainCharacter+anim).w ; use "standing" animation
 		move.b	#3,(MainCharacter+anim_frame_duration).w
 		rts	
-+
-		move.b	#4,(MainCharacter+mapping_frame).w
-		bra.s	-
 ; ===========================================================================
 
 End_MoveSon3:
@@ -6735,13 +6710,7 @@ SpecialStage:
 	move	#$2300,sr
 	moveq	#PalID_Result,d0
 	bsr.w	PalLoad_Now
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if it's S2 Final Sonic, branch
 	moveq	#PLCID_Std1S1,d0
-	bra.s	++
-+
-	moveq	#PLCID_Std1,d0
-+
 	bsr.w	LoadPLC2
 	move.l	#vdpComm(tiles_to_bytes(ArtTile_VRAM_Start+2),VRAM,WRITE),d0
 	lea	SpecialStage_ResultsLetters(pc),a0
@@ -10950,13 +10919,7 @@ ObjDB_Sonic_Init:
 	addq.b	#2,routine(a0) ; => ObjDB_Sonic_Wait
 	move.w	#$9C,x_pos(a0)
 	move.w	#$19C,y_pos(a0)
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if not, branch
 	move.l	#MapUnc_Sonic1,mappings(a0)
-	bra.s	++
-+
-	move.l	#MapUnc_Sonic,mappings(a0)
-+	; keep teleport monitor from causing unwanted effects
 	move.w	#make_art_tile(ArtTile_ArtUnc_Sonic,0,0),art_tile(a0)
 	move.b	#4,render_flags(a0)
 	move.b	#2,priority(a0)
@@ -11114,13 +11077,7 @@ TwoPlayerResults:
 	clr.w	(Anim_Counters).w
 	lea	(Anim_SonicMilesBG).l,a2
 	jsrto	Dynamic_Normal, JmpTo_Dynamic_Normal
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if it's S2 Final Sonic, branch
 	moveq	#PLCID_Std1S1,d0
-	bra.s	++
-+
-	moveq	#PLCID_Std1,d0
-+
 	bsr.w	LoadPLC2
 	moveq	#PalID_Menu,d0
 	bsr.w	PalLoad_ForFade
@@ -29092,13 +29049,7 @@ LoadTitleCard0:
 ; loc_157D2:
 LoadTitleCard:
 	bsr.s	LoadTitleCard0
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if it's S2 Final Sonic, branch
 	moveq	#PLCID_Std1S1,d0
-	bra.s	++
-+
-	moveq	#PLCID_Std1,d0
-+
 	jsr	LoadPLC2
 	moveq	#0,d0
 	move.b	(Current_Zone).w,d0
@@ -36112,13 +36063,7 @@ Obj01_Init:
 	addq.b	#2,routine(a0)	; => Obj01_Control
 	move.b	#$13,y_radius(a0) ; this sets Sonic's collision height (2*pixels)
 	move.b	#9,x_radius(a0)
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if not, branch
 	move.l	#MapUnc_Sonic1,mappings(a0)
-	bra.s	++
-+
-	move.l	#MapUnc_Sonic,mappings(a0)
-+	; keep teleport monitor from causing unwanted effects
 	move.b	#2,priority(a0)
 	move.b	#$18,width_pixels(a0)
 	move.b	#4,render_flags(a0)
@@ -36586,8 +36531,6 @@ Sonic_BalanceOnObjLeft:
 	bra.w	Obj01_ResetScr
 ; ---------------------------------------------------------------------------
 Sonic_Balance:
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.l	+			; if it's S2 Final Sonic, branch
 	jsr	(ChkFloorEdge).l
 	cmpi.w	#$C,d1
 	blt.w	Sonic_Lookup
@@ -37448,13 +37391,7 @@ Sonic_CheckGoSuper:
 	move.b	#$F,(Palette_timer).w
 	move.b	#1,(Super_Sonic_flag).w
 	move.b	#$81,obj_control(a0)
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if not, branch
-	move.b	#AniID1SupSonAni_Transform,anim(a0)			; use transformation animation
-	bra.s	++
-+
-	move.b	#AniIDSupSonAni_Transform,anim(a0)			; use transformation animation
-+	; keep teleport monitor from causing unwanted effects
+	move.b	#AniIDSonAni_Roll,anim(a0)			; use transformation animation
 	move.b	#ObjID_SuperSonicStars,(SuperSonicStars+id).w ; load Obj7E (Super Sonic stars object) at $FFFFD040
 	move.w	#$A00,(Sonic_top_speed).w
 	move.w	#$30,(Sonic_acceleration).w
@@ -37480,6 +37417,7 @@ return_1ABA4:
 
 ; loc_1ABA6:
 Sonic_Super:
+	rts
 	tst.b	(Super_Sonic_flag).w	; Ignore all this code if not Super Sonic
 	beq.w	return_1AC3C
 	tst.b	(Update_HUD_timer).w
@@ -37529,6 +37467,7 @@ return_1AC3C:
 
 ; loc_1AC3E:
 Sonic_CheckSpindash:
+	rts
 	tst.b	spindash_flag(a0)
 	bne.s	Sonic_UpdateSpindash
 	cmpi.b	#AniIDSonAni_Duck,anim(a0)
