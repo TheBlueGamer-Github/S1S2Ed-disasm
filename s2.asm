@@ -379,7 +379,7 @@ GameMode_SegaScreen:	bra.w	SegaScreen		; SEGA screen mode
 GameMode_TitleScreen:	bra.w	TitleScreen		; Title screen mode
 GameMode_Demo:		bra.w	Level			; Demo mode
 GameMode_Level:		bra.w	Level			; Zone play mode
-GameMode_SpecialStage:	bra.w	SpecialStage		; Special stage play mode
+GameMode_SpecialStage:	jmp	SpecialStage		; Special stage play mode
 GameMode_ContinueScreen:jmp	ContinueScreen		; Continue mode
 	jmp	(EndgameCredits).l
 GameMode_2PLevelSelect:	jmp	Ending	; 2P level select mode
@@ -3740,6 +3740,7 @@ PalPtr_Menu:	palptr Pal_Menu,  0
 PalPtr_Result:	palptr Pal_Result,0
 PalPtr_BGND1:	palptr Pal_BGND1,  0
 PalPtr_CPZ2:	palptr Pal_CPZ,   1
+ptr_Pal_LevelSel:	palptr Pal_LevelSel,   0
 ; ----------------------------------------------------------------------------
 ; This macro defines Pal_ABC and Pal_ABC_End, so palptr can compute the size of
 ; the palette automatically
@@ -3790,6 +3791,7 @@ Pal_SS2_2p:palette Special Stage 2 2p.bin ; Special Stage 2 2p palette
 Pal_SS3_2p:palette Special Stage 3 2p.bin ; Special Stage 3 2p palette
 Pal_Result:palette Special Stage Results Screen.bin ; Special Stage Results Screen palette
 Pal_BGND1:  palette Sonic.bin,SonicAndTails2.bin ; "Sonic and Miles" background palette (also usually the primary palette line)
+Pal_LevelSel:	palette	Level Select.bin
 ; ===========================================================================
 
     if gameRevision<2
@@ -4169,6 +4171,14 @@ TitleScreen:
 		locVRAM	ArtTile_Title_Trademark*tile_size
 		lea	(Nem_TitleTM).l,a0 ; load "TM" patterns
 		bsr.w	NemDec
+		lea	(VDP_data_port).l,a6
+		locVRAM	ArtTile_Level_Select_Font*$20,4(a6)
+		lea	(Art_Text).l,a5	; load level select font
+		move.w	#$28F,d1
+
+Tit_LoadText:
+		move.w	(a5)+,(a6)
+		dbf	d1,Tit_LoadText	; load level select font
 
 	; Clear some variables.
 	move.b	#0,(Last_star_pole_hit).w
@@ -4212,13 +4222,6 @@ TitleScreen:
 	lea	(MapEng_TitleLogo).l,a0
 	move.w	#0,d0
 	bsr.w	EniDec
-
-	; ...add the copyright text to it...
-;	lea	(Chunk_Table+planeLoc(40,28,26)).l,a1
-;	lea	(CopyrightText).l,a2
-;	moveq	#bytesToWcnt(CopyrightText_End-CopyrightText),d6
-;-	move.w	(a2)+,(a1)+
-	;dbf	d6,-
 
 	; ...and send it to VRAM.
 	copyTilemap	Chunk_Table,$C206,34,22
@@ -4299,7 +4302,7 @@ TitleScreen_Loop:
 	move.w	d0,(MainCharacter+obX).w ; move Sonic to the right
 	; Initialise title screen menu object.
 	
-	bsr.w	TailsNameCheat
+	;bsr.w	TailsNameCheat
 
 
 	; If the intro is still playing, then don't let the start button
@@ -4310,6 +4313,357 @@ TitleScreen_Loop:
 	move.b	#GameModeID_SegaScreen,(Game_Mode).w ; go to Sega screen
 	rts
 +
+		tst.b	(v_megadrive).w	; check	if the machine is US or	Japanese
+		bpl.s	Tit_RegionJap	; if Japanese, branch
+
+		lea	(LevSelCode_US).l,a0 ; load US code
+		bra.s	Tit_EnterCheat
+
+Tit_RegionJap:
+		lea	(LevSelCode_J).l,a0 ; load J code
+
+Tit_EnterCheat:
+		move.w	(v_title_dcount).w,d0
+		adda.w	d0,a0
+		move.b	(Ctrl_1_Press).w,d0 ; get button press
+		andi.b	#btnDir,d0	; read only UDLR buttons
+		cmp.b	(a0),d0		; does button press match the cheat code?
+		bne.s	Tit_ResetCheat	; if not, branch
+		addq.w	#1,(v_title_dcount).w ; next button press
+		tst.b	d0
+		bne.s	Tit_CountC
+		lea	(f_levselcheat).w,a0
+		move.w	(v_title_ccount).w,d1
+		lsr.w	#1,d1
+		andi.w	#3,d1
+		beq.s	Tit_PlayRing
+		tst.b	(v_megadrive).w
+		bpl.s	Tit_PlayRing
+		moveq	#1,d1
+		move.b	d1,1(a0,d1.w)	; cheat depends on how many times C is pressed
+
+Tit_PlayRing:
+		move.b	#1,(a0,d1.w)	; activate cheat
+		move.b	#SndID_Ring,d0
+		bsr.w	PlaySound2	; play ring sound when code is entered
+		bra.s	Tit_CountC
+Tit_ResetCheat:
+		tst.b	d0
+		beq.s	Tit_CountC
+		cmpi.w	#9,(v_title_dcount).w
+		beq.s	Tit_CountC
+		move.w	#0,(v_title_dcount).w ; reset UDLR counter
+
+Tit_CountC:
+		move.b	(Ctrl_1_Press).w,d0
+		andi.b	#btnC,d0	; is C button pressed?
+		beq.s	loc_3230	; if not, branch
+		addq.w	#1,(v_title_ccount).w ; increment C counter
+
+loc_3230:
+		tst.w	(Demo_Time_left).w
+		beq.w	TitleScreen_Demo
+		andi.b	#btnStart,(Ctrl_1_Press).w ; check if Start is pressed
+		beq.w	TitleScreen_Loop	; if not, branch
+
+Tit_ChkLevSel:
+		tst.b	(f_levselcheat).w ; check if level select code is on
+		beq.w	PlayLevel	; if not, play level
+		btst	#bitA,(Ctrl_1_Held).w ; check if A is pressed
+		beq.w	PlayLevel	; if not, play level
+
+		moveq	#palid_LevelSel,d0
+		bsr.w	PalLoad_Now	; load level select palette
+
+		;clearRAM v_hscrolltablebuffer,v_hscrolltablebuffer_end
+
+		move.l	d0,(Vscroll_Factor).w
+		disable_ints
+		lea	(VDP_data_port).l,a6
+		locVRAM	$E000
+		move.w	#$3FF,d1
+
+Tit_ClrScroll2:
+		move.l	d0,(a6)
+		dbf	d1,Tit_ClrScroll2 ; clear scroll data (in VRAM)
+
+		bsr.w	LevSelTextLoad
+LevelSelect:
+		move.b	#4,(Vint_routine).w
+		bsr.w	WaitForVint
+		bsr.w	LevSelControls
+		bsr.w	RunPLC_RAM
+		tst.l	(Plc_Buffer).w
+		bne.s	LevelSelect
+		andi.b	#btnABC+btnStart,(Ctrl_1_Press).w ; is A, B, C, or Start pressed?
+		beq.s	LevelSelect	; if not, branch
+		move.w	(v_levselitem).w,d0
+		cmpi.w	#$14,d0		; have you selected item $14 (sound test)?
+		bne.w	LevSel_Level_SS	; if not, go to	Level/SS subroutine
+		move.w	(v_levselsound).w,d0
+		addi.w	#$80,d0
+		;tst.b	(f_creditscheat).w ; is Japanese Credits cheat on?
+		;beq.s	LevSel_NoCheat	; if not, branch
+		;cmpi.w	#$9F,d0		; is sound $9F being played?
+		;beq.s	LevSel_Ending	; if yes, branch
+		;cmpi.w	#$9E,d0		; is sound $9E being played?
+		;beq.s	LevSel_Credits	; if yes, branch
+
+LevSel_NoCheat:
+		; This is a workaround for a bug; see PlaySoundID for more.
+		; Once you've fixed the bugs there, comment these four instructions out.
+		;cmpi.w	#bgm__Last+1,d0	; is sound $80-$93 being played?
+		;blo.s	LevSel_PlaySnd	; if yes, branch
+		;cmpi.w	#sfx__First,d0	; is sound $94-$9F being played?
+		;blo.s	LevelSelect	; if yes, branch
+
+LevSel_PlaySnd:
+		;bsr.w	PlaySound_Special
+		bra.s	LevelSelect
+LevSelControls:
+		move.b	(Ctrl_1_Press).w,d1
+		andi.b	#btnUp+btnDn,d1	; is up/down pressed and held?
+		bne.s	LevSel_UpDown	; if yes, branch
+		subq.w	#1,(v_levseldelay).w ; subtract 1 from time to next move
+		bpl.s	LevSel_SndTest	; if time remains, branch
+
+LevSel_UpDown:
+		move.w	#$B,(v_levseldelay).w ; reset time delay
+		move.b	(Ctrl_1_Held).w,d1
+		andi.b	#btnUp+btnDn,d1	; is up/down pressed?
+		beq.s	LevSel_SndTest	; if not, branch
+		move.w	(v_levselitem).w,d0
+		btst	#bitUp,d1	; is up	pressed?
+		beq.s	LevSel_Down	; if not, branch
+		subq.w	#1,d0		; move up 1 selection
+		bhs.s	LevSel_Down
+		moveq	#$14,d0		; if selection moves below 0, jump to selection	$14
+
+LevSel_Down:
+		btst	#bitDn,d1	; is down pressed?
+		beq.s	LevSel_Refresh	; if not, branch
+		addq.w	#1,d0		; move down 1 selection
+		cmpi.w	#$15,d0
+		blo.s	LevSel_Refresh
+		moveq	#0,d0		; if selection moves above $14,	jump to	selection 0
+
+LevSel_Refresh:
+		move.w	d0,(v_levselitem).w ; set new selection
+		bsr.w	LevSelTextLoad	; refresh text
+		rts	
+; ===========================================================================
+
+LevSel_SndTest:
+		cmpi.w	#$14,(v_levselitem).w ; is item $14 selected?
+		bne.s	LevSel_NoMove	; if not, branch
+		move.b	(Ctrl_1_Press).w,d1
+		andi.b	#btnR+btnL,d1	; is left/right	pressed?
+		beq.s	LevSel_NoMove	; if not, branch
+		move.w	(v_levselsound).w,d0
+		btst	#bitL,d1	; is left pressed?
+		beq.s	LevSel_Right	; if not, branch
+		subq.w	#1,d0		; subtract 1 from sound	test
+		bhs.s	LevSel_Right
+		moveq	#$4F,d0		; if sound test	moves below 0, set to $4F
+
+LevSel_Right:
+		btst	#bitR,d1	; is right pressed?
+		beq.s	LevSel_Refresh2	; if not, branch
+		addq.w	#1,d0		; add 1	to sound test
+		cmpi.w	#$50,d0
+		blo.s	LevSel_Refresh2
+		moveq	#0,d0		; if sound test	moves above $4F, set to	0
+
+LevSel_Refresh2:
+		move.w	d0,(v_levselsound).w ; set sound test number
+		bsr.w	LevSelTextLoad	; refresh text
+
+LevSel_NoMove:
+		rts	
+LevSel_Level_SS:
+		add.w	d0,d0
+		move.w	LevSel_Ptrs(pc,d0.w),d0 ; load level number
+		bmi.w	LevelSelect
+		cmpi.w	#id_SS*$100,d0	; check	if level is 0700 (Special Stage)
+		bne.s	LevSel_Level	; if not, branch
+		move.b	#GameModeID_SpecialStage,(Game_Mode).w ; set screen mode to $10 (Special Stage)
+		clr.w	(Current_Zone).w	; clear	level
+		move.b	#3,(Life_count).w
+		moveq	#0,d0
+		move.w	d0,(Ring_count).w
+		move.l	d0,(Timer).w
+		move.l	d0,(Score).w
+		move.b	d0,(Continue_count).w
+		if Revision<>0
+			move.l	#5000,(Next_Extra_life_score).w
+		endif
+		rts	
+LevSel_Ptrs:	if Revision=0
+		; old level order
+		dc.b id_GHZ, 0
+		dc.b id_GHZ, 1
+		dc.b id_GHZ, 2
+		dc.b id_LZ, 0
+		dc.b id_LZ, 1
+		dc.b id_LZ, 2
+		dc.b id_MZ, 0
+		dc.b id_MZ, 1
+		dc.b id_MZ, 2
+		dc.b id_SLZ, 0
+		dc.b id_SLZ, 1
+		dc.b id_SLZ, 2
+		dc.b id_SYZ, 0
+		dc.b id_SYZ, 1
+		dc.b id_SYZ, 2
+		dc.b id_SBZ, 0
+		dc.b id_SBZ, 1
+		dc.b id_LZ, 3		; Scrap Brain Zone 3
+		dc.b id_SBZ, 2		; Final Zone
+		else
+		; correct level order
+		dc.b id_GHZ, 0
+		dc.b id_GHZ, 1
+		dc.b id_GHZ, 2
+		dc.b id_MZ, 0
+		dc.b id_MZ, 1
+		dc.b id_MZ, 2
+		dc.b id_SYZ, 0
+		dc.b id_SYZ, 1
+		dc.b id_SYZ, 2
+		dc.b id_LZ, 0
+		dc.b id_LZ, 1
+		dc.b id_LZ, 2
+		dc.b id_SLZ, 0
+		dc.b id_SLZ, 1
+		dc.b id_SLZ, 2
+		dc.b id_SBZ, 0
+		dc.b id_SBZ, 1
+		dc.b id_LZ, 3
+		dc.b id_SBZ, 2
+		endif
+		dc.b id_SS, 0		; Special Stage
+		dc.w $8000		; Sound Test
+		even
+id_SS = 7
+; ===========================================================================
+
+LevSel_Level:
+		andi.w	#$3FFF,d0
+		move.w	d0,(Current_Zone).w	; set level number
+
+PlayLevel:
+		move.b	#GameModeID_Level,(Game_Mode).w ; set screen mode to $0C (level)
+
+	move.b	#3,(Life_count).w
+	move.b	#3,(Life_count_2P).w
+
+	moveq	#0,d0
+	move.w	d0,(Ring_count).w
+	move.l	d0,(Timer).w
+	move.l	d0,(Score).w
+	move.w	d0,(Ring_count_2P).w
+	move.l	d0,(Timer_2P).w
+	move.l	d0,(Score_2P).w
+	move.b	d0,(Continue_count).w
+
+		if Revision<>0
+			move.l	#5000,(Next_Extra_life_score).w
+		endif
+
+	move.b	#MusID_FadeOut,d0 ; prepare to stop music (fade out)
+	bsr.w	PlaySound
+		rts	
+; End of function LevSelControls
+LevSelTextLoad:
+
+textpos:	= ($40000000+(($E210&$3FFF)<<16)+(($E210&$C000)>>14))
+					; $E210 is a VRAM address
+
+		lea	(LevelMenuText).l,a1
+		lea	(VDP_data_port).l,a6
+		move.l	#textpos,d4	; text position on screen
+		move.w	#$E680,d3	; VRAM setting (4th palette, $680th tile)
+		moveq	#$14,d1		; number of lines of text
+
+LevSel_DrawAll:
+		move.l	d4,4(a6)
+		bsr.w	LevSel_ChgLine	; draw line of text
+		addi.l	#$800000,d4	; jump to next line
+		dbf	d1,LevSel_DrawAll
+
+		moveq	#0,d0
+		move.w	(v_levselitem).w,d0
+		move.w	d0,d1
+		move.l	#textpos,d4
+		lsl.w	#7,d0
+		swap	d0
+		add.l	d0,d4
+		lea	(LevelMenuText).l,a1
+		lsl.w	#3,d1
+		move.w	d1,d0
+		add.w	d1,d1
+		add.w	d0,d1
+		adda.w	d1,a1
+		move.w	#$C680,d3	; VRAM setting (3rd palette, $680th tile)
+		move.l	d4,4(a6)
+		bsr.w	LevSel_ChgLine	; recolour selected line
+		move.w	#$E680,d3
+		cmpi.w	#$14,(v_levselitem).w
+		bne.s	LevSel_DrawSnd
+		move.w	#$C680,d3
+
+LevSel_DrawSnd:
+		locVRAM	$EC30		; sound test position on screen
+		move.w	(v_levselsound).w,d0
+		addi.w	#$80,d0
+		move.b	d0,d2
+		lsr.b	#4,d0
+		bsr.w	LevSel_ChgSnd	; draw 1st digit
+		move.b	d2,d0
+		bsr.w	LevSel_ChgSnd	; draw 2nd digit
+		rts	
+; End of function LevSelTextLoad
+; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
+
+
+LevSel_ChgSnd:
+		andi.w	#$F,d0
+		cmpi.b	#$A,d0		; is digit $A-$F?
+		blo.s	LevSel_Numb	; if not, branch
+		addi.b	#7,d0		; use alpha characters
+
+LevSel_Numb:
+		add.w	d3,d0
+		move.w	d0,(a6)
+		rts	
+; End of function LevSel_ChgSnd
+
+
+; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
+
+
+LevSel_ChgLine:
+		moveq	#$17,d2		; number of characters per line
+
+LevSel_LineLoop:
+		moveq	#0,d0
+		move.b	(a1)+,d0	; get character
+		bpl.s	LevSel_CharOk	; branch if valid
+		move.w	#0,(a6)		; use blank character
+		dbf	d2,LevSel_LineLoop
+		rts	
+
+
+LevSel_CharOk:
+		add.w	d3,d0		; combine char with VRAM setting
+		move.w	d0,(a6)		; send to VRAM
+		dbf	d2,LevSel_LineLoop
+		rts	
+; End of function LevSel_ChgLine
+v_levselsound = Sound_test_sound
+v_levselitem = Level_select_zone
+v_levseldelay = LevSel_HoldTimer
+	rts
 	; If the start button has not been pressed, then loop back and keep
 	; running the title screen.
 	move.b	(Ctrl_1_Press).w,d0
@@ -4344,7 +4698,7 @@ TitleScreen_Loop:
 
 	moveq	#0,d0
 	move.b	(Title_screen_option).w,d0
-	bne.s	TitleScreen_CheckIfChose2P	; branch if not a 1-player game
+	bne.w	TitleScreen_CheckIfChose2P	; branch if not a 1-player game
 
 	moveq	#0,d0
 	move.w	d0,(Two_player_mode_copy).w
@@ -4383,6 +4737,22 @@ Tilemap_Cell:
 	move.l	d0,(Got_Emeralds_array+4).w
 	rts
 ; ===========================================================================
+; ---------------------------------------------------------------------------
+; Level	select codes
+; ---------------------------------------------------------------------------
+LevSelCode_J:	if Revision=0
+		dc.b btnUp,btnDn,btnL,btnR,0,$FF
+		else
+		dc.b btnUp,btnDn,btnDn,btnDn,btnL,btnR,0,$FF
+		endif
+		even
+
+LevSelCode_US:	dc.b btnUp,btnDn,btnL,btnR,0,$FF
+		even
+v_megadrive = Graphics_Flags
+v_title_dcount = Correct_cheat_entries
+v_title_ccount = Correct_cheat_entries_2
+f_levselcheat = Level_select_flag
 ; loc_3CF6:
 TitleScreen_CheckIfChose2P:
 	subq.b	#1,d0
@@ -4550,7 +4920,12 @@ JmpTo_SwScrl_Title ; JmpTo
 
 
 
-
+LevelMenuText:	if Revision=0
+		binclude	"misc/Level Select Text.bin"
+		else
+		binclude	"misc/Level Select Text (JP1).bin"
+		endif
+		even
 ;----------------------------------------------------------------------------
 ; 1P Music Playlist
 ;----------------------------------------------------------------------------
@@ -11071,7 +11446,7 @@ ObjDB_Sonic_StartRunning:
 	move.b	#AniIDSonAni_LieDown,anim(a0)
 	clr.w	inertia(a0)
 	move.b	#SndID_SpindashRev,d0 ; super peel-out sound
-	bsr.w	PlaySound
+	jsr	(PlaySound).l
 
 ; loc_7BFA:
 ObjDB_Sonic_Run:
@@ -11113,7 +11488,7 @@ ObjDB_Tails_StartRunning:
 	move.b	#AniIDSonAni_Walk,anim(a0)
 	clr.w	inertia(a0)
 	move.b	#SndID_SpindashRev,d0 ; super peel-out sound
-	bsr.w	PlaySound
+	jsr	(PlaySound).l
 
 ; loc_7C88:
 ObjDB_Tails_Run:
@@ -11161,7 +11536,7 @@ TwoPlayerResults:
 	move.w	(VDP_Reg1_val).w,d0
 	andi.b	#$BF,d0
 	move.w	d0,(VDP_control_port).l
-	bsr.w	ClearScreen
+	jsr	(ClearScreen).l
 	lea	(VDP_control_port).l,a6
 	move.w	#$8004,(a6)		; H-INT disabled
 	move.w	#$8200|(VRAM_Menu_Plane_A_Name_Table/$400),(a6)	; PNT A base: $C000
@@ -11219,7 +11594,7 @@ TwoPlayerResults:
 	cmp.w	(Level_Music).w,d0
 	beq.s	+
 	move.w	d0,(Level_Music).w
-	bsr.w	PlayMusic
+	jsr	(PlayMusic).l
 +
 	move.w	#(30*60)-1,(Demo_Time_left).w	; 30 seconds
 	clr.w	(Two_player_mode).w
@@ -12511,55 +12886,8 @@ MenuScreenTextToRAM:
 ; ===========================================================================
 ; loc_8FCC:
 MenuScreen_Options:
-	lea	(Chunk_Table).l,a1
-	lea	(MapEng_Options).l,a0
-	move.w	#make_art_tile(ArtTile_ArtNem_MenuBox,0,0),d0
-	jsr	(EniDec).l
-	lea	(Chunk_Table+$160).l,a1
-	lea	(MapEng_Options).l,a0
-	move.w	#make_art_tile(ArtTile_ArtNem_MenuBox,1,0),d0
-	jsr	(EniDec).l
-	clr.b	(Options_menu_box).w
-	bsr.w	OptionScreen_DrawSelected
-	addq.b	#1,(Options_menu_box).w
-	bsr.w	OptionScreen_DrawUnselected
-	addq.b	#1,(Options_menu_box).w
-	bsr.w	OptionScreen_DrawUnselected
-	clr.b	(Options_menu_box).w
-	clr.b	(Level_started_flag).w
-	clr.w	(Anim_Counters).w
-	lea	(Anim_SonicMilesBG).l,a2
-	jsrto	Dynamic_Normal, JmpTo2_Dynamic_Normal
-	moveq	#PalID_Menu,d0
-	bsr.w	PalLoad_ForFade
-	move.b	#MusID_Options,d0
-	jsrto	PlayMusic, JmpTo_PlayMusic
-	clr.w	(Two_player_mode).w
-	clr.l	(Camera_X_pos).w
-	clr.l	(Camera_Y_pos).w
-	clr.w	(Correct_cheat_entries).w
-	clr.w	(Correct_cheat_entries_2).w
-	move.b	#VintID_Menu,(Vint_routine).w
-	bsr.w	WaitForVint
-	move.w	(VDP_Reg1_val).w,d0
-	ori.b	#$40,d0
-	move.w	d0,(VDP_control_port).l
-	bsr.w	Pal_FadeFromBlack
 ; loc_9060:
 OptionScreen_Main:
-	move.b	#VintID_Menu,(Vint_routine).w
-	bsr.w	WaitForVint
-	move	#$2700,sr
-	bsr.w	OptionScreen_DrawUnselected
-	bsr.w	OptionScreen_Controls
-	bsr.w	OptionScreen_DrawSelected
-	move	#$2300,sr
-	lea	(Anim_SonicMilesBG).l,a2
-	jsrto	Dynamic_Normal, JmpTo2_Dynamic_Normal
-	move.b	(Ctrl_1_Press).w,d0
-	or.b	(Ctrl_2_Press).w,d0
-	andi.b	#button_start_mask,d0
-	bne.s	OptionScreen_Select
 	bra.w	OptionScreen_Main
 ; ===========================================================================
 ; loc_909A:
@@ -12839,93 +13167,8 @@ off_92F2:
 ; ===========================================================================
 ; loc_92F6:
 MenuScreen_LevelSelect:
-	; Load foreground (sans zone icon)
-	lea	(Chunk_Table).l,a1
-	lea	(MapEng_LevSel).l,a0	; 2 bytes per 8x8 tile, compressed
-	move.w	#make_art_tile(ArtTile_VRAM_Start,0,0),d0
-	jsr	EniDec
-
-	lea	(Chunk_Table).l,a1
-	move.l	#vdpComm(VRAM_Plane_A_Name_Table,VRAM,WRITE),d0
-	moveq	#40-1,d1
-	moveq	#28-1,d2	; 40x28 = whole screen
-	jsrto	PlaneMapToVRAM_H40, JmpTo_PlaneMapToVRAM_H40	; display patterns
-
-	; Draw sound test number
-	moveq	#palette_line_0,d3
-	bsr.w	LevelSelect_DrawSoundNumber
-
-	; Load zone icon
-	lea	(Chunk_Table+planeLoc(40,0,28)).l,a1
-	lea	(MapEng_LevSelIcon).l,a0
-	move.w	#make_art_tile(ArtTile_ArtNem_LevelSelectPics,0,0),d0
-	jsr	EniDec
-
-	bsr.w	LevelSelect_DrawIcon
-
-	clr.w	(Player_mode).w
-	clr.w	(Results_Screen_2P).w	; VsRSID_Act
-	clr.b	(Level_started_flag).w
-	clr.w	(Anim_Counters).w
-
-	; Animate background (loaded back in MenuScreen)
-	lea	(Anim_SonicMilesBG).l,a2
-	jsrto	Dynamic_Normal, JmpTo2_Dynamic_Normal	; background
-
-	moveq	#PalID_Menu,d0
-	bsr.w	PalLoad_ForFade
-
-	lea	(Normal_palette_line3).w,a1
-	lea	(Target_palette_line3).w,a2
-
-	moveq	#bytesToLcnt(palette_line_size),d1
--	move.l	(a1),(a2)+
-	clr.l	(a1)+
-	dbf	d1,-
-
-	move.b	#MusID_Options,d0
-	jsrto	PlayMusic, JmpTo_PlayMusic
-
-	move.w	#(30*60)-1,(Demo_Time_left).w	; 30 seconds
-	clr.w	(Two_player_mode).w
-	clr.l	(Camera_X_pos).w
-	clr.l	(Camera_Y_pos).w
-	clr.w	(Correct_cheat_entries).w
-	clr.w	(Correct_cheat_entries_2).w
-
-	move.b	#VintID_Menu,(Vint_routine).w
-	bsr.w	WaitForVint
-
-	move.w	(VDP_Reg1_val).w,d0
-	ori.b	#$40,d0
-	move.w	d0,(VDP_control_port).l
-
-	jsr	(Pal_FadeFromBlack).l
-
 ;loc_93AC:
 LevelSelect_Main:	; routine running during level select
-	move.b	#VintID_Menu,(Vint_routine).w
-	bsr.w	WaitForVint
-
-	move	#$2700,sr
-
-	moveq	#palette_line_0,d3
-	bsr.w	LevelSelect_MarkFields	; unmark fields
-	bsr.w	LevSelControls		; possible change selected fields
-	move.w	#palette_line_3,d3
-	bsr.w	LevelSelect_MarkFields	; mark fields
-
-	bsr.w	LevelSelect_DrawIcon
-
-	move	#$2300,sr
-
-	lea	(Anim_SonicMilesBG).l,a2
-	jsrto	Dynamic_Normal, JmpTo2_Dynamic_Normal
-
-	move.b	(Ctrl_1_Press).w,d0
-	or.b	(Ctrl_2_Press).w,d0
-	andi.b	#button_start_mask,d0	; start pressed?
-	bne.s	LevelSelect_PressStart	; yes
 	bra.w	LevelSelect_Main	; no
 ; ===========================================================================
 
@@ -13055,7 +13298,7 @@ LevelSelect_StartZone:
 ; Change what you're selecting in the level select
 ; ---------------------------------------------------------------------------
 ; loc_94DC:
-LevSelControls:
+;LevSelControls:
 	move.b	(Ctrl_1_Press).w,d1
 	andi.b	#button_up_mask|button_down_mask,d1
 	bne.s	+	; up/down pressed
@@ -13748,7 +13991,7 @@ TryAgainEnd:
 TryAg_MainLoop:
 		jsr	(PauseGame).l
 		move.b	#4,(Vint_routine).w
-		bsr.w	WaitForVint
+		jsr	(WaitForVint).l
 		jsr	(RunObjects).l
 		jsr	(BuildSprites).l
 		andi.b	#button_start_mask,(Ctrl_1_Press).w ; is Start button pressed?

@@ -502,6 +502,7 @@ PalID_Menu =	id(PalPtr_Menu) ; 26
 PalID_Result =	id(PalPtr_Result) ; 27
 PalID_BGND1 =	id(PalPtr_BGND1) ; 3
 PalID_CPZ2 =	id(PalPtr_CPZ2) ; 11
+palid_LevelSel = 		id(ptr_Pal_LevelSel)
 ; PLC IDs
 offset :=	ArtLoadCues
 ptrsize :=	2
