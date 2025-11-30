@@ -87363,7 +87363,6 @@ PlrList_Dez2_End
 ; ARZ Primary
 ;---------------------------------------------------------------------------------------
 PlrList_Arz1: plrlistheader
-	;plreq ArtTile_ArtNem_ARZBarrierThing, ArtNem_ARZBarrierThing
 	plreq	ArtTile_MZ_Spike_Stomper,  Nem_MzMetal   ; metal blocks
 	plreq ArtTile_MZ_Fireball,	Nem_MzFire           ; fireballs
 	plreq ArtTile_ArtNem_OOZSwingPlat, ArtNem_OOZSwingPlat
@@ -87389,9 +87388,7 @@ Nem_MzGlass:	binclude	"artnem/MZ Green Glass Block.nem"
 ; ARZ Secondary
 ;---------------------------------------------------------------------------------------
 PlrList_Arz2: plrlistheader
-	plreq ArtTile_ArtNem_BigBubbles, ArtNem_BigBubbles
 	plreq ArtTile_ArtNem_Spikes, ArtNem_Spikes
-	;plreq ArtTile_ArtNem_LeverSpring, ArtNem_LeverSpring
 	plreq ArtTile_ArtNem_VrtclSprng, ArtNem_VrtclSprng
 	plreq ArtTile_ArtNem_HrzntlSprng, ArtNem_HrzntlSprng
 	plreq	ArtTile_MZ_Block,  Nem_MzBlock           ; green stone block
