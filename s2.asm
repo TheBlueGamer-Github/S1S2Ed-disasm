@@ -13535,11 +13535,11 @@ EndingDemoLoad:
 		move.w	d0,(Ring_count).w	; clear rings
 		move.l	d0,(Timer).w		; clear time
 		move.l	d0,(Score).w	; clear score
-		;move.b	d0,(v_lastlamp).w ; clear lamppost counter
+		move.b	d0,(Last_star_pole_hit).w ; clear lamppost counter
 		cmpi.w	#4,(Ending_demo_number).w ; is SLZ demo running?
 		bne.s	EndDemo_Exit	; if not, branch
 		lea	(EndDemo_LampVar).l,a1 ; load lamppost variables
-		;lea	(v_lastlamp).w,a2
+		lea	(Last_star_pole_hit).w,a2
 		move.w	#(EndDemo_LampVar_End-EndDemo_LampVar)/4-1,d0
 
 EndDemo_LampLoad:
@@ -21849,7 +21849,7 @@ DLE_SBZ3:
 		blo.s	locret_6F8C
 		cmpi.w	#$18,(v_player+obY).w ; has Sonic reached the top of the level?
 		bhs.s	locret_6F8C	; if not, branch
-		;clr.b	(v_lastlamp).w
+		clr.b	(Last_star_pole_hit).w
 		move.w	#1,(Level_Inactive_flag).w ; restart level
 		move.w	#(metropolis_zone<<8)+2,(Current_Zone).w ; set level number to 0502 (FZ)
 		move.b	#1,(obj_control+v_player).w ; lock controls
@@ -27169,7 +27169,7 @@ Card_ChangeArt:
 		;moveq	#plcid_Explode,d0
 		;jsr	(AddPLC).l	; load explosion patterns
 		;moveq	#0,d0
-		;move.b	(v_zone).w,d0
+		;move.b	(Current_Zone).w,d0
 		;addi.w	#plcid_GHZAnimals,d0
 		;jsr	(AddPLC).l	; load animal patterns
 
@@ -27774,279 +27774,237 @@ Obj39_Display:
 ; ----------------------------------------------------------------------------
 ; Object 3A - End of level results screen
 ; ----------------------------------------------------------------------------
+id_GHZ = 0
+id_LZ = 1
+id_MZ = 2
+id_SLZ = 3
+id_SYZ = 4
+id_SBZ = 5
 ; Sprite_14086:
 Obj3A: ; (screen-space obj)
-	moveq	#0,d0
-	move.b	routine(a0),d0
-	move.w	Obj3A_Index(pc,d0.w),d1
-	jmp	Obj3A_Index(pc,d1.w)
+		moveq	#0,d0
+		move.b	obRoutine(a0),d0
+		move.w	Got_Index(pc,d0.w),d1
+		jmp	Got_Index(pc,d1.w)
 ; ===========================================================================
-; off_14094:
-Obj3A_Index:	offsetTable
-		offsetTableEntry.w loc_140AC					;   0
-		offsetTableEntry.w loc_14102					;   2
-		offsetTableEntry.w BranchTo_Obj34_MoveTowardsTargetPosition	;   4
-		offsetTableEntry.w loc_14146					;   6
-		offsetTableEntry.w loc_14168					;   8
-		offsetTableEntry.w loc_1419C					;  $A
-		offsetTableEntry.w loc_141AA					;  $C
-		offsetTableEntry.w loc_1419C					;  $E
-		offsetTableEntry.w loc_14270					; $10
-		offsetTableEntry.w loc_142B0					; $12
-		offsetTableEntry.w loc_142CC					; $14
-		offsetTableEntry.w loc_1413A					; $16
+Got_Index:	dc.w Got_ChkPLC-Got_Index
+		dc.w Got_Move-Got_Index
+		dc.w Got_Wait-Got_Index
+		dc.w Got_TimeBonus-Got_Index
+		dc.w Got_Wait-Got_Index
+		dc.w Got_NextLevel-Got_Index
+		dc.w Got_Wait-Got_Index
+		dc.w Got_Move2-Got_Index
+		dc.w loc_C766-Got_Index
+
+got_mainX = objoff_30		; position for card to display on
+got_finalX = objoff_32		; position for card to finish on
 ; ===========================================================================
 
-loc_140AC:
-	tst.l	(Plc_Buffer).w
-	beq.s	+
-	rts
-; ---------------------------------------------------------------------------
-+
-	movea.l	a0,a1
-	lea	Obj3A_SubObjectMetadata(pc),a2
-	moveq	#bytesToXcnt(Obj3A_SubObjectMetadata_End-Obj3A_SubObjectMetadata, results_screen_object_size),d1
-
-loc_140BC:
-	_move.b	id(a1),d0
-	beq.s	loc_140CE
-	cmpi.b	#ObjID_Results,d0
-	beq.s	loc_140CE
-	lea	next_object(a1),a1 ; a1=object
-	bra.s	loc_140BC
+Got_ChkPLC:	; Routine 0
+		tst.l	(Plc_Buffer).w ; are the pattern load cues empty?
+		beq.s	Got_Main	; if yes, branch
+		rts	
 ; ===========================================================================
 
-loc_140CE:
+Got_Main:
+		movea.l	a0,a1
+		lea	(Got_Config).l,a2
+		moveq	#6,d1
 
-	_move.b	#ObjID_Results,id(a1) ; load obj3A
-	move.w	(a2)+,x_pixel(a1)
-	move.w	(a2)+,titlecard_x_target(a1)
-	move.w	(a2)+,y_pixel(a1)
-	move.b	(a2)+,routine(a1)
-	move.b	(a2)+,mapping_frame(a1)
-	move.l	#Obj3A_MapUnc_14CBC,mappings(a1)
-	bsr.w	Adjust2PArtPointer2
-	move.b	#0,render_flags(a1)
-	lea	next_object(a1),a1 ; a1=object
-	dbf	d1,loc_140BC
+Got_Loop:
+		_move.b	#$3A,obID(a1)
+		move.w	(a2),obX(a1)	; load start x-position
+		move.w	(a2)+,got_finalX(a1) ; load finish x-position (same as start)
+		move.w	(a2)+,got_mainX(a1) ; load main x-position
+		move.w	(a2)+,obScreenY(a1) ; load y-position
+		move.b	(a2)+,obRoutine(a1)
+		move.b	(a2)+,d0
+		cmpi.b	#6,d0
+		bne.s	loc_C5CA
+		add.b	(Current_Act).w,d0	; add act number to frame number
 
-loc_14102:
-	moveq	#0,d0
-	cmpi.w	#2,(Player_mode).w
-	bne.s	loc_14118
-	addq.w	#1,d0
-	btst	#7,(Graphics_Flags).w
-	beq.s	loc_14118
-	addq.w	#1,d0
+loc_C5CA:
+		move.b	d0,obFrame(a1)
+		move.l	#Map_Got,obMap(a1)
+		move.w	#make_art_tile(ArtTile_Title_Card,0,1),obGfx(a1)
+		move.b	#0,obRender(a1)
+		lea	object_size(a1),a1
+		dbf	d1,Got_Loop	; repeat 6 times
 
-loc_14118:
+Got_Move:	; Routine 2
+		moveq	#$10,d1		; set horizontal speed
+		move.w	got_mainX(a0),d0
+		cmp.w	obX(a0),d0	; has item reached its target position?
+		beq.s	loc_C61A	; if yes, branch
+		bge.s	Got_ChgPos
+		neg.w	d1
 
-	move.b	d0,mapping_frame(a0)
-	bsr.w	Obj34_MoveTowardsTargetPosition
-	move.w	x_pixel(a0),d0
-	cmp.w	titlecard_x_target(a0),d0
-	bne.w	return_14138
-	move.b	#$A,routine(a0)
-	move.w	#$B4,anim_frame_duration(a0)
+Got_ChgPos:
+		add.w	d1,obX(a0)	; change item's position
 
-return_14138:
-	rts
+loc_C5FE:
+		move.w	obX(a0),d0
+		bmi.s	locret_C60E
+		cmpi.w	#$200,d0	; has item moved beyond	$200 on	x-axis?
+		bhs.s	locret_C60E	; if yes, branch
+		bra.w	DisplaySprite
 ; ===========================================================================
 
-loc_1413A:
-	cmpi.w	#metropolis_zone_act_2,(Current_ZoneAndAct).w
-	beq.w	loc_C766
-	tst.w	(Perfect_rings_left).w
-	bne.w	DeleteObject
-
-BranchTo_Obj34_MoveTowardsTargetPosition ; BranchTo
-	bra.w	Obj34_MoveTowardsTargetPosition
+locret_C60E:
+		rts	
 ; ===========================================================================
 
-loc_14146:
-	move.b	(Current_Zone).w,d0
-	bra.w	Obj34_MoveTowardsTargetPosition
-
-loc_1415E:
-
-	move.b	#5,mapping_frame(a0)
-	bra.w	Obj34_MoveTowardsTargetPosition
+loc_C610:
+		move.b	#$E,obRoutine(a0)
+		bra.w	Got_Move2
 ; ===========================================================================
 
-loc_14168:
-	move.b	(Current_Zone).w,d0
-	cmpi.b	#metropolis_zone_2,d0
-	bne.s	loc_1418E
-	moveq	#8,d0
-	bra.s	loc_14194
+loc_C61A:
+		cmpi.b	#$E,((TitleCard+5)+obRoutine).w
+		beq.s	loc_C610
+		cmpi.b	#4,obFrame(a0)
+		bne.s	loc_C5FE
+		addq.b	#2,obRoutine(a0)
+		move.w	#180,obTimeFrame(a0) ; set time delay to 3 seconds
+
+Got_Wait:	; Routine 4, 8, $C
+		subq.w	#1,obTimeFrame(a0) ; subtract 1 from time delay
+		bne.s	Got_Display
+		addq.b	#2,obRoutine(a0)
+
+Got_Display:
+		bra.w	DisplaySprite
 ; ===========================================================================
 
-loc_1418E:
-	move.b	(Current_Act).w,d0
-	addq.b	#6,d0
+Got_TimeBonus:	; Routine 6
+		bsr.w	DisplaySprite
+		move.b	#1,(Update_Bonus_score).w ; set time/ring bonus update flag
+		moveq	#0,d0
+		tst.w	(Bonus_Countdown_1).w	; is time bonus	= zero?
+		beq.s	Got_RingBonus	; if yes, branch
+		addi.w	#10,d0		; add 10 to score
+		subi.w	#10,(Bonus_Countdown_1).w ; subtract 10 from time bonus
 
-loc_14194:
-	move.b	d0,mapping_frame(a0)
-	bra.w	Obj34_MoveTowardsTargetPosition
-; ===========================================================================
+Got_RingBonus:
+		tst.w	(Bonus_Countdown_2).w	; is ring bonus	= zero?
+		beq.s	Got_ChkBonus	; if yes, branch
+		addi.w	#10,d0		; add 10 to score
+		subi.w	#10,(Bonus_Countdown_2).w ; subtract 10 from ring bonus
 
-loc_1419C:
-	subq.w	#1,anim_frame_duration(a0)
-	bne.s	BranchTo18_DisplaySprite
-	addq.b	#2,routine(a0)
-
-BranchTo18_DisplaySprite
-	bra.w	DisplaySprite
-; ===========================================================================
-
-loc_141AA:
-	bsr.w	DisplaySprite
-	move.b	#1,(Update_Bonus_score).w
-	moveq	#0,d0
-	tst.w	(Bonus_Countdown_1).w
-	beq.s	loc_141C6
-	addi.w	#10,d0
-	subi.w	#10,(Bonus_Countdown_1).w
-
-loc_141C6:
-	tst.w	(Bonus_Countdown_2).w
-	beq.s	loc_141D6
-	addi.w	#10,d0
-	subi.w	#10,(Bonus_Countdown_2).w
-
-loc_141D6:
-	tst.w	(Bonus_Countdown_3).w
-	beq.s	loc_141E6
-	addi.w	#10,d0
-	subi.w	#10,(Bonus_Countdown_3).w
-
-loc_141E6:
-	add.w	d0,(Total_Bonus_Countdown).w
-	tst.w	d0
-	bne.s	loc_14256
-	move.w	#SndID_TallyEnd,d0
-	jsr	(PlaySound).l
-	addq.b	#2,routine(a0)
-	cmpi.w	#metropolis_zone_act_2,(Current_ZoneAndAct).w
-	bne.s	Got_SetDelay
-	addq.b	#4,routine(a0)
+Got_ChkBonus:
+		tst.w	d0		; is there any bonus?
+		bne.s	Got_AddBonus	; if yes, branch
+		;move.w	#sfx_Cash,d0
+		;jsr	(PlaySound_Special).l	; play "ker-ching" sound
+		addq.b	#2,obRoutine(a0)
+		cmpi.w	#(id_SBZ<<8)+1,(Current_Zone).w
+		bne.s	Got_SetDelay
+		addq.b	#4,obRoutine(a0)
 
 Got_SetDelay:
-	move.w	#$B4,anim_frame_duration(a0)
-	cmpi.w	#1000,(Total_Bonus_Countdown).w
-	blo.s	return_14254
-	move.w	#$12C,anim_frame_duration(a0)
-	lea	next_object(a0),a1 ; a1=object
+		move.w	#180,obTimeFrame(a0) ; set time delay to 3 seconds
 
-loc_14214:
-	_tst.b	id(a1)
-	beq.s	loc_14220
-	lea	next_object(a1),a1 ; a1=object
-	bra.s	loc_14214
+locret_C692:
+		rts	
 ; ===========================================================================
 
-loc_14220:
-	_move.b	#ObjID_Results,id(a1) ; load obj3A (uses screen-space)
-	move.b	#$12,routine(a1)
-	move.w	#$188,x_pixel(a1)
-	move.w	#$118,y_pixel(a1)
-	move.l	#Obj3A_MapUnc_14CBC,mappings(a1)
-	bsr.w	Adjust2PArtPointer2
-	move.b	#0,render_flags(a1)
-	move.w	#60,anim_frame_duration(a1)
-	addq.b	#1,(Continue_count).w
-
-return_14254:
-
-	rts
+Got_AddBonus:
+		jsr	(AddPoints).l
+		move.b	(Vint_runcount+3).w,d0
+		andi.b	#3,d0
+		bne.s	locret_C692
+		move.w	#SndID_Blip,d0
+		jmp	(PlaySound2).l	; play "blip" sound
+		rts
 ; ===========================================================================
 
-loc_14256:
-	jsr	(AddPoints).l
-	move.b	(Vint_runcount+3).w,d0
-	andi.b	#3,d0
-	bne.s	return_14254
-	move.w	#SndID_Blip,d0
-	jmp	(PlaySound).l
+Got_NextLevel:	; Routine $A
+		move.b	(Current_Zone).w,d0
+		andi.w	#7,d0
+		lsl.w	#3,d0
+		move.b	(Current_Act).w,d1
+		andi.w	#3,d1
+		add.w	d1,d1
+		add.w	d1,d0
+		move.w	LevelOrder(pc,d0.w),d0 ; load level from level order array
+		move.w	d0,(Current_Zone).w	; set level number
+		tst.w	d0
+		bne.s	Got_ChkSS
+		move.b	#GameModeID_SegaScreen,(Game_Mode).w
+		bra.s	Got_Display2
 ; ===========================================================================
 
-loc_14270:
-	;moveq	#0,d0
-	move.b	(Current_Zone).w,d0
-	lsl.w	#3,d0
-	move.b	(Current_Act).w,d1
-	andi.w	#3,d1
-	add.w	d1,d1
-	add.w	d1,d0
-	lea	LevelOrder(pc),a1
-
-loc_1428C:
-	move.w	(a1,d0.w),d0
-	tst.w	d0
-	bpl.s	loc_1429C
-	move.b	#GameModeID_SegaScreen,(Game_Mode).w ; => SegaScreen
-	rts
-; ===========================================================================
-
-loc_1429C:
-	move.w	d0,(Current_Zone).w
-	clr.b	(Last_star_pole_hit).w
-	clr.b	(Last_star_pole_hit_2P).w
-		tst.b	(f_bigring).w	; has Sonic jumped into a giant ring?
+Got_ChkSS:
+		clr.b	(Last_star_pole_hit).w	; clear	lamppost counter
+		tst.b	(f_bigring).w	; has Sonic jumped into	a giant	ring?
 		beq.s	loc_C6EA	; if not, branch
-		move.b	#GameModeID_SpecialStage,(Game_Mode).w ; => SpecialStage
+		move.b	#GameModeID_SpecialStage,(Game_Mode).w ; set game mode to Special Stage (10)
 		bra.s	Got_Display2
 ; ===========================================================================
 
 loc_C6EA:
-	move.w	#1,(Level_Inactive_flag).w
+		move.w	#1,(Level_Inactive_flag).w ; restart level
+
 Got_Display2:
-		rts
+		bra.w	DisplaySprite
+; ===========================================================================
+; ---------------------------------------------------------------------------
+; Level	order array
+; ---------------------------------------------------------------------------
+LevelOrder:
+		; Green Hill Zone
+		dc.b id_GHZ, 1	; Act 1
+		dc.b id_GHZ, 2	; Act 2
+		dc.b id_MZ, 0	; Act 3
+		dc.b 0, 0
+
+		; Labyrinth Zone
+		dc.b id_LZ, 1	; Act 1
+		dc.b id_LZ, 2	; Act 2
+		dc.b id_SLZ, 0	; Act 3
+		dc.b id_SBZ, 2	; Scrap Brain Zone Act 3
+
+		; Marble Zone
+		dc.b id_MZ, 1	; Act 1
+		dc.b id_MZ, 2	; Act 2
+		dc.b id_SYZ, 0	; Act 3
+		dc.b 0, 0
+
+		; Star Light Zone
+		dc.b id_SLZ, 1	; Act 1
+		dc.b id_SLZ, 2	; Act 2
+		dc.b id_SBZ, 0	; Act 3
+		dc.b 0, 0
+
+		; Spring Yard Zone
+		dc.b id_SYZ, 1	; Act 1
+		dc.b id_SYZ, 2	; Act 2
+		dc.b id_LZ, 0	; Act 3
+		dc.b 0, 0
+
+		; Scrap Brain Zone
+		dc.b id_SBZ, 1	; Act 1
+		dc.b id_LZ, 3	; Act 2
+		dc.b 0, 0	; Final Zone
+		dc.b 0, 0
+		even
+		;zonewarning LevelOrder,8
 ; ===========================================================================
 
-loc_142B0:
-	cmpi.w	#metropolis_zone_act_2,(Current_ZoneAndAct).w
-	beq.w	loc_1419C
-	tst.w	anim_frame_duration(a0)
-	beq.s	loc_142BC
-	subq.w	#1,anim_frame_duration(a0)
-	rts
-; ===========================================================================
-
-loc_142BC:
-	addi_.b	#2,routine(a0)
-	move.w	#SndID_ContinueJingle,d0
-	jsr	(PlaySound).l
-
-loc_142CC:
-	cmpi.w	#metropolis_zone_act_2,(Current_ZoneAndAct).w
-	beq.w	Got_Move2
-	subq.w	#1,anim_frame_duration(a0)
-	bpl.s	loc_142E2
-	move.w	#$13,anim_frame_duration(a0)
-	addq.b	#1,anim_frame(a0)
-	andi.b	#1,anim_frame(a0)
-
-loc_142E2:
-	moveq	#$C,d0
-	add.b	anim_frame(a0),d0
-	move.b	d0,mapping_frame(a0)
-	btst	#4,(Level_frame_counter+1).w
-	bne.w	DisplaySprite
-	rts
 Got_Move2:	; Routine $E
-	moveq	#$20,d0
-	move.w	x_pixel(a0),d1
-	cmp.w	titlecard_x_source(a0),d1
-	beq.s	Got_SBZ2
-	bge.s	Got_ChgPos2
-	neg.w	d0
+		moveq	#$20,d1		; set horizontal speed
+		move.w	got_finalX(a0),d0
+		cmp.w	obX(a0),d0	; has item reached its finish position?
+		beq.s	Got_SBZ2	; if yes, branch
+		bge.s	Got_ChgPos2
+		neg.w	d1
 
 Got_ChgPos2:
-		add.w	d0,x_pixel(a0)	; change item's position
-		move.w	x_pixel(a0),d0
+		add.w	d1,obX(a0)	; change item's position
+		move.w	obX(a0),d0
 		bmi.s	locret_C748
-		cmpi.w	#$200,d0	; has item moved beyond $200 on x-axis?
+		cmpi.w	#$200,d0	; has item moved beyond	$200 on	x-axis?
 		bhs.s	locret_C748	; if yes, branch
 		bra.w	DisplaySprite
 ; ===========================================================================
@@ -28059,188 +28017,103 @@ Got_SBZ2:
 		cmpi.b	#4,obFrame(a0)
 		bne.w	DeleteObject
 		addq.b	#2,obRoutine(a0)
-		;clr.b	(f_lockctrl).w	; unlock controls
+		clr.b	(obj_control+v_player).w	; unlock controls
 		;move.w	#bgm_FZ,d0
-		;jmp	(QueueSound1).l	; play FZ music
+		;jmp	(PlaySound).l	; play FZ music
 		rts
 ; ===========================================================================
 
 loc_C766:	; Routine $10
-		;addq.w	#2,(v_limitright2).w
-		;cmpi.w	#$2100,(v_limitright2).w
-		;beq.w	DeleteObject
+		addq.w	#2,(Camera_Max_X_pos).w
+		cmpi.w	#$2100,(Camera_Max_X_pos).w
+		beq.w	DeleteObject
 		rts	
-got_finalX = objoff_32		; position for card to finish on
 ; ===========================================================================
-; -------------------------------------------------------------------------------
-; Main game level order
+		;    x-start,	x-main,	y-main,
+		;				routine, frame number
 
-; One value per act. That value is the level/act number of the level to load when
-; that act finishes.
-; -------------------------------------------------------------------------------
-;word_142F8:
-LevelOrder: ;zoneOrderedTable 2,4	; WrdArr_LevelOrder
-	; EHZ
-	dc.b emerald_hill_zone, 1	; Act 1
-	dc.b emerald_hill_zone, 2	; Act 2
-	dc.b aquatic_ruin_zone, 0				; Act 3
-	dc.b 0,0				; Act 4
-	; Zone 1
-	dc.b aquatic_ruin_zone, 1				; Act 1
-	dc.b 0,0				; Act 2
-	dc.b aquatic_ruin_zone, 0				; Act 3
-	dc.b 0,0				; Act 4
-	; WZ
-	dc.b casino_night_zone, 1		; Act 1
-	dc.b metropolis_zone, 2		; Act 2
-	dc.b casino_night_zone, 0		; Act 3
-	dc.b metropolis_zone, 0		; Act 4
-	; Zone 3
-	dc.b 0,0				; Act 1
-	dc.b 0,0				; Act 2
-	dc.b 0,0				; Act 3
-	dc.b 0,0				; Act 4
-	; MTZ
-	dc.b metropolis_zone, 1		; Act 1
-	dc.b hidden_palace_zone, 2		; Act 2
-	dc.b 9,0		; Act 3
-	dc.b 0,0		; Act 4
-	; MTZ
-	dc.b 9,0		; Act 1
-	dc.b 0,0				; Act 2
-	dc.b 9,0		; Act 3
-	dc.b 0,0				; Act 4
-	; WFZ
-	dc.b chemical_plant_zone, 1		; Act 1
-	dc.b 0,0				; Act 2
-	dc.b metropolis_zone, 0 	; Act 3
-	dc.b 0,0				; Act 4
-	; HTZ
-	dc.b hill_top_zone, 1		; Act 1
-	dc.b hill_top_zone, 2	; Act 2
-	dc.b metropolis_zone, 0 	; Act 3
-	dc.b 0,0				; Act 4
-	; HPZ
-	dc.b metropolis_zone, 2 	; Act 1
-	dc.b oil_ocean_zone, 2		; Act 2
-	dc.b metropolis_zone, 0 	; Act 3
-	dc.b oil_ocean_zone, 0		; Act 4
-	; Zone 9
-	dc.b 0,0				; Act 1
-	dc.b 0,0				; Act 2
-	dc.b 0,0				; Act 3
-	dc.b 0,0				; Act 4
-	; OOZ
-	dc.b hill_top_zone, 1		; Act 1
-	dc.b metropolis_zone, 2		; Act 2
-	dc.b hill_top_zone, 0		; Act 3
-	dc.b metropolis_zone, 0		; Act 4
-	; MCZ
-	dc.b mystic_cave_zone, 1	; Act 1
-	dc.b oil_ocean_zone, 2		; Act 2
-	dc.b mystic_cave_zone, 0	; Act 3
-	dc.b oil_ocean_zone, 0		; Act 4
-	; CNZ
-	dc.b casino_night_zone, 1	; Act 1
-	dc.b casino_night_zone, 2		; Act 2
-	dc.b chemical_plant_zone, 0		; Act 3
-	dc.b 0,0				; Act 4
-	; CPZ
-	dc.b chemical_plant_zone, 1	; Act 1
-	dc.b chemical_plant_zone, 2	; Act 2
-	dc.b hill_top_zone, 0		; Act 1
-	dc.b metropolis_zone, 2 	; Act 4
-	; DEZ
-	dc.b -1,-1			; Act 1
-	dc.b 0,0				; Act 2
-	dc.b -1,-1				; Act 3
-	dc.b 0,0				; Act 4
-	; ARZ
-	dc.b aquatic_ruin_zone, 1	; Act 1
-	dc.b aquatic_ruin_zone, 2	; Act 2
-	dc.b casino_night_zone, 0		; Act 3
-	dc.b metropolis_zone, 0		; Act 4
-	; SCZ
-	dc.b metropolis_zone, 0 	; Act 1
-	dc.b 0,0				; Act 2
-	dc.b metropolis_zone, 0 	; Act 3
-	dc.b 0,0				; Act 4
-  ;  zoneTableEnd
+Got_Config:	dc.w 4,		$124,	$BC			; "SONIC HAS"
+		dc.b 				2,	0
 
-;word_1433C:
-LevelOrder_2P: zoneOrderedTable 2,2	; WrdArr_LevelOrder_2P
-	; EHZ
-	zoneTableEntry.w  emerald_hill_zone_act_2	; Act 1
-	zoneTableEntry.w  zone_1_act_1	; Act 2
-	; Zone 1
-	zoneTableEntry.w  casino_night_zone_act_1				; Act 1
-	zoneTableEntry.w  0				; Act 2
-	; WZ
-	zoneTableEntry.w  wood_zone_act_2		; Act 1
-	zoneTableEntry.w  metropolis_zone_act_1		; Act 2
-	; Zone 3
-	zoneTableEntry.w  0				; Act 1
-	zoneTableEntry.w  0				; Act 2
-	; MTZ
-	zoneTableEntry.w  metropolis_zone_act_2		; Act 1
-	zoneTableEntry.w  metropolis_zone_act_3		; Act 2
-	; MTZ
-	zoneTableEntry.w  sky_chase_zone_act_1		; Act 3
-	zoneTableEntry.w  0				; Act 4
-	; WFZ
-	zoneTableEntry.w  death_egg_zone_act_1		; Act 1
-	zoneTableEntry.w  0				; Act 2
-	; HTZ
-	zoneTableEntry.w  hill_top_zone_act_2		; Act 1
-	zoneTableEntry.w  mystic_cave_zone_act_1	; Act 2
-	; HPZ
-	zoneTableEntry.w  hidden_palace_zone_act_2 	; Act 1
-	zoneTableEntry.w  oil_ocean_zone_act_1		; Act 2
-	; Zone 9
-	zoneTableEntry.w  0				; Act 1
-	zoneTableEntry.w  0				; Act 2
-	; OOZ
-	zoneTableEntry.w  oil_ocean_zone_act_2		; Act 1
-	zoneTableEntry.w  metropolis_zone_act_1		; Act 2
-	; MCZ
-	zoneTableEntry.w  mystic_cave_zone_act_2	; Act 1
-	zoneTableEntry.w  -1				; Act 2
-	; CNZ
-	zoneTableEntry.w  casino_night_zone_act_2	; Act 1
-	zoneTableEntry.w  mystic_cave_zone_act_1	; Act 2
-	; CPZ
-	zoneTableEntry.w  chemical_plant_zone_act_2 	; Act 1
-	zoneTableEntry.w  aquatic_ruin_zone_act_1	; Act 2
-	; DEZ
-	zoneTableEntry.w  -1				; Act 1
-	zoneTableEntry.w  0				; Act 2
-	; ARZ
-	zoneTableEntry.w  aquatic_ruin_zone_act_2	; Act 1
-	zoneTableEntry.w  casino_night_zone_act_1	; Act 2
-	; SCZ
-	zoneTableEntry.w  wing_fortress_zone_act_1 	; Act 1
-	zoneTableEntry.w  0				; Act 2
-    zoneTableEnd
+		dc.w -$120,	$120,	$D0			; "PASSED"
+		dc.b 				2,	1
 
-results_screen_object macro startx, targetx, y, routine, frame
-	dc.w	128+startx, 128+targetx, 128+y
-	dc.b	routine, frame
-    endm
+		dc.w $40C,	$14C,	$D6			; "ACT" 1/2/3
+		dc.b 				2,	6
 
-results_screen_object_size = 8
+		dc.w $520,	$120,	$EC			; score
+		dc.b 				2,	2
 
-; byte_14380:
-Obj3A_SubObjectMetadata:
-	;                      start X, target X, start Y, routine, map frame
-	results_screen_object     0-96,    320/2,      56,       2,         0
-	results_screen_object   320+64, 320/2-32,      74,       4,         3
-	results_screen_object  320+128, 320/2+32,      74,       6,         4
-	results_screen_object  320+184, 320/2+88,      62,       8,         6
-	results_screen_object  320+400,    320/2,     160,       4,         9
-	results_screen_object  320+352,    320/2,     112,       4,        $A
-	results_screen_object  320+368,    320/2,     128,       4,        $B
-	results_screen_object  320+384,    320/2,     144,     $16,        $E
-Obj3A_SubObjectMetadata_End:
+		dc.w $540,	$120,	$FC			; time bonus
+		dc.b 				2,	3
+
+		dc.w $560,	$120,	$10C			; ring bonus
+		dc.b 				2,	4
+
+		dc.w $20C,	$14C,	$CC			; oval
+		dc.b 				2,	5
+
+Map_Got:	mappingsTable
+	mappingsTableEntry.w	M_Got_SonicHas
+	mappingsTableEntry.w	M_Got_Passed
+	mappingsTableEntry.w	M_Got_Score
+	mappingsTableEntry.w	M_Got_TBonus
+	mappingsTableEntry.w	M_Got_RBonus
+	mappingsTableEntry.w	M_Card_Oval
+	mappingsTableEntry.w	M_Card_Act1
+	mappingsTableEntry.w	M_Card_Act2
+	mappingsTableEntry.w	M_Card_Act3
+	
+M_Got_SonicHas:	spriteHeader		; SONIC HAS
+	spritePiece	-$48, -8, 2, 2, $3E, 0, 0, 0, 0
+	spritePiece	-$38, -8, 2, 2, $32, 0, 0, 0, 0
+	spritePiece	-$28, -8, 2, 2, $2E, 0, 0, 0, 0
+	spritePiece	-$18, -8, 1, 2, $20, 0, 0, 0, 0
+	spritePiece	-$10, -8, 2, 2, 8, 0, 0, 0, 0
+	spritePiece	$10, -8, 2, 2, $1C, 0, 0, 0, 0
+	spritePiece	$20, -8, 2, 2, 0, 0, 0, 0, 0
+	spritePiece	$30, -8, 2, 2, $3E, 0, 0, 0, 0
+M_Got_SonicHas_End
+
+M_Got_Passed:	spriteHeader		; PASSED
+	spritePiece	-$30, -8, 2, 2, $36, 0, 0, 0, 0
+	spritePiece	-$20, -8, 2, 2, 0, 0, 0, 0, 0
+	spritePiece	-$10, -8, 2, 2, $3E, 0, 0, 0, 0
+	spritePiece	0, -8, 2, 2, $3E, 0, 0, 0, 0
+	spritePiece	$10, -8, 2, 2, $10, 0, 0, 0, 0
+	spritePiece	$20, -8, 2, 2, $C, 0, 0, 0, 0
+M_Got_Passed_End
+
+M_Got_Score:	spriteHeader		; SCORE
+	spritePiece	-$50, -8, 4, 2, $14A, 0, 0, 0, 0
+	spritePiece	-$30, -8, 1, 2, $162, 0, 0, 0, 0
+	spritePiece	$18, -8, 3, 2, $164, 0, 0, 0, 0
+	spritePiece	$30, -8, 4, 2, $16A, 0, 0, 0, 0
+	spritePiece	-$33, -9, 2, 1, $6E, 0, 0, 0, 0
+	spritePiece	-$33, -1, 2, 1, $6E, 1, 1, 0, 0
+M_Got_Score_End
+
+M_Got_TBonus:	spriteHeader		; TIME BONUS
+	spritePiece	-$50, -8, 4, 2, $15A, 0, 0, 0, 0
+	spritePiece	-$27, -8, 4, 2, $66, 0, 0, 0, 0
+	spritePiece	-7, -8, 1, 2, $14A, 0, 0, 0, 0
+	spritePiece	-$A, -9, 2, 1, $6E, 0, 0, 0, 0
+	spritePiece	-$A, -1, 2, 1, $6E, 1, 1, 0, 0
+	spritePiece	$28, -8, 4, 2, -$10, 0, 0, 0, 0
+	spritePiece	$48, -8, 1, 2, $170, 0, 0, 0, 0
+M_Got_TBonus_End
+
+M_Got_RBonus:	spriteHeader		; RING BONUS
+	spritePiece	-$50, -8, 4, 2, $152, 0, 0, 0, 0
+	spritePiece	-$27, -8, 4, 2, $66, 0, 0, 0, 0
+	spritePiece	-7, -8, 1, 2, $14A, 0, 0, 0, 0
+	spritePiece	-$A, -9, 2, 1, $6E, 0, 0, 0, 0
+	spritePiece	-$A, -1, 2, 1, $6E, 1, 1, 0, 0
+	spritePiece	$28, -8, 4, 2, -8, 0, 0, 0, 0
+	spritePiece	$48, -8, 1, 2, $170, 0, 0, 0, 0
+M_Got_RBonus_End
+	even
+
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 6F - End of special stage results screen
@@ -28293,7 +28166,7 @@ Obj6F_Init:
 +
 	movea.l	a0,a1
 	lea	Obj6F_SubObjectMetaData(pc),a2
-	moveq	#bytesToXcnt(Obj6F_SubObjectMetaData_End-Obj6F_SubObjectMetaData, results_screen_object_size),d1
+	;moveq	#bytesToXcnt(Obj6F_SubObjectMetaData_End-Obj6F_SubObjectMetaData, results_screen_object_size),d1
 
 -	_move.b	id(a0),id(a1) ; load obj6F
 	move.w	(a2),x_pixel(a1)
@@ -28605,20 +28478,6 @@ Obj6F_MoveAndDisplay:
 ; ===========================================================================
 ;byte_14752
 Obj6F_SubObjectMetaData:
-	;                       start X, target X, start Y, routine, map frame
-	results_screen_object   320+128,    320/2,      42,       2,         0		; "Special Stage"
-	results_screen_object     0-128,    320/2,      24,       4,         1		; "Sonic got a"
-	results_screen_object   320/2-8,    0-128,      68,       6,         5		; Emerald 0
-	results_screen_object  320/2+16,    0-128,      80,       8,         6		; Emerald 1
-	results_screen_object  320/2+16,    0-128,     104,      $A,         7		; Emerald 2
-	results_screen_object   320/2-8,    0-128,     116,      $C,         8		; Emerald 3
-	results_screen_object  320/2-32,    0-128,     104,      $E,         9		; Emerald 4
-	results_screen_object  320/2-32,    0-128,      80,     $10,        $A		; Emerald 5
-	results_screen_object   320/2-8,    0-128,      92,     $12,        $B		; Emerald 6
-	results_screen_object   320+368,    320/2,     136,     $14,        $C		; Score
-	results_screen_object   320+384,    320/2,     152,     $16,        $D		; Sonic Rings
-	results_screen_object   320+400,    320/2,     168,     $18,        $E		; Miles Rings
-	results_screen_object   320+416,    320/2,     184,     $1A,       $10		; Gems Bonus
 Obj6F_SubObjectMetaData_End:
 ; -------------------------------------------------------------------------------
 ; sprite mappings
@@ -34866,16 +34725,14 @@ Load_EndOfAct:
 	lea	(MainCharacter).w,a1 ; a1=character
 	clr.b	status_secondary(a1)
 	clr.b	(Update_HUD_timer).w
-	bsr.w	AllocateObject
-	bne.s	+
-	move.b	#ObjID_Results,id(a1) ; load obj3A (end of level results screen)
+	move.b	#ObjID_Results,(TitleCard+id).w ; load obj3A (end of level results screen)
 +
-	moveq	#PLCID_Results,d0
-	cmpi.w	#2,(Player_mode).w
-	bne.s	+
-	moveq	#PLCID_ResultsTails,d0
+	;moveq	#PLCID_Results,d0
+	;cmpi.w	#2,(Player_mode).w
+	;bne.s	+
+	;moveq	#PLCID_ResultsTails,d0
 +
-	jsr	(LoadPLC2).l
+	;jsr	(LoadPLC2).l
 	move.b	#1,(Update_Bonus_score).w
 	moveq	#0,d0
 	move.b	(Timer_minute).w,d0
