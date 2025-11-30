@@ -19,6 +19,8 @@
 ;
 RecordingDevPreview = 0
 
+Revision = 1
+
 gameRevision = 1
 ;	| If 0, a REV00 ROM is built
 ;	| If 1, a REV01 ROM is built, which contains some fixes
@@ -102,17 +104,15 @@ Vectors:
 	dc.l ErrorTrap , ErrorTrap , ErrorTrap , ErrorTrap ; 64
 ; byte_100:
 Header:
-	dc.b "SEGA GENESIS    " ; Console name
-	dc.b "(C)SEGA 1992.SEP" ; Copyright holder and release date (generally year)
-	dc.b "SONIC THE             HEDGEHOG 2                " ; Domestic name
-	dc.b "SONIC THE             HEDGEHOG 2                " ; International name
-    if gameRevision=0
-	dc.b "GM 00001051-00"   ; Version (REV00)
-    elseif gameRevision=1
-	dc.b "GM 00001051-01"   ; Version (REV01)
-    elseif gameRevision=2
-	dc.b "GM 00001051-02"   ; Version (REV02)
-    endif
+	dc.b "SEGA MEGA DRIVE " ; Hardware system ID (Console name)
+	dc.b "(C)SEGA 1991.APR" ; Copyright holder and release date (generally year)
+	dc.b "SONIC THE               HEDGEHOG                " ; Domestic name
+	dc.b "SONIC THE               HEDGEHOG                " ; International name
+	if Revision=0
+	dc.b "GM 00001009-00"   ; Serial/version number (Rev 0)
+	else
+			dc.b "GM 00004049-01" ; Serial/version number (Rev non-0)
+	endif
 ; word_18E
 Checksum:
 	dc.w $D951		; Checksum (patched later if incorrect)
