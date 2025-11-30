@@ -51791,6 +51791,8 @@ Obj23_MapUnc_259E6:	include "mappings/sprite/obj23.asm"
 ; ----------------------------------------------------------------------------
 ; Object 2B - Rising pillar from ARZ
 ; ----------------------------------------------------------------------------
+		include	"_anim/Chopper.asm"
+Map_Chop:	include	"_maps/Chopper.asm"
 ; Sprite_25A5A:
 Obj2B:
 	moveq	#0,d0
@@ -51807,7 +51809,7 @@ Obj5C_Index:	offsetTable
 ; loc_2D3AA:
 Obj5C_Init:
 	addq.b	#2,routine(a0)
-	move.l	#Obj5C_MapUnc_2D442,mappings(a0)
+	move.l	#Map_Chop,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_Masher,0,0),art_tile(a0)
 	jsrto	Adjust2PArtPointer, JmpTo58_Adjust2PArtPointer
 	move.b	#4,render_flags(a0)
@@ -51818,7 +51820,7 @@ Obj5C_Init:
 	move.w	$C(a0),$30(a0)
 ; loc_2D3E4:
 Obj5C_Main:
-	lea	(Ani_obj5C).l,a1
+	lea	(Ani_Chop).l,a1
 	jsrto	AnimateSprite, JmpTo16_AnimateSprite
 	jsrto	ObjectMove, JmpTo22_ObjectMove
 	addi.w	#$18,y_vel(a0)	; apply gravity
@@ -86745,7 +86747,7 @@ PlrList_Ehz1: plrlistheader
 	plreq $34C, S1Nem_GHZWall
 	plreq ArtTile_ArtNem_Buzzer, ArtNem_Buzzer
 	plreq ArtTile_ArtNem_GHZ_Purple_Rock, ArtNem_GHZ_Purple_Rock
-	plreq ArtTile_ArtNem_Masher, ArtNem_Masher
+	plreq ArtTile_ArtNem_Masher, Nem_Chopper
 PlrList_Ehz1_End
 ;---------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
