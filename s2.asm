@@ -5106,8 +5106,6 @@ Level_PlayBgm2:
 	move.w	d0,(VDP_control_port).l
 	move.w	#$3F,(Palette_fade_start).w
 	jsr	Pal_FadeFromBlack
-	moveq	#PalID_EHZ,d0
-	bsr.w	PalLoad_Now
 Ending_MainLoop:
 	bsr.w	PauseGame
 	move.b	#VintID_Level,(Vint_routine).w
@@ -20273,9 +20271,13 @@ loadZoneBlockMaps:
 		moveq	#PalID_MTZ2,d0	; use SBZ2/FZ palette
 
 .normalpal:
+	cmpi.b	#9,(Current_Zone).w
+	beq.s	+
 	jsrto	PalLoad_Now, JmpTo_PalLoad_Now
 	rts
-
++
+	jsr	(PalLoad_ForFade).l
+	rts
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 
