@@ -4881,10 +4881,10 @@ Level_SetPlayerMode:
 	beq.s	+			; if yes, branch
 	tst.w	(Two_player_mode).w	; 2P mode?
 	bne.s	+			; if yes, branch
-	move.w	(Player_option).w,(Player_mode).w ; use the option chosen in the Options screen
+	move.w	#1,(Player_mode).w ; use the option chosen in the Options screen
 	rts
 +
-	move.w	(Player_option).w,(Player_mode).w ; use the option chosen in the Options screen
+	move.w	#1,(Player_mode).w ; use the option chosen in the Options screen
 	rts
 ; End of function Level_SetPlayerMode
 
@@ -4898,18 +4898,6 @@ InitPlayers:
 
 	move.b	#ObjID_Sonic,(MainCharacter+id).w ; load Obj01 Sonic object at $FFFFB000
 	move.b	#ObjID_SpindashDust,(Sonic_Dust+id).w ; load Obj08 Sonic's spindash dust/splash object at $FFFFD100
-
-	move.b	#ObjID_Tails,(Sidekick+id).w ; load Obj02 Tails object at $FFFFB040
-	move.w	(MainCharacter+x_pos).w,(Sidekick+x_pos).w
-	move.w	(MainCharacter+y_pos).w,(Sidekick+y_pos).w
-	cmpi.w	#casino_night_zone_act_2,(Current_ZoneAndAct).w
-	beq.s	CasinoNightTailspos
-	cmpi.w	#hill_top_zone_act_2,(Current_ZoneAndAct).w
-	beq.s	CasinoNightTailspos
-	subi.w	#$20,(Sidekick+x_pos).w
-	addi_.w	#4,(Sidekick+y_pos).w
-	move.b	#ObjID_SpindashDust,(Tails_Dust+id).w ; load Obj08 Tails' spindash dust/splash object at $FFFFD140
-+
 	rts
 CasinoNightTailspos:
 	addi.w	#$20,(Sidekick+x_pos).w
@@ -5023,24 +5011,12 @@ End_LoadData:
 +
 	move.w	(Hint_counter_reserve).w,(a6)
     ResetDMAQueue
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if it's S2 Final Sonic, branch
 	moveq	#PLCID_Std1S1,d0
-	bra.s	++
-+
-	moveq	#PLCID_Std1,d0
-+
 	jsr	LoadPLC2
 	jsr	(Hud_Base).l
-+	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if not, branch
++
 	moveq	#PalID_BGND1,d0
 	bsr.w	PalLoad_ForFade	; load Sonic's palette line
-	bra.s	++
-+
-	moveq	#PalID_BGND,d0
-	bsr.w	PalLoad_ForFade	; load Sonic's palette line
-+
 	jsr	LevelSizeLoad
 	jsrto	DeformBgLayer, JmpTo_DeformBgLayer
 	clr.w	(Vscroll_Factor_FG).w
