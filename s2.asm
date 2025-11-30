@@ -41941,6 +41941,9 @@ obj0a_timer                         = objoff_38
 obj0a_next_bubble_timer             = objoff_3A
 ;obj0a_character                    = objoff_3C
 
+		include	"_anim/Drowning Countdown.asm"
+Map_Drown:	include	"_maps/Drowning Countdown.asm"
+
 ; Sprite_1D320:
 Obj0A:
 	moveq	#0,d0
@@ -41976,7 +41979,10 @@ Obj0A_Init:
 	move.b	#1,priority(a0)
 	move.b	subtype(a0),d0
 	bpl.s	loc_1D388
+
 	addq.b	#8,routine(a0) ; Obj0A_Countdown
+	move.l	#Map_Drown,obMap(a0)
+	move.w	#make_art_tile(ArtTile_LZ_Sonic_Drowning,0,0),obGfx(a0)
 	andi.w	#$7F,d0
 	; Yes, this is actually configurable, but it is normally only ever
 	; set to 2 seconds. The countdown starts at 12 seconds remaining, and
