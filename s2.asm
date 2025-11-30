@@ -557,7 +557,7 @@ ShowErrorValue:
 
 ErrorWaitForC:
 		bsr.w	ReadJoypads
-		cmpi.b	#btnC,(Ctrl_1_Press_Logical).w ; is button C pressed?
+		cmpi.b	#btnC,(Ctrl_1_Press).w ; is button C pressed?
 		bne.w	ErrorWaitForC	; if not, branch
 		rts	
 ; End of function ErrorWaitForC
