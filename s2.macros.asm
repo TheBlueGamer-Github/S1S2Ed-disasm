@@ -306,3 +306,18 @@ copyTilemap:	macro source,destination,width,height
 		moveq	#(height)-1,d2
 		bsr.w	TilemapToVRAM
 		endm
+; ---------------------------------------------------------------------------
+; disable interrupts
+; ---------------------------------------------------------------------------
+
+disable_ints:	macro
+		move	#$2700,sr
+		endm
+		
+; ---------------------------------------------------------------------------
+; enable interrupts
+; ---------------------------------------------------------------------------
+
+enable_ints:	macro
+		move	#$2300,sr
+		endm

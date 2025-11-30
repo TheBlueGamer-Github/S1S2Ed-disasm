@@ -1215,9 +1215,10 @@ Sonic_Pos_Record_Buf_End:
 Tails_Pos_Record_Buf:		ds.b	$100
 Tails_Pos_Record_Buf_End:
 
-CNZ_saucer_data:		ds.b	$40	; the number of saucer bumpers in a group which have been destroyed. Used to decide when to give 500 points instead of 10
-CNZ_saucer_data_End:
-				ds.b	$C0	; $FFFFE740-$FFFFE7FF ; unused as far as I can tell
+v_regbuffer:	ds.b	$40	; stores registers d0-a7 during an error event
+v_spbuffer:	ds.l	1	; stores most recent sp address
+v_errortype:	ds.b	1	; error type
+				ds.b	$BB	; $FFFFE740-$FFFFE7FF ; unused as far as I can tell
 Ring_Positions:			ds.b	$600
 Ring_Positions_End:
 
@@ -2871,3 +2872,8 @@ ArtTile_Title_Foreground:	equ $200
 ArtTile_Title_Sonic:		equ $300
 ArtTile_Title_Trademark:	equ $510
 ArtTile_Level_Select_Font:	equ $680
+; VRAM data
+vram_fg:	equ $C000	; foreground namespace
+vram_bg:	equ $E000	; background namespace
+vram_sprites:	equ $F800	; sprite table
+vram_hscroll:	equ $FC00	; horizontal scroll table

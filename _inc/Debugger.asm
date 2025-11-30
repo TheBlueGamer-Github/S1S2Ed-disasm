@@ -94,11 +94,11 @@ InitErrorHandler macro framesz,errmsg,rewindflag,rewindfun
 	move.l	sp,usp						; Save current stack pointer to usp
 	endm
 ; ===========================================================================
-BusError:
+;BusError:
 	InitErrorHandler group0_sz,BusErrorMsg
 	bra.w	BusAddressError_Handler
 ; ===========================================================================
-AddressError:
+;AddressError:
 	InitErrorHandler group0_sz,AddressErrorMsg
 	bra.w	BusAddressError_Handler
 ; ===========================================================================
