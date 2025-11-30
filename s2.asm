@@ -2460,7 +2460,7 @@ PalCycle: zoneOrderedOffsetTable 2,1
 	zoneOffsetTableEntry.w PalCycle_Null	; OOZ
 	zoneOffsetTableEntry.w PalCycle_MCZ	; MCZ
 	zoneOffsetTableEntry.w PalCycle_CNZ	; CNZ
-	zoneOffsetTableEntry.w PalCycle_Null	; CPZ
+	zoneOffsetTableEntry.w PalCycle_LZ	; CPZ
 	zoneOffsetTableEntry.w PalCycle_CPZ	; DEZ
 	zoneOffsetTableEntry.w PalCycle_Null	; ARZ
 	zoneOffsetTableEntry.w PalCycle_HTZ	; SCZ
@@ -2495,6 +2495,73 @@ locret_1EA2:
 	rts
 ; ===========================================================================
 
+PalCycle_LZ:
+; Waterfalls
+		subq.w	#1,($FFFFF634).w ; decrement timer
+		bpl.s	PCycLZ_Skip1	; if time remains, branch
+
+		move.w	#2,($FFFFF634).w ; reset timer to 2 frames
+		move.w	($FFFFF632).w,d0
+		addq.w	#1,($FFFFF632).w ; increment cycle number
+		andi.w	#3,d0		; if cycle > 3, reset to 0
+		lsl.w	#3,d0
+		lea	(Pal_LZCyc1).l,a0
+		cmpi.b	#3,(Current_Act).w	; check if level is SBZ3
+		bne.s	PCycLZ_NotSBZ3
+		lea	(Pal_SBZ3Cyc).l,a0 ; load SBZ3	palette instead
+
+PCycLZ_NotSBZ3:
+		lea	(Normal_palette+$56).w,a1
+		move.l	(a0,d0.w),(a1)+
+		move.l	4(a0,d0.w),(a1)
+		lea	(Underwater_palette+$56).w,a1
+		move.l	(a0,d0.w),(a1)+
+		move.l	4(a0,d0.w),(a1)
+
+PCycLZ_Skip1:
+; Conveyor belts
+		move.w	(Level_frame_counter).w,d0
+		andi.w	#7,d0
+		move.b	PCycLZ_Seq(pc,d0.w),d0 ; get byte from palette sequence
+		beq.s	PCycLZ_Skip2	; if byte is 0, branch
+		moveq	#1,d1
+		;tst.b	(f_conveyrev).w	; have conveyor belts been reversed?
+		;beq.s	PCycLZ_NoRev	; if not, branch
+		;neg.w	d1
+
+PCycLZ_NoRev:
+		move.w	($FFFFF650).w,d0
+		andi.w	#3,d0
+		add.w	d1,d0
+		cmpi.w	#3,d0
+		blo.s	loc_1A0A
+		move.w	d0,d1
+		moveq	#0,d0
+		tst.w	d1
+		bpl.s	loc_1A0A
+		moveq	#2,d0
+
+loc_1A0A:
+		move.w	d0,($FFFFF650).w
+		add.w	d0,d0
+		move.w	d0,d1
+		add.w	d0,d0
+		add.w	d1,d0
+		lea	(Pal_LZCyc2).l,a0
+		lea	(Normal_palette+$76).w,a1
+		move.l	(a0,d0.w),(a1)+
+		move.w	4(a0,d0.w),(a1)
+		lea	(Pal_LZCyc3).l,a0
+		lea	(Underwater_palette+$76).w,a1
+		move.l	(a0,d0.w),(a1)+
+		move.w	4(a0,d0.w),(a1)
+
+PCycLZ_Skip2:
+		rts	
+; End of function PalCycle_LZ
+; ===========================================================================
+PCycLZ_Seq:	dc.b 1,	0, 0, 1, 0, 0, 1, 0
+; ===========================================================================
 ; PalCycle_Level2:
 PalCycle_WZ:
 	subq.w	#1,(PalCycle_Timer).w
@@ -87316,7 +87383,7 @@ Nem_MzGlass:	binclude	"artnem/MZ Green Glass Block.nem"
 ; ARZ Secondary
 ;---------------------------------------------------------------------------------------
 PlrList_Arz2: plrlistheader
-	;plreq ArtTile_ArtNem_BigBubbles, ArtNem_BigBubbles
+	plreq ArtTile_ArtNem_BigBubbles, ArtNem_BigBubbles
 	plreq ArtTile_ArtNem_Spikes, ArtNem_Spikes
 	;plreq ArtTile_ArtNem_LeverSpring, ArtNem_LeverSpring
 	plreq ArtTile_ArtNem_VrtclSprng, ArtNem_VrtclSprng

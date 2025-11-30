@@ -2632,7 +2632,7 @@ ArtTile_ArtNem_Whisp                  = $0500
 ArtTile_ArtNem_Grounder               = $0509
 ArtTile_ArtNem_ChopChop               = $053B
 ArtTile_ArtUnc_Waterfall1_2           = $0557
-ArtTile_ArtNem_BigBubbles             = $055B
+ArtTile_ArtNem_BigBubbles             = $348
 ArtTile_ArtNem_TailsDust2             = $048C
 ArtTile_ArtNem_SonicDust2             = $049C
 ; ---------------------------------------------------------------------------
