@@ -4629,8 +4629,8 @@ noLevel_TtlCard:
 	bsr.w	PalLoad_ForFade	; load Sonic's palette line
 	jsr	LevelSizeLoad
 	jsrto	DeformBgLayer, JmpTo_DeformBgLayer
-	clr.w	(Vscroll_Factor_FG).w
-	move.w	#-224,(Vscroll_Factor_P2_FG).w
+	bset	#2,(Vscroll_Factor_FG).w
+	;move.w	#-224,(Vscroll_Factor_P2_FG).w
 
 	clearRAM Horiz_Scroll_Buf,Horiz_Scroll_Buf+HorizontalScrollBuffer.len
 
@@ -4739,14 +4739,15 @@ Level_FromCheckpoint:
 	bsr.w	WaitForVint
 	dbf	d1,-
 	
-	;move.w	#$202F,(Palette_fade_range).w ; fade in 2nd, 3rd & 4th palette lines
-	;bsr.w	PalFadeIn_Alt
+	move.w	#$202F,(Palette_fade_range).w ; fade in 2nd, 3rd & 4th palette lines
+	bsr.w	PalFadeIn_Alt
 	tst.w	(Demo_mode_flag).w	; is an ending sequence demo running?
 	bmi.w	JmpTo_Level_ClrCardArt ; if yes, branch
 	lea	(TitleCard).w,a1
 	addq.b	#2,TitleCard_ZoneName-TitleCard+routine(a1)
 	addq.b	#4,TitleCard_Zone-TitleCard+routine(a1)
 	addq.b	#4,TitleCard_ActNumber-TitleCard+routine(a1)
+	addq.b	#4,TitleCard_Background-TitleCard+routine(a1)
 	bra.s	+
 JmpTo_Level_ClrCardArt:
 	jmp	(Level_ClrCardArt).l
@@ -19991,35 +19992,6 @@ DrawInitialBG:
 	lea	(Camera_BG_X_pos).w,a3
 	lea	(Level_Layout+$80).w,a4	; background
 	move.w	#vdpComm(VRAM_Plane_B_Name_Table,VRAM,WRITE)>>16,d2
-	; The purpose of this function is to dynamically load a portion of
-	; the background, based on where the BG camera is pointing. This
-	; makes plenty of sense for levels that dynamically load their
-	; background to Plane B. However, not all levels do this: some are
-	; content with just loading their entire (small) background to
-	; Plane B and leaving it there, untouched.
-	; Unfortunately, that does not mesh well with this function: if the
-	; camera is too high or too low, then only part of the background
-	; will be properly loaded. This bug most visibly manifests itself in
-	; Casino Night Zone Act 1, where the background abruptly cuts off at
-	; the bottom.
-	; To work around this, an ugly hack was added, to cause the function
-	; to load a portion of the background 16 pixels lower than normal.
-	; However, this hack applies to both Act 1 AND Act 2, resulting in
-	; Act 2's background being cut off at the top.
-	; Sonic 3 & Knuckles fixed this problem for good by giving each zone
-	; its own background initialisation function (see 'LevelSetup' in the
-	; Sonic & Knuckles disassembly). This fix won't go quite that far,
-	; but it will give these 'static' backgrounds their own
-	; initialisation logic, much like two player Mystic Cave Zone does.
-	move.b	(Current_Zone).w,d0
-	cmpi.b	#emerald_hill_zone,d0
-	beq.w	DrawInitialBG_LoadWholeBackground_512x256
-	cmpi.b	#hill_top_zone,d0
-	beq.w	DrawInitialBG_LoadWholeBackground_512x256
-	tst.w	(Two_player_mode).w
-	beq.w	+
-	cmpi.b	#mystic_cave_zone,(Current_Zone).w
-	beq.w	DrawInitialBG_LoadWholeBackground_512x512
 +
 DrawChunks:
 	moveq	#-16,d4
@@ -20185,7 +20157,7 @@ loadZoneBlockMaps:
 		moveq	#PalID_MTZ2,d0	; use SBZ2/FZ palette
 
 .normalpal:
-	jsrto	PalLoad_Now, JmpTo_PalLoad_Now
+	jsr	(PalLoad_ForFade).l
 	rts
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
