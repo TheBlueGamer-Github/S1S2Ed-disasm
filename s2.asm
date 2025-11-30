@@ -37192,13 +37192,7 @@ Sonic_MoveLeft:
 	move.w	d6,d1
 	neg.w	d1
 	cmp.w	d1,d0	; compare new speed with top speed
-	bgt.s	++	; if new speed is less than the maximum, branch
-	tst.w	(Demo_mode_flag).w	; is demo mode on?
-	bne.w	+	; if yes, branch
-	add.w	d5,d0	; remove this frame's acceleration change
-	cmp.w	d1,d0	; compare speed with top speed
-	ble.s	++	; if speed was already greater than the maximum, branch
-+
+	bgt.s	+	; if new speed is less than the maximum, branch
 	move.w	d1,d0	; limit speed on ground going left
 +
 	move.w	d0,inertia(a0)
@@ -37256,13 +37250,7 @@ Sonic_MoveRight:
 +
 	add.w	d5,d0	; add acceleration to the right
 	cmp.w	d6,d0	; compare new speed with top speed
-	blt.s	++	; if new speed is less than the maximum, branch
-	tst.w	(Demo_mode_flag).w	; is demo mode on?
-	bne.w	+	; if yes, branch
-	sub.w	d5,d0	; remove this frame's acceleration change
-	cmp.w	d6,d0	; compare speed with top speed
-	bge.s	++	; if speed was already greater than the maximum, branch
-+
+	blt.s	+	; if new speed is less than the maximum, branch
 	move.w	d6,d0	; limit speed on ground going right
 +
 	move.w	d0,inertia(a0)
