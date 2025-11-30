@@ -4375,7 +4375,7 @@ Tit_ChkLevSel:
 		moveq	#palid_LevelSel,d0
 		bsr.w	PalLoad_Now	; load level select palette
 
-		;clearRAM v_hscrolltablebuffer,v_hscrolltablebuffer_end
+		clearRAM Horiz_Scroll_Buf,Horiz_Scroll_Buf+HorizontalScrollBuffer.len
 
 		move.l	d0,(Vscroll_Factor).w
 		disable_ints
@@ -4418,7 +4418,7 @@ LevSel_NoCheat:
 		;blo.s	LevelSelect	; if yes, branch
 
 LevSel_PlaySnd:
-		;bsr.w	PlaySound_Special
+		bsr.w	PlaySound2
 		bra.s	LevelSelect
 LevSelControls:
 		move.b	(Ctrl_1_Press).w,d1
