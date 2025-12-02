@@ -45868,7 +45868,7 @@ JmpTo17_DeleteObject ; JmpTo
 ; ----------------------------------------------------------------------------
 ; Object 04 - Surface of the water - water surface
 ; ----------------------------------------------------------------------------
-
+Map_Surf:	include	"_maps/Water Surface.asm"
 Obj04:
 	moveq	#0,d0
 	move.b	routine(a0),d0
@@ -45883,8 +45883,8 @@ Obj04_Index:	offsetTable
 ; loc_208F0: Obj04_Main:
 Obj04_Init:
 	addq.b	#2,routine(a0) ; => Obj04_Action
-	move.l	#Obj04_MapUnc_20A0E,mappings(a0)
-	move.w	#make_art_tile(ArtTile_ArtNem_WaterSurface,0,1),art_tile(a0)
+	move.l	#Map_Surf,mappings(a0)
+	move.w	#make_art_tile(ArtTile_ArtNem_WaterSurface,2,1),art_tile(a0)
 	jsrto	Adjust2PArtPointer, JmpTo12_Adjust2PArtPointer
 	move.b	#4,render_flags(a0)
 	move.b	#$80,width_pixels(a0)
@@ -45919,20 +45919,15 @@ Obj04_Animate:
 	bne.s	Obj04_Display		; if yes, branch
 	move.b	#0,objoff_32(a0)	; resume animation
 	subq.b	#3,mapping_frame(a0)	; use normal frames
-	cmpi.w	#$900,($FFFFF64A).w
-	bhs.s	+	; use normal frames
 	
 loc_20962:
-	lea	(Anim_obj04).l,a1
-	moveq	#0,d1
-	move.b	anim_frame(a0),d1
-	move.b	(a1,d1.w),mapping_frame(a0)
-	addq.b	#1,anim_frame(a0)
-	andi.b	#$3F,anim_frame(a0)
-+
-	cmpi.w	#$900,($FFFFF64A).w
-	blo.s	Obj04_Display	; use normal frames
-	move.b	#6,mapping_frame(a0)
+		subq.b	#1,anim_frame_duration(a0)
+		bpl.s	Obj04_Display
+		move.b	#7,anim_frame_duration(a0)
+		addq.b	#1,mapping_frame(a0)
+		cmpi.b	#3,mapping_frame(a0)
+		blo.s	Obj04_Display
+		move.b	#0,mapping_frame(a0)
 
 Obj04_Display:
 	jmpto	DisplaySprite, JmpTo10_DisplaySprite
@@ -47367,7 +47362,7 @@ loc_215A8:
 	subi.w	#$10,d1
 	cmpi.w	#$30,d1
 	bhs.s	return_215BE
-	bsr.w	RideObject_SetRide
+	jsr	(RideObject_SetRide).l
 
 return_215BE:
 	rts
@@ -88565,7 +88560,7 @@ ArtNem_CNZFlipper:		BINCLUDE	"art/nemesis/Flippers.nem"
 ;---------------------------------------------------------------------------------------
 ArtNem_CPZElevator:		BINCLUDE	"art/nemesis/Large moving platform from CPZ.nem"
 	even
-ArtNem_WaterSurface:		BINCLUDE	"art/nemesis/Top of water in HPZ and CNZ.nem"
+ArtNem_WaterSurface:		BINCLUDE	"artnem/LZ Water Surface.nem"
 	even
 ArtNem_CPZBooster:		BINCLUDE	"art/nemesis/Speed booster from CPZ.nem"
 	even
