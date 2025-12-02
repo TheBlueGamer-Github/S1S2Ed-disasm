@@ -25,7 +25,7 @@ gameRevision = 1
 ;	| If 0, a REV00 ROM is built
 ;	| If 1, a REV01 ROM is built, which contains some fixes
 ;	| If 2, a (theoretical) REV02 ROM is built, which contains even more fixes
-padToPowerOfTwo = 1
+padToPowerOfTwo = 0
 ;	| If 1, pads the end of the ROM to the next power of two bytes (for real hardware)
 ;
 fixBugs = 1
@@ -35,7 +35,7 @@ fixBugs = 1
 allOptimizations = 1
 ;	| If 1, enables all optimizations
 ;
-skipChecksumCheck = 1
+skipChecksumCheck = 0
 ;	| If 1, disables the slow bootup checksum calculation
 ;
 zeroOffsetOptimization = 0|allOptimizations
@@ -311,11 +311,6 @@ GameProgram:
 	tst.w	(VDP_control_port).l
 ; loc_306:
 CheckSumCheck:
-    if gameRevision>0
-	move.w	(VDP_control_port).l,d1
-	btst	#1,d1
-	bne.s	CheckSumCheck	; wait until DMA is completed
-    endif
 	btst	#6,(HW_Expansion_Control).l
 	beq.s	ChecksumTest
 	cmpi.l	#'init',(Checksum_fourcc).w ; has checksum routine already run?
@@ -323,7 +318,6 @@ CheckSumCheck:
 
 ; loc_328:
 ChecksumTest:
-    if skipChecksumCheck=0	; checksum code
 	movea.l	#EndOfHeader,a0	; start checking bytes after the header ($200)
 	movea.l	#ROMEndLoc,a1	; stop at end of ROM
 	move.l	(a1),d0
@@ -336,7 +330,6 @@ ChecksumLoop:
 	movea.l	#Checksum,a1	; read the checksum
 	cmp.w	(a1),d1	; compare correct checksum to the one in ROM
 	bne.w	ChecksumError	; if they don't match, branch
-    endif
 ;checksum_good:
 	; Clear some RAM only on a coldboot.
 	lea	(CrossResetRAM).w,a6
@@ -395,9 +388,7 @@ GameMode_2PResults:	jmp	(EndgameCredits).l	; 2P results mode
 ;    if skipChecksumCheck=0	; checksum error code
 ; loc_3CE:
 ChecksumError:
-	move.l	d1,-(sp)
 	bsr.w	VDPSetupGame
-	move.l	(sp)+,d1
 	move.l	#vdpComm($0000,CRAM,WRITE),(VDP_control_port).l ; set VDP to CRAM write
 	moveq	#$3F,d7
 ; loc_3E2:
