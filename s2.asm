@@ -87326,6 +87326,7 @@ PlrList_Cpz2: plrlistheader
 	plreq ArtTile_ArtNem_VrtclSprng, ArtNem_VrtclSprng
 	plreq ArtTile_ArtNem_HrzntlSprng, ArtNem_HrzntlSprng
 	plreq	ArtTile_LZ_Blocks,     Nem_LzDoor2          ; large horizontal door
+	plreq	ArtTile_LZ_Gargoyle,    Nem_Gargoyle        ; gargoyle head
 PlrList_Cpz2_End
 Nem_Splash:	binclude	"artnem/LZ Water & Splashes.nem"
 		even
@@ -87334,6 +87335,8 @@ Nem_LzDoor1:	binclude	"artnem/LZ Vertical Door.nem"
 Nem_LzPole:	binclude	"artnem/LZ Breakable Pole.nem"
 		even
 Nem_LzPlatfm:	binclude	"artnem/LZ Rising Platform.nem"
+		even
+Nem_Gargoyle:	binclude	"artnem/LZ Gargoyle & Fireball.nem"
 		even
 ;---------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
