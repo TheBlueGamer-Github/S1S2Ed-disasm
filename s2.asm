@@ -4051,7 +4051,7 @@ TitleScreen:
 	clearRAM Camera_RAM,Camera_RAM_End ; clear camera RAM and following variables
 
 	; Load the credit font for the following text.
-	move.l	#vdpComm(tiles_to_bytes(ArtTile_ArtNem_CreditText),VRAM,WRITE),(VDP_control_port).l
+	move.l	#vdpComm(tiles_to_bytes(1),VRAM,WRITE),(VDP_control_port).l
 	lea	(Nem_CreditText).l,a0
 	bsr.w	NemDec
 
@@ -4086,10 +4086,6 @@ TitleScreen:
 		locVRAM	ArtTile_Title_Trademark*tile_size
 		lea	(Nem_TitleTM).l,a0 ; load "TM" patterns
 		bsr.w	NemDec
-
-	move.l	#vdpComm(tiles_to_bytes(ArtTile_ArtNem_Player1VS2),VRAM,WRITE),(VDP_control_port).l
-	lea	(ArtNem_Player1VS2).l,a0
-	bsr.w	NemDec
 
 	move.l	#vdpComm(tiles_to_bytes(ArtTile_ArtNem_FontStuff_TtlScr),VRAM,WRITE),(VDP_control_port).l
 	lea	(ArtNem_FontStuff).l,a0
@@ -25514,7 +25510,7 @@ Obj29_Index:	offsetTable
 Obj29_Init:
 	addq.b	#2,routine(a0)
 	move.l	#Obj29_MapUnc_11ED0,mappings(a0)
-	move.w	#make_art_tile(ArtTile_ArtNem_Numbers,0,1),art_tile(a0)
+	move.w	#make_art_tile(ArtTile_ArtNem_Numbers,1,1),art_tile(a0)
 	bsr.w	Adjust2PArtPointer
 	move.b	#4,render_flags(a0)
 	move.b	#1,priority(a0)
@@ -25551,7 +25547,7 @@ Obj28_MapUnc_11EAC:	include "mappings/sprite/obj28_e.asm"
 ; -------------------------------------------------------------------------------
 ; sprite mappings
 ; -------------------------------------------------------------------------------
-Obj29_MapUnc_11ED0:	include "mappings/sprite/obj29.asm"
+Obj29_MapUnc_11ED0:	include "_maps/Points.asm"
 
     if ~~removeJmpTos
 JmpTo_RandomNumber ; JmpTo
@@ -82593,7 +82589,7 @@ Obj8A_Init:
 	move.b	#0,priority(a0)
 	cmpi.b	#GameModeID_TitleScreen,(Game_Mode).w	; title screen??
 	bne.s	Obj8A_Display	; if not, branch
-	move.w	#make_art_tile(ArtTile_ArtNem_CreditText,0,0),art_tile(a0)
+	move.w	#make_art_tile(1,0,0),art_tile(a0)
 	jsrto	Adjust2PArtPointer, JmpTo65_Adjust2PArtPointer
 	move.b	#$A,mapping_frame(a0)
 	tst.b	(S1_hidden_credits_flag).w
@@ -88401,7 +88397,7 @@ ArtNem_Powerups:		BINCLUDE	"art/nemesis/Monitor and contents.nem"
 	even
 ArtNem_Spikes:			BINCLUDE	"art/nemesis/Spikes.nem"
 	even
-ArtNem_Numbers:			BINCLUDE	"art/nemesis/Numbers.nem"
+ArtNem_Numbers:			BINCLUDE	"artnem/Points.nem"
 	even
 Art_HudS1:		BINCLUDE	"art/uncompressed/HUD Numbers.bin"
 	even

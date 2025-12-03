@@ -2292,7 +2292,7 @@ ArtTile_ArtUnc_Giant_Sonic            = $0088
 ; Title screen
 ArtTile_ArtNem_Title                  = $200
 ArtTile_ArtNem_TitleSprites           = $300
-ArtTile_ArtNem_MenuJunk               = $03F2
+ArtTile_ArtNem_MenuJunk               = $1CD
 ArtTile_ArtNem_Player1VS2             = $0402
 ArtTile_ArtNem_CreditText             = $0500
 ArtTile_ArtNem_FontStuff_TtlScr       = $0680
@@ -2729,15 +2729,15 @@ ArtTile_ArtNem_SuperSonic_stars       = $05F2
 ArtTile_ArtNem_Checkpoint             = $6B0
 ArtTile_ArtNem_TailsDust              = $055F
 ArtTile_ArtNem_SonicDust              = $056F
-ArtTile_ArtNem_Numbers                = $03AA
+ArtTile_ArtNem_Numbers                = $79B
 ArtTile_ArtNem_Shield                 = $541
 ArtTile_ArtNem_Invincible_stars       = $053E
 ArtTile_ArtNem_Powerups               = $0680
 ArtTile_ArtNem_Ring                   = $6BA
 ArtTile_ArtNem_HUD                    = $6CA
 ArtTile_ArtUnc_Sonic                  = $0780
-ArtTile_ArtUnc_Tails                  = $07A0
-ArtTile_ArtUnc_Tails_Tails            = $07B0
+ArtTile_ArtUnc_Tails                  = $07A4
+ArtTile_ArtUnc_Tails_Tails            = $07B4
 ArtTile_Eggman:			equ $400
 ArtTile_Eggman_Weapons:		equ $46C
 ArtTile_Eggman_Button:		equ $4A4
