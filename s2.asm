@@ -3499,7 +3499,7 @@ Pal_FadeToWhite:
 ; Unused - dead code/data for old SEGA screen:
 
 ; ===========================================================================
-; PalCycle_Sega:
+PalCycle_Sega:
 	tst.b	(PalCycle_Timer+1).w
 	bne.s	loc_2680
 	lea	(Normal_palette_line2).w,a1
@@ -3745,7 +3745,7 @@ __LABEL__ label *
 __LABEL___End label *
 	endm
 
-Pal_SEGA:  palette Sega screen.bin ; SEGA screen palette (Sonic and initial background)
+Pal_SEGA:  palette Sega Background.bin ; SEGA screen palette (Sonic and initial background)
 Pal_Title: palette Title screen.bin ; Title screen Palette
 Pal_MenuB: palette S2B Level Select.bin ; Leftover S2B level select palette
 Pal_BGND:  palette SonicAndTails.bin,SonicAndTails2.bin ; "Sonic and Miles" background palette (also usually the primary palette line)
@@ -3940,117 +3940,73 @@ Angle_Data:	BINCLUDE	"misc/angles.bin"
 SegaScreen:
 	move.b	#MusID_Stop,d0
 	bsr.w	PlayMusic ; stop music
-	bsr.w	ClearPLC
-	bsr.w	Pal_FadeToBlack
+		bsr.w	ClearPLC
+		bsr.w	Pal_FadeToBlack
+		lea	(VDP_control_port).l,a6
+		move.w	#$8004,(a6)	; use 8-colour mode
+		move.w	#$8200+(vram_fg>>10),(a6) ; set foreground nametable address
+		move.w	#$8400+(vram_bg>>13),(a6) ; set background nametable address
+		move.w	#$8700,(a6)	; set background colour (palette entry 0)
+		move.w	#$8B00,(a6)	; full-screen vertical scrolling
+		;clr.b	(f_wtr_state).w
+		disable_ints
+		move.w	(VDP_Reg1_val).w,d0
+		andi.b	#$BF,d0
+		move.w	d0,(VDP_control_port).l
+		bsr.w	ClearScreen
+		locVRAM	ArtTile_Sega_Tiles*tile_size
+		lea	(Nem_SegaLogo).l,a0 ; load Sega logo patterns
+		bsr.w	NemDec
+		lea	(Chunk_Table).l,a1
+		lea	(Eni_SegaLogo).l,a0 ; load Sega logo mappings
+		move.w	#make_art_tile(ArtTile_Sega_Tiles,0,FALSE),d0
+		bsr.w	EniDec
 
-	clearRAM Misc_Variables,Misc_Variables_End
+		copyTilemap	Chunk_Table,vram_bg+$510,24,8
+		copyTilemap	(Chunk_Table+24*8*2)&$FFFFFF,vram_fg,40,28
 
-	clearRAM Object_RAM,Object_RAM_End ; fill object RAM with 0
+		if Revision<>0
+			tst.b	(v_megadrive).w	; is console Japanese?
+			bmi.s	.loadpal
+			copyTilemap	(Chunk_Table+$A40)&$FFFFFF,vram_fg+$53A,3,2 ; hide "TM" with a white rectangle
+		endif
 
-	lea	(VDP_control_port).l,a6
-	move.w	#$8004,(a6)		; H-INT disabled
-	move.w	#$8200|(VRAM_SegaScr_Plane_A_Name_Table/$400),(a6)	; PNT A base: $C000
-	move.w	#$8400|(VRAM_SegaScr_Plane_B_Name_Table/$2000),(a6)	; PNT B base: $A000
-	move.w	#$8700,(a6)		; Background palette/color: 0/0
-	move.w	#$8B03,(a6)		; EXT-INT disabled, V scroll by screen, H scroll by line
-	move.w	#$8C81,(a6)		; H res 40 cells, no interlace, S/H disabled
-	move.w	#$9003,(a6)		; Scroll table size: 128x32 ($2000 bytes)
-	clr.b	(Water_fullscreen_flag).w
-	clr.w	(Two_player_mode).w
-	move	#$2700,sr
-	move.w	(VDP_Reg1_val).w,d0
-	andi.b	#$BF,d0
-	move.w	d0,(VDP_control_port).l
-	bsr.w	ClearScreen
+.loadpal:
+		moveq	#PalID_SEGA,d0
+		bsr.w	PalLoad_Now	; load Sega logo palette
+		move.w	#-$A,(PalCycle_Frame).w
+		move.w	#0,(PalCycle_Timer).w
+		move.w	#0,(v_pal_buffer+$12).w
+		move.w	#0,(v_pal_buffer+$10).w
+		move.w	(VDP_Reg1_val).w,d0
+		ori.b	#$40,d0
+		move.w	d0,(VDP_control_port).l
 
-	dmaFillVRAM 0,VRAM_SegaScr_Plane_A_Name_Table,VRAM_SegaScr_Plane_Table_Size ; clear Plane A pattern name table
+Sega_WaitPal:
+		move.b	#2,(Vint_routine).w
+		bsr.w	WaitForVint
+		bsr.w	PalCycle_Sega
+		bne.s	Sega_WaitPal
 
-	move.l	#vdpComm(tiles_to_bytes(ArtTile_ArtNem_Sega_Logo),VRAM,WRITE),(VDP_control_port).l
-	lea	(ArtNem_SEGA).l,a0
-	bsr.w	NemDec
+		move.b	#SndID_SegaSound,d0
+		bsr.w	PlaySound	; play "SEGA" sound
+		move.b	#$14,(Vint_routine).w
+		bsr.w	WaitForVint
+		move.w	#3*60,(Demo_Time_left).w
 
-	move.l	#vdpComm(tiles_to_bytes(ArtTile_ArtNem_Trails),VRAM,WRITE),(VDP_control_port).l
-	lea	(ArtNem_IntroTrails).l,a0
-	bsr.w	NemDec
-
-	; This gets overwritten by the upscaled Sonic sprite. This may have
-	; been used to test the Sega screen before the sprite upscaling logic
-	; was added.
-	move.l	#vdpComm(tiles_to_bytes(ArtTile_ArtUnc_Giant_Sonic),VRAM,WRITE),(VDP_control_port).l
-	lea	(ArtNem_SilverSonic).l,a0
-	bsr.w	NemDec
-
-	lea	(Chunk_Table).l,a1
-	lea	(MapEng_SEGA).l,a0
-	move.w	#make_art_tile(ArtTile_VRAM_Start,0,0),d0
-	bsr.w	EniDec
-
-	lea	(Chunk_Table).l,a1
-	move.l	#vdpComm(VRAM_SegaScr_Plane_B_Name_Table,VRAM,WRITE),d0
-	moveq	#40-1,d1	; 40 cells wide
-	moveq	#28-1,d2	; 28 cells tall
-	bsr.w	PlaneMapToVRAM_H80_Sega
-
-	tst.b	(Graphics_Flags).w ; are we on a Japanese Mega Drive?
-	bmi.s	SegaScreen_Contin ; if not, branch
-
-	; load an extra sprite to hide the TM (trademark) symbol on the SEGA screen
-	lea	(SegaHideTM).w,a1
-	move.b	#ObjID_SegaHideTM,id(a1)	; load objB1 at $FFFFB080
-	move.b	#$4E,subtype(a1) ; <== ObjB1_SubObjData
-; loc_38CE:
-SegaScreen_Contin:
-	moveq	#PalID_SEGA,d0
-	bsr.w	PalLoad_Now
-	move.w	#-$A,(PalCycle_Frame).w
-	move.w	#0,(PalCycle_Timer).w
-	move.w	#0,(SegaScr_VInt_Subrout).w
-	move.w	#0,(SegaScr_PalDone_Flag).w
-	lea	(SegaScreenObject).w,a1
-	move.b	#ObjID_SonicOnSegaScr,id(a1) ; load objB0 (sega screen?) at $FFFFB040
-	move.b	#$4C,subtype(a1) ; <== ObjB0_SubObjData
-	move.w	#4*60,(Demo_Time_left).w	; 4 seconds
-	move.w	(VDP_Reg1_val).w,d0
-	ori.b	#$40,d0
-	move.w	d0,(VDP_control_port).l
-; loc_390E:
-Sega_WaitPalette:
-	move.b	#VintID_SEGA,(Vint_routine).w
-	bsr.w	WaitForVint
-	jsrto	RunObjects, JmpTo_RunObjects
-	jsr	(BuildSprites).l
-	tst.b	(SegaScr_PalDone_Flag).w
-	beq.s	Sega_WaitPalette
-    if ~~fixBugs
-	; This is a leftover from Sonic 1: ObjB0 plays the Sega sound now.
-	; Normally, you'll only hear one Sega sound, but the game actually
-	; tries to play it twice. The only reason it doesn't is because the
-	; sound queue only has room for one sound per frame. Some custom
-	; sound drivers don't have this limitation, however, and the sound
-	; will indeed play twice in those.
-	move.b	#SndID_SegaSound,d0
-	bsr.w	PlaySound	; play "SEGA" sound
-    endif
-	move.b	#VintID_SEGA,(Vint_routine).w
-	bsr.w	WaitForVint
-	move.w	#3*60,(Demo_Time_left).w	; 3 seconds
-; loc_3940:
 Sega_WaitEnd:
-	move.b	#VintID_PCM,(Vint_routine).w
-	bsr.w	WaitForVint
-	tst.w	(Demo_Time_left).w
-	beq.s	Sega_GotoTitle
-	move.b	(Ctrl_1_Press).w,d0	; is Start button pressed?
-	or.b	(Ctrl_2_Press).w,d0	; (either player)
-	andi.b	#button_start_mask,d0
-	beq.s	Sega_WaitEnd		; if not, branch
-; loc_395E:
-Sega_GotoTitle:
-	clr.w	(SegaScr_PalDone_Flag).w
-	clr.w	(SegaScr_VInt_Subrout).w
-	move.b	#GameModeID_TitleScreen,(Game_Mode).w	; => TitleScreen
-	rts
+		move.b	#2,(Vint_routine).w
+		bsr.w	WaitForVint
+		tst.w	(Demo_Time_left).w
+		beq.s	Sega_GotoTitle
+		move.b	(Ctrl_1_Press).w,d0	; is Start button pressed?
+		or.b	(Ctrl_2_Press).w,d0	; (either player)
+		andi.b	#button_start_mask,d0
+		beq.s	Sega_WaitEnd		; if not, branch
 
+Sega_GotoTitle:
+		move.b	#GameModeID_TitleScreen,(Game_Mode).w	; => TitleScreen
+		rts	
 ; ---------------------------------------------------------------------------
 ; Subroutine that does the exact same thing as PlaneMapToVRAM_H80_SpecialStage
 ; (this one is used at the Sega screen)
@@ -89877,6 +89833,11 @@ Nem_SbzDoor2:	binclude	"artnem/SBZ Large Horizontal Door.nem"
 		even
 Nem_Girder:	binclude	"artnem/SBZ Crushing Girder.nem"
 		even
+
+Nem_SegaLogo:	binclude	"artnem/Sega Logo (JP1).nem" ; large Sega logo
+			even
+Eni_SegaLogo:	binclude	"tilemaps/Sega Logo (JP1).eni" ; large Sega logo (mappings)
+			even
 
 ; end of 'ROM'
 	if padToPowerOfTwo && (*)&(*-1)

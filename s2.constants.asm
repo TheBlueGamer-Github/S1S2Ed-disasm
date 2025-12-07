@@ -1447,6 +1447,7 @@ Water_routine:			ds.b	1
 Water_fullscreen_flag:		ds.b	1	; was "Water_move"
 Do_Updates_in_H_int:		ds.b	1
 
+v_pal_buffer:
 PalCycle_Frame_CNZ:		ds.w	1
 PalCycle_Frame2:		ds.w	1
 PalCycle_Frame3:		ds.w	1
@@ -2290,6 +2291,9 @@ ArtTile_ArtNem_FontStuff              = $0010
 ArtTile_ArtNem_Sega_Logo              = $0001
 ArtTile_ArtNem_Trails                 = $0080
 ArtTile_ArtUnc_Giant_Sonic            = $0088
+
+; Sega Screen
+ArtTile_Sega_Tiles:		equ $000
 
 ; Title screen
 ArtTile_ArtNem_Title                  = $200
