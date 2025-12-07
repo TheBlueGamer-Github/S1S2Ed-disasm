@@ -352,11 +352,11 @@ cur_zone_str := "\{cur_zone_id}"
 emerald_hill_zone zoneID	$00
 zone_1 zoneID			$01
 wood_zone zoneID		$02
-zone_3 zoneID			$03
+hill_top_zone zoneID		$03
 metropolis_zone zoneID		$04
 metropolis_zone_2 zoneID	$05
 wing_fortress_zone zoneID	$06
-hill_top_zone zoneID		$07
+zone_3 zoneID			$07
 hidden_palace_zone zoneID	$08
 zone_9 zoneID			$09
 oil_ocean_zone zoneID		$0A
