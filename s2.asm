@@ -2576,7 +2576,7 @@ Kos_Done:
 
 ; sub_19DC:
 PalCycle_Load:
-	bsr.w	PalCycle_SuperSonic
+	;bsr.w	PalCycle_SuperSonic
 	moveq	#0,d2
 	moveq	#0,d0
 	move.b	(Current_Zone).w,d0	; use level number as index into palette cycles
@@ -4130,7 +4130,7 @@ TitleScreen:
 	clearRAM Camera_RAM,Camera_RAM_End ; clear camera RAM and following variables
 
 	; Load the credit font for the following text.
-	move.l	#vdpComm(tiles_to_bytes(ArtTile_ArtNem_CreditText),VRAM,WRITE),(VDP_control_port).l
+	move.l	#vdpComm(tiles_to_bytes(ArtTile_Sonic_Team_Font),VRAM,WRITE),(VDP_control_port).l
 	lea	(Nem_CreditText).l,a0
 	bsr.w	NemDec
 
@@ -5109,12 +5109,12 @@ Level_GetBgm:
 	bmi.s	noLevel_TtlCard
 	moveq	#0,d0
 	move.b	(Current_Zone).w,d0
-		cmpi.w	#chemical_plant_zone_act_4,(Current_ZoneAndAct).w ; is level SBZ3?
+		cmpi.w	#(id_LZ<<8)+3,(Current_Zone).w ; is level SBZ3?
 		bne.s	Level_BgmNotLZ4	; if not, branch
 		moveq	#4,d0		; use 5th music (SBZ)
 
 Level_BgmNotLZ4:
-		cmpi.w	#metropolis_zone_act_3,(Current_ZoneAndAct).w ; is level FZ?
+		cmpi.w	#(id_SBZ<<8)+2,(Current_Zone).w ; is level FZ?
 		bne.s	Level_PlayBgmS1	; if not, branch
 		moveq	#5,d0		; use 6th music (FZ)
 Level_PlayBgmS1:
@@ -19261,7 +19261,7 @@ Draw_BG2:
 	tst.b	(a2)
 	beq.w	++	; rts
 
-	cmpi.b	#metropolis_zone,(Current_Zone).w
+	cmpi.b	#id_SBZ,(Current_Zone).w
 	beq.w	Draw_BG2_SBZ
 	;beq.w	Draw_SBz
 	; Leftover from Sonic 1: was used by Green Hill Zone and Spring Yard Zone.
@@ -20528,16 +20528,16 @@ loadZoneBlockMaps:
 	addq.w	#4,a2
 	moveq	#0,d0
 	move.b	(a2),d0	; palette ID
-		cmpi.w	#chemical_plant_zone_act_4,(Current_ZoneAndAct).w ; is level SBZ3 (LZ4) ?
+		cmpi.w	#(id_LZ<<8)+3,(Current_Zone).w ; is level SBZ3 (LZ4) ?
 		bne.s	.notSBZ3	; if not, branch
 		moveq	#PalID_HPZ,d0	; use SB3 palette
 
 .notSBZ3:
 		;cmpi.w	#metropolis_zone_act_2,(Current_ZoneAndAct).w ; is level SBZ2?
 		;bne.s	.normalpal	; if yes, branch
-		cmpi.w	#metropolis_zone_act_2,(Current_ZoneAndAct).w ; is level SBZ2?
+		cmpi.w	#(id_SBZ<<8)+1,(Current_Zone).w ; is level SBZ2?
 		beq.s	.isSBZorFZ	; if yes, branch
-		cmpi.w	#metropolis_zone_act_3,(Current_ZoneAndAct).w ; is level FZ?
+		cmpi.w	#(id_SBZ<<8)+2,(Current_Zone).w ; is level FZ?
 		bne.s	.normalpal	; if yes, branch
 
 .isSBZorFZ:
@@ -20814,11 +20814,11 @@ RunDynamicLevelEvents:
 ; off_E636:
 DynamicLevelEventIndex: zoneOrderedOffsetTable 2,1
 	zoneOffsetTableEntry.w LevEvents_EHZ	; EHZ
-	zoneOffsetTableEntry.w LevEvents_001	; Zone 1
-	zoneOffsetTableEntry.w LevEvents_WZ	; WZ
-	zoneOffsetTableEntry.w LevEvents_003	; Zone 3
-	zoneOffsetTableEntry.w LevEvents_MTZ	; MTZ1,2
-	zoneOffsetTableEntry.w LevEvents_MTZ3	; MTZ3
+	zoneOffsetTableEntry.w LevEvents_CPZ	; Zone 1
+	zoneOffsetTableEntry.w LevEvents_ARZ	; WZ
+	zoneOffsetTableEntry.w LevEvents_HTZ	; Zone 3
+	zoneOffsetTableEntry.w LevEvents_CNZ	; MTZ1,2
+	zoneOffsetTableEntry.w LevEvents_MTZ	; MTZ3
 	zoneOffsetTableEntry.w LevEvents_WFZ	; WFZ
 	zoneOffsetTableEntry.w LevEvents_HTZ	; HTZ
 	zoneOffsetTableEntry.w LevEvents_HPZ	; HPZ
@@ -22238,7 +22238,7 @@ DLE_SBZ3:
 		bhs.s	locret_6F8C	; if not, branch
 		clr.b	(Last_star_pole_hit).w
 		move.w	#1,(Level_Inactive_flag).w ; restart level
-		move.w	#(metropolis_zone<<8)+2,(Current_Zone).w ; set level number to 0502 (FZ)
+		move.w	#(id_SBZ<<8)+2,(Current_Zone).w ; set level number to 0502 (FZ)
 		move.b	#1,(obj_control+v_player).w ; lock controls
 
 locret_6F8C:
@@ -23227,7 +23227,7 @@ Obj15_Init:
 	move.b	#8,y_radius(a0)
 	move.w	y_pos(a0),objoff_38(a0)
 	move.w	x_pos(a0),objoff_3A(a0)
-	cmpi.b	#hill_top_zone,(Current_Zone).w
+	cmpi.b	#id_SLZ,(Current_Zone).w
 	bne.s	+
 	move.l	#Obj15_Obj7A_MapUnc_10256,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_OOZSwingPlat,2,0),art_tile(a0)
@@ -23235,7 +23235,7 @@ Obj15_Init:
 		move.b	#$10,obHeight(a0)
 		move.b	#$99,obColType(a0)
 +
-	cmpi.b	#metropolis_zone,(Current_Zone).w
+	cmpi.b	#id_SBZ,(Current_Zone).w
 	bne.s	+
 	move.l	#Map_BBall,mappings(a0)
 		move.w	#make_art_tile(ArtTile_SBZ_Swing,0,0),obGfx(a0)
@@ -23311,7 +23311,7 @@ Obj15_Init:
 	bne.s	Obj15_State2
 	move.l	#Obj15_MapUnc_102DE,mappings(a0)
 	move.b	#$A7,collision_flags(a0)
-		cmpi.b	#metropolis_zone,(Current_Zone).w
+		cmpi.b	#id_SBZ,(Current_Zone).w
 		beq.w	loc_1000C	; if yes, branch
 
 ; loc_FE50:
@@ -26290,6 +26290,8 @@ JmpTo4_CalcSine ; JmpTo
 ; The power-ups themselves are handled by the next object. This just does the
 ; monitor collision and graphics.
 ; ----------------------------------------------------------------------------
+		include	"_anim/Monitor.asm"
+Map_Monitor:	include	"_maps/Monitor.asm"
 ; Obj_Monitor:
 Obj26:
 	moveq	#0,d0
@@ -26310,7 +26312,7 @@ Obj26_Init:
 	addq.b	#2,routine(a0)
 	move.b	#$E,y_radius(a0)
 	move.b	#$E,x_radius(a0)
-	move.l	#Obj26_MapUnc_12D36,mappings(a0)
+	move.l	#Map_Monitor,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_Powerups,0,0),art_tile(a0)
 	bsr.w	Adjust2PArtPointer
 	move.b	#4,render_flags(a0)
@@ -26373,7 +26375,7 @@ SolidObject_Monitor:
 	bsr.w	SolidObject_Monitor_Tails
 
 Obj26_Animate:
-	lea	(Ani_obj26).l,a1
+	lea	(Ani_Monitor).l,a1
 	bsr.w	AnimateSprite
 
 BranchTo2_MarkObjGone
@@ -27449,13 +27451,13 @@ Card_CheckSBZ3:	; Routine 0
 		movea.l	a0,a1
 		moveq	#0,d0
 		move.b	(Current_Zone).w,d0
-		cmpi.w	#(chemical_plant_zone<<8)+3,(Current_ZoneAndAct).w ; check if level is SBZ 3
+		cmpi.w	#(id_LZ<<8)+3,(Current_ZoneAndAct).w ; check if level is SBZ 3
 		bne.s	Card_CheckFZ
 		moveq	#5,d0		; load title card number 5 (SBZ)
 
 Card_CheckFZ:
 		move.w	d0,d2
-		cmpi.w	#(metropolis_zone<<8)+2,(Current_ZoneAndAct).w ; check if level is FZ
+		cmpi.w	#(id_SBZ<<8)+2,(Current_ZoneAndAct).w ; check if level is FZ
 		bne.s	Card_LoadConfig
 		moveq	#6,d0		; load title card number 6 (FZ)
 		moveq	#$B,d2		; use "FINAL" mappings
@@ -29453,22 +29455,7 @@ LoadTitleCard:
 	bsr.s	LoadTitleCard0
 	moveq	#PLCID_Std1S1,d0
 	jsr	LoadPLC2
-	moveq	#0,d0
-	move.b	(Current_Zone).w,d0
-		cmpi.w	#chemical_plant_zone_act_4,(Current_ZoneAndAct).w ; is level SBZ3?
-		bne.s	LoadTitleCardNotLZ4	; if not, branch
-		move.b	#4,d0		; use 5th music (SBZ)
-
-LoadTitleCardNotLZ4:
-		cmpi.w	#metropolis_zone_act_3,(Current_ZoneAndAct).w ; is level FZ?
-		bne.s	+	; if not, branch
-		move.b	#5,d0		; use 6th music (FZ)
-+
-	move.b	Off_TitleCardLetters(pc,d0.w),d0
-	lea	TitleCardLetters(pc),a0
-	lea	(a0,d0.w),a0
-	move.l	#vdpComm(tiles_to_bytes(ArtTile_LevelName),VRAM,WRITE),d0
-
+	moveq #0,d0
 loc_157EC:
 	move	#$2700,sr
 	lea	(Level_Layout).w,a1
@@ -38649,272 +38636,175 @@ Obj01_Respawning:
 ; loc_1B350:
 Sonic_Animate:
 	lea	(SonicAniData1).l,a1
-	moveq	#0,d0
-	move.b	anim(a0),d0
-	cmp.b	prev_anim(a0),d0	; has animation changed?
-	beq.s	SAnim_Do		; if not, branch
-	move.b	d0,prev_anim(a0)	; set previous animation
-	move.b	#0,anim_frame(a0)	; reset animation frame
-	move.b	#0,anim_frame_duration(a0)	; reset frame duration
-	bclr	#5,status(a0)
-; loc_1B384:
-SAnim_Do:
-	add.w	d0,d0
-	adda.w	(a1,d0.w),a1	; calculate address of appropriate animation script
-	move.b	(a1),d0
-	bmi.s	SAnim_WalkRun	; if animation is walk/run/roll/jump, branch
-	move.b	status(a0),d1
-	andi.b	#1,d1
-	andi.b	#$FC,render_flags(a0)
-	or.b	d1,render_flags(a0)
-	subq.b	#1,anim_frame_duration(a0)	; subtract 1 from frame duration
-	bpl.s	SAnim_Delay			; if time remains, branch
-	move.b	d0,anim_frame_duration(a0)	; load frame duration
-; loc_1B3AA:
-SAnim_Do2:
-	moveq	#0,d1
-	move.b	anim_frame(a0),d1	; load current frame number
-	move.b	1(a1,d1.w),d0		; read sprite number from script
-	cmpi.b	#$F0,d0
-	bhs.s	SAnim_End_FF		; if animation is complete, branch
-; loc_1B3BA:
-SAnim_Next:
-	move.b	d0,mapping_frame(a0)	; load sprite number
-	addq.b	#1,anim_frame(a0)	; go to next frame
-; return_1B3C2:
-SAnim_Delay:
-	rts
-; ===========================================================================
-; loc_1B3C4:
-SAnim_End_FF:
-	addq.b	#1,d0		; is the end flag = $FF?
-	bne.s	SAnim_End_FE	; if not, branch
-	move.b	#0,anim_frame(a0)	; restart the animation
-	move.b	1(a1),d0	; read sprite number
-	bra.s	SAnim_Next
-; ===========================================================================
-; loc_1B3D4:
-SAnim_End_FE:
-	addq.b	#1,d0		; is the end flag = $FE?
-	bne.s	SAnim_End_FD	; if not, branch
-	move.b	2(a1,d1.w),d0	; read the next byte in the script
-	sub.b	d0,anim_frame(a0)	; jump back d0 bytes in the script
-	sub.b	d0,d1
-	move.b	1(a1,d1.w),d0	; read sprite number
-	bra.s	SAnim_Next
-; ===========================================================================
-; loc_1B3E8:
-SAnim_End_FD:
-	addq.b	#1,d0			; is the end flag = $FD?
-	bne.s	SAnim_End		; if not, branch
-	move.b	2(a1,d1.w),anim(a0)	; read next byte, run that animation
-; return_1B3F2:
-SAnim_End:
-	rts
-; ===========================================================================
-; loc_1B3F4:
-SAnim_WalkRun:
-	addq.b	#1,d0		; is the start flag = $FF?
-	bne.w	SAnim_Roll	; if not, branch
-	moveq	#0,d0		; is animation walking/running?
-	move.b	flip_angle(a0),d0	; if not, branch
-	bne.w	SAnim_Tumble
-	moveq	#0,d1
-	move.b	angle(a0),d0	; get Sonic's angle
-	bmi.s	+
-	beq.s	+
-	subq.b	#1,d0
-+
-	move.b	status(a0),d2
-	andi.b	#1,d2		; is Sonic mirrored horizontally?
-	bne.s	+		; if yes, branch
-	not.b	d0		; reverse angle
-+
-	addi.b	#$10,d0		; add $10 to angle
-	bpl.s	+		; if angle is $0-$7F, branch
-	moveq	#3,d1
-+
-	andi.b	#$FC,render_flags(a0)
-	eor.b	d1,d2
-	or.b	d2,render_flags(a0)
-	btst	#5,status(a0)
-	bne.w	SAnim_Push
-	lsr.b	#4,d0		; divide angle by 16
-	andi.b	#6,d0		; angle must be 0, 2, 4 or 6
-	mvabs.w	inertia(a0),d2	; get Sonic's "speed" for animation purposes
-    if status_sec_isSliding = 7
-	tst.b	status_secondary(a0)
-	bpl.w	+
-    else
-	btst	#status_sec_isSliding,status_secondary(a0)
-	beq.w	+
-    endif
-	add.w	d2,d2
-+
-	lea	(SonAni1_Run).l,a1	; use running animation
-	cmpi.w	#$600,d2		; is Sonic at running speed?
-	bhs.s	+		; use running animation
-	lea	(SonAni1_Walk).l,a1	; if yes, branch
-	move.b	d0,d1
-	lsr.b	#1,d1
-	add.b	d1,d0
-+
-	add.b	d0,d0
-	move.b	d0,d3
-	moveq	#0,d1
-	move.b	anim_frame(a0),d1
-	move.b	1(a1,d1.w),d0
-	cmpi.b	#-1,d0
-	bne.s	+
-	move.b	#0,anim_frame(a0)
-	move.b	1(a1),d0
-+
-	move.b	d0,mapping_frame(a0)
-	add.b	d3,mapping_frame(a0)
-	subq.b	#1,anim_frame_duration(a0)
-	bpl.s	return_1B4AC
-	neg.w	d2
-	addi.w	#$800,d2
-	bpl.s	+
-	moveq	#0,d2
-+
-	lsr.w	#8,d2
-	move.b	d2,anim_frame_duration(a0)	; modify frame duration
-	addq.b	#1,anim_frame(a0)		; modify frame number
+		moveq	#0,d0
+		move.b	obAnim(a0),d0
+		cmp.b	obPrevAni(a0),d0 ; has animation changed?
+		beq.s	.do		; if not, branch
+		move.b	d0,obPrevAni(a0)
+		move.b	#0,obAniFrame(a0) ; reset animation
+		move.b	#0,obTimeFrame(a0) ; reset frame duration
 
-return_1B4AC:
-	rts
-; ===========================================================================
-; loc_1B4AE:
-SAnim_Super:
-	lea	(SupSonAni_Run).l,a1	; use fast animation
-	cmpi.w	#$800,d2		; is Sonic moving fast?
-	bhs.s	SAnim_SuperRun		; if yes, branch
-	lea	(SupSonAni_Walk).l,a1	; use slower animation
-	add.b	d0,d0
-	add.b	d0,d0
-	bra.s	SAnim_SuperWalk
-; ---------------------------------------------------------------------------
-; loc_1B4C6:
-SAnim_SuperRun:
-	lsr.b	#1,d0
-; loc_1B4C8:
-SAnim_SuperWalk:
-	move.b	d0,d3
-	moveq	#0,d1
-	move.b	anim_frame(a0),d1
-	move.b	1(a1,d1.w),d0
-	cmpi.b	#-1,d0
-	bne.s	+
-	move.b	#0,anim_frame(a0)
-	move.b	1(a1),d0
-+
-	move.b	d0,mapping_frame(a0)
-	add.b	d3,mapping_frame(a0)
-	move.b	(Level_frame_counter+1).w,d1
-	andi.b	#3,d1
-	bne.s	+
-	cmpi.b	#$B5,mapping_frame(a0)
-	bhs.s	+
-	addi.b	#$20,mapping_frame(a0)
-+
-	subq.b	#1,anim_frame_duration(a0)
-	bpl.s	return_1B51E
-	neg.w	d2
-	addi.w	#$800,d2
-	bpl.s	+
-	moveq	#0,d2
-+
-	lsr.w	#8,d2
-	move.b	d2,anim_frame_duration(a0)
-	addq.b	#1,anim_frame(a0)
+.do:
+		add.w	d0,d0
+		adda.w	(a1,d0.w),a1	; jump to appropriate animation	script
+		move.b	(a1),d0
+		bmi.s	.walkrunroll	; if animation is walk/run/roll/jump, branch
+		move.b	obStatus(a0),d1
+		andi.b	#1,d1
+		andi.b	#$FC,obRender(a0)
+		or.b	d1,obRender(a0)
+		subq.b	#1,obTimeFrame(a0) ; subtract 1 from frame duration
+		bpl.s	.delay		; if time remains, branch
+		move.b	d0,obTimeFrame(a0) ; load frame duration
 
-return_1B51E:
-	rts
-; ===========================================================================
-; loc_1B520:
-SAnim_Tumble:
-	move.b	flip_angle(a0),d0
-	moveq	#0,d1
-	move.b	status(a0),d2
-	andi.b	#1,d2
-	bne.s	SAnim_Tumble_Left
+.loadframe:
+		moveq	#0,d1
+		move.b	obAniFrame(a0),d1 ; load current frame number
+		move.b	1(a1,d1.w),d0	; read sprite number from script
+		bmi.s	.end_FF		; if animation is complete, branch
 
-	andi.b	#$FC,render_flags(a0)
-	addi.b	#$B,d0
-	divu.w	#$16,d0
-	addi.b	#$5F,d0
-	move.b	d0,mapping_frame(a0)
-	move.b	#0,anim_frame_duration(a0)
-	rts
-; ===========================================================================
-; loc_1B54E:
-SAnim_Tumble_Left:
-	andi.b	#$FC,render_flags(a0)
-	tst.b	flip_turned(a0)
-	beq.s	loc_1B566
-	ori.b	#1,render_flags(a0)
-	addi.b	#$B,d0
-	bra.s	loc_1B572
+.next:
+		move.b	d0,obFrame(a0)	; load sprite number
+		addq.b	#1,obAniFrame(a0) ; next frame number
+
+.delay:
+		rts	
 ; ===========================================================================
 
-loc_1B566:
-	ori.b	#3,render_flags(a0)
-	neg.b	d0
-	addi.b	#$8F,d0
-
-loc_1B572:
-	divu.w	#$16,d0
-	addi.b	#$5F,d0
-	move.b	d0,mapping_frame(a0)
-	move.b	#0,anim_frame_duration(a0)
-	rts
-; ===========================================================================
-; loc_1B586:
-SAnim_Roll:
-	subq.b	#1,anim_frame_duration(a0)	; subtract 1 from frame duration
-	bpl.w	SAnim_Delay			; if time remains, branch
-	addq.b	#1,d0		; is the start flag = $FE?
-	bne.s	SAnim_Push	; if not, branch
-	mvabs.w	inertia(a0),d2
-	lea	(SonAni1_Roll2).l,a1
-	cmpi.w	#$600,d2
-	bhs.s	+
-	lea	(SonAni1_Roll).l,a1
-+
-	neg.w	d2
-	addi.w	#$400,d2
-	bpl.s	+
-	moveq	#0,d2
-+
-	lsr.w	#8,d2
-	move.b	d2,anim_frame_duration(a0)
-	move.b	status(a0),d1
-	andi.b	#1,d1
-	andi.b	#$FC,render_flags(a0)
-	or.b	d1,render_flags(a0)
-	bra.w	SAnim_Do2
+.end_FF:
+		addq.b	#1,d0		; is the end flag = $FF	?
+		bne.s	.end_FE		; if not, branch
+		move.b	#0,obAniFrame(a0) ; restart the animation
+		move.b	1(a1),d0	; read sprite number
+		bra.s	.next
 ; ===========================================================================
 
-SAnim_Push:
-	subq.b	#1,anim_frame_duration(a0)	; subtract 1 from frame duration
-	bpl.w	SAnim_Delay			; if time remains, branch
-	move.w	inertia(a0),d2
-	bmi.s	+
-	neg.w	d2
-+
-	addi.w	#$800,d2
-	bpl.s	+
-	moveq	#0,d2
-+
-	lsr.w	#6,d2
-	move.b	d2,anim_frame_duration(a0)
-	lea	(SonAni1_Push).l,a1	; use running animation
-	move.b	status(a0),d1
-	andi.b	#1,d1
-	andi.b	#$FC,render_flags(a0)
-	or.b	d1,render_flags(a0)
-	bra.w	SAnim_Do2
+.end_FE:
+		addq.b	#1,d0		; is the end flag = $FE	?
+		bne.s	.end_FD		; if not, branch
+		move.b	2(a1,d1.w),d0	; read the next	byte in	the script
+		sub.b	d0,obAniFrame(a0) ; jump back d0 bytes in the script
+		sub.b	d0,d1
+		move.b	1(a1,d1.w),d0	; read sprite number
+		bra.s	.next
+; ===========================================================================
+
+.end_FD:
+		addq.b	#1,d0		; is the end flag = $FD	?
+		bne.s	.end		; if not, branch
+		move.b	2(a1,d1.w),obAnim(a0) ; read next byte, run that animation
+
+.end:
+		rts	
+; ===========================================================================
+
+.walkrunroll:
+		subq.b	#1,obTimeFrame(a0) ; subtract 1 from frame duration
+		bpl.s	.delay		; if time remains, branch
+		addq.b	#1,d0		; is animation walking/running?
+		bne.w	.rolljump	; if not, branch
+		moveq	#0,d1
+		move.b	obAngle(a0),d0	; get Sonic's angle
+		move.b	obStatus(a0),d2
+		andi.b	#1,d2		; is Sonic mirrored horizontally?
+		bne.s	.flip		; if yes, branch
+		not.b	d0		; reverse angle
+
+.flip:
+		addi.b	#$10,d0		; add $10 to angle
+		bpl.s	.noinvert	; if angle is $0-$7F, branch
+		moveq	#3,d1
+
+.noinvert:
+		andi.b	#$FC,obRender(a0)
+		eor.b	d1,d2
+		or.b	d2,obRender(a0)
+		btst	#5,obStatus(a0)	; is Sonic pushing something?
+		bne.w	.push		; if yes, branch
+
+		lsr.b	#4,d0		; divide angle by $10
+		andi.b	#6,d0		; angle	must be	0, 2, 4	or 6
+		move.w	obInertia(a0),d2 ; get Sonic's speed
+		bpl.s	.nomodspeed
+		neg.w	d2		; modulus speed
+
+.nomodspeed:
+		lea	(SonAni1_Run).l,a1 ; use	running	animation
+		cmpi.w	#$600,d2	; is Sonic at running speed?
+		bhs.s	.running	; if yes, branch
+
+		lea	(SonAni1_Walk).l,a1 ; use walking animation
+		move.b	d0,d1
+		lsr.b	#1,d1
+		add.b	d1,d0
+
+.running:
+		add.b	d0,d0
+		move.b	d0,d3
+		neg.w	d2
+		addi.w	#$800,d2
+		bpl.s	.belowmax
+		moveq	#0,d2		; max animation speed
+
+.belowmax:
+		lsr.w	#8,d2
+		move.b	d2,obTimeFrame(a0) ; modify frame duration
+		bsr.w	.loadframe
+		add.b	d3,obFrame(a0)	; modify frame number
+		rts	
+; ===========================================================================
+
+.rolljump:
+		addq.b	#1,d0		; is animation rolling/jumping?
+		bne.s	.push		; if not, branch
+		move.w	obInertia(a0),d2 ; get Sonic's speed
+		bpl.s	.nomodspeed2
+		neg.w	d2
+
+.nomodspeed2:
+		lea	(SonAni1_Roll2).l,a1 ; use fast animation
+		cmpi.w	#$600,d2	; is Sonic moving fast?
+		bhs.s	.rollfast	; if yes, branch
+		lea	(SonAni1_Roll).l,a1 ; use slower	animation
+
+.rollfast:
+		neg.w	d2
+		addi.w	#$400,d2
+		bpl.s	.belowmax2
+		moveq	#0,d2
+
+.belowmax2:
+		lsr.w	#8,d2
+		move.b	d2,obTimeFrame(a0) ; modify frame duration
+		move.b	obStatus(a0),d1
+		andi.b	#1,d1
+		andi.b	#$FC,obRender(a0)
+		or.b	d1,obRender(a0)
+		bra.w	.loadframe
+; ===========================================================================
+
+.push:
+		move.w	obInertia(a0),d2 ; get Sonic's speed
+		bmi.s	.negspeed
+		neg.w	d2
+
+.negspeed:
+		addi.w	#$800,d2
+		bpl.s	.belowmax3	
+		moveq	#0,d2
+
+.belowmax3:
+		lsr.w	#6,d2
+		move.b	d2,obTimeFrame(a0) ; modify frame duration
+		lea	(SonAni1_Push).l,a1
+		move.b	obStatus(a0),d1
+		andi.b	#1,d1
+		andi.b	#$FC,obRender(a0)
+		or.b	d1,obRender(a0)
+		bra.w	.loadframe
+
+; End of function Sonic_Animate
+
 ; ===========================================================================
 
 ; ---------------------------------------------------------------------------
@@ -47076,7 +46966,7 @@ Obj84_MainY_Alt:
 ; ---------------------------------------------------------------------------
 +	move.b	#0,pinball_mode(a1)
 skipobj84:
-	cmpi.w	#metropolis_zone_act_3,(Current_ZoneAndAct).w	; check if level is SLZ
+	cmpi.b	#id_SBZ,(Current_Zone).w	; check if level is SBZ
 	beq.s	EggmanCylinder
 	rts
 
@@ -82751,7 +82641,7 @@ Obj8A_Init:
 	move.w	#$120,x_pixel(a0)
 	move.w	#$F0,y_pixel(a0)
 	move.l	#Obj8A_MapUnc_3EB4E,mappings(a0)
-	move.w	#make_art_tile($05A0,0,0),art_tile(a0)
+	move.w	#make_art_tile(ArtTile_Credits_Font,0,0),art_tile(a0)
 	jsrto	Adjust2PArtPointer, JmpTo65_Adjust2PArtPointer
 	move.w	(Ending_demo_number).w,d0
 	move.b	d0,mapping_frame(a0)
@@ -82759,7 +82649,7 @@ Obj8A_Init:
 	move.b	#0,priority(a0)
 	cmpi.b	#GameModeID_TitleScreen,(Game_Mode).w	; title screen??
 	bne.s	Obj8A_Display	; if not, branch
-	move.w	#make_art_tile(ArtTile_ArtNem_CreditText,0,0),art_tile(a0)
+	move.w	#make_art_tile(ArtTile_Sonic_Team_Font,0,0),art_tile(a0)
 	jsrto	Adjust2PArtPointer, JmpTo65_Adjust2PArtPointer
 	move.b	#$A,mapping_frame(a0)
 	tst.b	(S1_hidden_credits_flag).w
@@ -87090,10 +86980,12 @@ PlrList_Std1S1_End
 ;---------------------------------------------------------------------------------------
 PlrList_Std2: plrlistheader
 	plreq ArtTile_ArtNem_Checkpoint, ArtNem_Checkpoint
-	plreq ArtTile_ArtNem_Powerups, ArtNem_Powerups
+	plreq ArtTile_ArtNem_Powerups, Nem_Monitors
 	;plreq ArtTile_ArtNem_Shield, ArtNem_Shield
 	;plreq ArtTile_ArtNem_Invincible_stars, ArtNem_Invincible_stars
 PlrList_Std2_End
+Nem_Monitors:	binclude	"artnem/Monitors.nem"
+		even
 ;---------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Aquatic level standard
