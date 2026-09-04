@@ -42851,7 +42851,7 @@ Obj08_ResetDisplayMode:
 ; ===========================================================================
 
 BranchTo16_DeleteObject
-	bra.w	DeleteObject
+	jmp		DeleteObject
 ; ===========================================================================
 ; loc_1DE4A:
 Obj08_CheckSkid:
@@ -47330,7 +47330,7 @@ loc_21562:
 	bhs.s	return_215BE
 	tst.b	obj_control(a1)
 	bne.s	return_215BE
-	bsr.w	RideObject_SetRide
+	jsr		RideObject_SetRide
 	rts
 ; ---------------------------------------------------------------------------
 
