@@ -4910,7 +4910,7 @@ Level_MainLoop:
 		tst.w	(Demo_mode_flag).w	; is demo mode on & not ending sequence?
 		bpl.s	+	; if yes, branch
 		move.b	#GameModeID_2PResults,(Game_Mode).w ; go to credits
-	jsr	EndgameCredits
+	;jsr	EndgameCredits
 +
 	move.w	#1*60,(Demo_Time_left).w	; 1 second
 	move.w	#$3F,(Palette_fade_range).w
@@ -12075,7 +12075,7 @@ dword_8732:
 	charset ' ',0
 
 	; Menu text
-Text2P_EmeraldHill:	menutxt	"EMERALD HILL"	; byte_874A:
+Text2P_EmeraldHill:	menutxt	" GREEN HILL "	; byte_874A:
 	rev02even
 Text2P_MysticCave:	menutxt	" MYSTIC CAVE"	; byte_8757:
 	rev02even
@@ -13640,7 +13640,7 @@ EndgameCredits:
 		moveq	#0,d0
 		move.b	(a2),d0
 		beq.s	Cred_SkipObjGfx
-		jsr	(LoadPLC).l		; load object graphics
+		;jsr	(LoadPLC).l		; load object graphics
 
 Cred_SkipObjGfx:
 		moveq	#PLCID_Std2,d0
@@ -13651,7 +13651,7 @@ Cred_SkipObjGfx:
 Cred_WaitLoop:
 		move.b	#4,(Vint_routine).w
 		bsr.w	WaitForVint
-		jsr	(LoadPLC).l
+		;jsr	(LoadPLC).l
 		tst.w	(Demo_Time_left).w ; have 2 seconds elapsed?
 		bne.s	Cred_WaitLoop	; if not, branch
 		tst.l	(Plc_Buffer).w ; have level gfx finished decompressing?
@@ -13731,7 +13731,7 @@ TryAgainEnd:
 		;moveq	#palid_Ending,d0
 		;bsr.w	PalLoad_ForFade	; load ending palette
 		;clr.w	(v_pal_dry_dup+$40).w
-		;move.b	#id_EndEggman,(v_endeggman).w ; load Eggman object
+		move.b	#$8B,(v_endeggman).w ; load Eggman object
 		jsr	(RunObjects).l
 		jsr	(BuildSprites).l
 		move.w	#1800,(Demo_Time_left).w ; show screen for 30 seconds
@@ -29999,7 +29999,7 @@ ObjPtr_SSNumberOfRings:	dc.l Obj87	; Number of rings in Special Stage
 ObjPtr_SSTailsTails:	dc.l Obj88	; Tails' tails in Special Stage
 ObjPtr_ARZBoss:		dc.l Obj89	; ARZ boss
 			dc.l Obj8A	; Sonic Team Presents/Credits (seemingly unused leftover from S1)
-ObjPtr_WFZPalSwitcher:	dc.l Obj8B	; Cycling palette switcher from Wing Fortress Zone
+ObjPtr_WFZPalSwitcher:	dc.l EndEggman	; Cycling palette switcher from Wing Fortress Zone
 ObjPtr_Whisp:		dc.l Obj8C	; Whisp (blowfly badnik) from ARZ
 ObjPtr_GrounderInWall:	dc.l Obj8D	; Grounder in wall, from ARZ
 ObjPtr_GrounderInWall2:	dc.l Obj8D	; Obj8E = Obj8D
@@ -47113,113 +47113,84 @@ locret_1A674:
 
 
 
-; ===========================================================================
-; ----------------------------------------------------------------------------
-; Object 8B - Cycling palette switcher from Wing Fortress Zone
-; ----------------------------------------------------------------------------
-; Sprite_21392:
-Obj8B:
-	moveq	#0,d0
-	move.b	routine(a0),d0
-	move.w	Obj8B_Index(pc,d0.w),d1
-	jsr	Obj8B_Index(pc,d1.w)
-	jmp	(MarkObjGone3).l
-; ===========================================================================
-; off_213A6:
-Obj8B_Index:	offsetTable
-		offsetTableEntry.w Obj8B_Init	; 0
-		offsetTableEntry.w Obj8B_Main	; 2
-; ===========================================================================
-word_213AA:
-	dc.w   $20
-	dc.w   $40	; 1
-	dc.w   $80	; 2
-	dc.w  $100	; 3
-; ===========================================================================
-; loc_213B2:
-Obj8B_Init:
-	addq.b	#2,routine(a0)
-	move.l	#Obj03_MapUnc_1FFB8,mappings(a0)
-	move.w	#make_art_tile(ArtTile_ArtNem_Ring,0,0),art_tile(a0)
-	jsrto	Adjust2PArtPointer, JmpTo12_Adjust2PArtPointer
-	ori.b	#4,render_flags(a0)
-	move.b	#$10,width_pixels(a0)
-	move.b	#5,priority(a0)
-	move.b	subtype(a0),d0
-	andi.w	#3,d0
-	move.b	d0,mapping_frame(a0)
-	add.w	d0,d0
-	move.w	word_213AA(pc,d0.w),objoff_32(a0)
-	move.w	x_pos(a0),d1
-	lea	(MainCharacter).w,a1 ; a1=character
-	cmp.w	x_pos(a1),d1
-	bhs.s	loc_21402
-	move.b	#1,objoff_34(a0)
-
-loc_21402:
-	lea	(Sidekick).w,a1 ; a1=character
-	cmp.w	x_pos(a1),d1
-	bhs.s	Obj8B_Main
-	move.b	#1,objoff_35(a0)
-; loc_21412:
-Obj8B_Main:
-	tst.w	(Debug_placement_mode).w
-	bne.s	return_2146A
-	move.w	x_pos(a0),d1
-	lea	objoff_34(a0),a2 ; a2=object
-	lea	(MainCharacter).w,a1 ; a1=character
-	bsr.s	loc_2142A
-	lea	(Sidekick).w,a1 ; a1=character
-
-loc_2142A:
-	tst.b	(a2)+
-	bne.s	loc_2146C
-	cmp.w	x_pos(a1),d1
-	bhi.s	return_2146A
-	move.b	#1,-1(a2)
-	move.w	y_pos(a0),d2
-	move.w	d2,d3
-	move.w	objoff_32(a0),d4
-	sub.w	d4,d2
-	add.w	d4,d3
-	move.w	y_pos(a1),d4
-	cmp.w	d2,d4
-	blo.s	return_2146A
-	cmp.w	d3,d4
-	bhs.s	return_2146A
-	btst	#0,render_flags(a0)
-	bne.s	+
-	move.b	#1,(WFZ_SCZ_Fire_Toggle).w
-	rts
 ; ---------------------------------------------------------------------------
-+	move.b	#0,(WFZ_SCZ_Fire_Toggle).w
-
-return_2146A:
-	rts
-; ===========================================================================
-
-loc_2146C:
-	cmp.w	x_pos(a1),d1
-	bls.s	return_2146A
-	move.b	#0,-1(a2)
-	move.w	y_pos(a0),d2
-	move.w	d2,d3
-	move.w	objoff_32(a0),d4
-	sub.w	d4,d2
-	add.w	d4,d3
-	move.w	y_pos(a1),d4
-	cmp.w	d2,d4
-	blo.s	return_2146A
-	cmp.w	d3,d4
-	bhs.s	return_2146A
-	btst	#0,render_flags(a0)
-	beq.s	+
-	move.b	#1,(WFZ_SCZ_Fire_Toggle).w
-	rts
+; Object 8B - Eggman on "TRY AGAIN" and "END" screens
 ; ---------------------------------------------------------------------------
-+	move.b	#0,(WFZ_SCZ_Fire_Toggle).w
-	rts
+
+; Try Again Screen
+ArtTile_Try_Again_Emeralds:	equ $3C5
+ArtTile_Try_Again_Eggman:	equ $3E1
+
+EndEggman:
+		moveq	#0,d0
+		move.b	obRoutine(a0),d0
+		move.w	EEgg_Index(pc,d0.w),d1
+		jsr	EEgg_Index(pc,d1.w)
+		jmp	(DisplaySprite).l
 ; ===========================================================================
+EEgg_Index:	dc.w EEgg_Main-EEgg_Index
+		dc.w EEgg_Animate-EEgg_Index
+		dc.w EEgg_Juggle-EEgg_Index
+		dc.w EEgg_Wait-EEgg_Index
+
+eegg_time = objoff_30		; time between juggle motions
+; ===========================================================================
+
+EEgg_Main:	; Routine 0
+		addq.b	#2,obRoutine(a0)
+		move.w	#$120,obX(a0)
+		move.w	#$F4,obScreenY(a0)
+		move.l	#Map_EEgg,obMap(a0)
+		move.w	#make_art_tile(ArtTile_Try_Again_Eggman,0,0),obGfx(a0)
+		move.b	#0,obRender(a0)
+		move.b	#2,obPriority(a0)
+		move.b	#2,obAnim(a0)	; use "END" animation
+		cmpi.b	#6,(Emerald_count).w ; do you have all 6 emeralds?
+		bhs.s	EEgg_Animate	; if yes, branch
+
+		move.b	#$8A,(v_tryagain).w ; load credits object
+		move.w	#9,(v_creditsnum).w ; use "TRY AGAIN" text
+		;move.b	#id_TryChaos,(v_eggmanchaos).w ; load emeralds object on "TRY AGAIN" screen
+		move.b	#0,obAnim(a0)	; use "TRY AGAIN" animation
+
+EEgg_Animate:	; Routine 2
+		lea	(Ani_EEgg).l,a1
+		jmp	(AnimateSprite).l
+; ===========================================================================
+
+EEgg_Juggle:	; Routine 4
+		addq.b	#2,obRoutine(a0)
+		moveq	#2,d0
+		btst	#0,obAnim(a0)
+		beq.s	.noflip
+		neg.w	d0
+
+.noflip:
+		lea	(v_eggmanchaos).w,a1 ; get RAM address for emeralds
+		moveq	#5,d1
+
+.emeraldloop:
+		move.b	d0,objoff_3E(a1)
+		move.w	d0,d2
+		asl.w	#3,d2
+		add.b	d2,obAngle(a1)
+		lea	object_size(a1),a1
+		dbf	d1,.emeraldloop
+		addq.b	#1,obFrame(a0)
+		move.w	#112,eegg_time(a0)
+
+EEgg_Wait:	; Routine 6
+		subq.w	#1,eegg_time(a0) ; decrement timer
+		bpl.s	.nochg		; branch if time remains
+		bchg	#0,obAnim(a0)
+		move.b	#2,obRoutine(a0) ; goto EEgg_Animate next
+
+.nochg:
+		rts
+
+		include "_anim/Try Again & End Eggman.asm"
+		;include	"_incObj/8C Try Again Emeralds.asm"
+Map_EEgg:	include	"_maps/Try Again & End Eggman.asm"
 
     if gameRevision<2
 	nop
@@ -47241,7 +47212,6 @@ JmpTo12_Adjust2PArtPointer ; JmpTo
 JmpTo18_DeleteObject ; JmpTo
 	jmp	(DeleteObject).l
     endif
-
 
 
 

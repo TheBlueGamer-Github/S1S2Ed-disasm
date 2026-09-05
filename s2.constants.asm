@@ -1127,14 +1127,17 @@ TitleCard_Left:			; level title card: red part on the left
 				ds.b	object_size
 
 				; Reserved object RAM, free slots
+v_tryagain:
 Endlogo:
 				ds.b	object_size
+v_eggmanchaos:
 Endemeralds:
 				ds.b	object_size
 Endemeralds_end:
 				ds.b	object_size
 Object56:
 				ds.b	object_size
+v_endeggman:
 				ds.b	object_size
 
 Credits:
