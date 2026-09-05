@@ -104,7 +104,7 @@ Vectors:
 Header:
 	dc.b "SEGA GENESIS    " ; Console name
 	dc.b "(C)SEGA 1992.SEP" ; Copyright holder and release date (generally year)
-	dc.b "SONIC THE             HEDGEHOG 2                " ; Domestic name
+	dc.b "SONIC THE             HEDGEHOG S2 EDITION       " ; Domestic name
 	dc.b "SONIC THE             HEDGEHOG 2                " ; International name
     if gameRevision=0
 	dc.b "GM 00001051-00"   ; Version (REV00)
@@ -84988,9 +84988,12 @@ hud_letter_num_tiles = 2
 hud_letter_vdp_delta = vdpCommDelta(tiles_to_bytes(hud_letter_num_tiles))
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
+-
+	rts
 ; loc_40804:
 BuildHUD:
+	tst.w	(Demo_mode_flag).w	; is an ending sequence demo running?
+	bmi.w	- ; if yes, branch
 	tst.w	(Ring_count).w
 	beq.s	++	; blink ring count if it's 0
 	moveq	#0,d1
