@@ -1606,7 +1606,11 @@ Demo_press_counter:		ds.b	1	; frames remaining until next button press, for play
 				ds.b	1	; $FFFFF793 ; seems unused
 PalChangeSpeed:			ds.w	1
 Collision_addr:			ds.l	1
-				ds.b	$D	; $FFFFF79A-$FFFFF7A6 ; seems unused
+SS_palette_number:		ds.w	1		; current palette cycle in the Special Stage
+SS_palette_time:		ds.w	1		; stores time until next palette cycle
+SS_palette_index:		ds.w	1		; index into palette cycle 2, not sure if this is actually used
+SS_BGAnim:			ds.w	1		; current background animation in the Special Stage
+				ds.b	5		; $FFFFF7A2-$FFFFF7A6 ; unused
 Boss_defeated_flag:		ds.b	1
 					ds.b	2	; $FFFFF7A8-$FFFFF7A9 ; seems unused
 Current_Boss_ID:		ds.b	1
@@ -2100,6 +2104,8 @@ SS_Horiz_Scroll_Buf_1:		HorizontalScrollBuffer
 	phase	ramaddr(Boss_variables)	; Still in SS RAM
 v_unused11:				ds.w	1
 				ds.b	2 ; unused
+v_ssangle = SS_Offset_X
+v_ssrotate = SS_Offset_Y
 SS_Offset_X:			ds.w	1
 SS_Offset_Y:			ds.w	1
 SS_Swap_Positions_Flag:		ds.b	1
@@ -2336,6 +2342,34 @@ ArtTile_ArtNem_SpecialStageResults    = $0590
 ArtTile_ArtNem_SpecialBack            = $0700
 ArtTile_ArtNem_SpecialStars           = $077F
 ArtTile_ArtNem_SpecialTailsText       = $07A4
+
+; Special Stage
+ArtTile_SS_Background_Clouds:	equ $000
+ArtTile_SS_Background_Fish:	equ $051
+ArtTile_SS_Wall:		equ $142
+ArtTile_SS_Plane_1:		equ $200
+ArtTile_SS_Bumper:		equ $23B
+ArtTile_SS_Goal:		equ $251
+ArtTile_SS_Up_Down:		equ $263
+ArtTile_SS_R_Block:		equ $2F0
+ArtTile_SS_Plane_2:		equ $300
+ArtTile_SS_Extra_Life:		equ $370
+ArtTile_SS_Emerald_Sparkle:	equ $3F0
+ArtTile_SS_Plane_3:		equ $400
+ArtTile_SS_Red_White_Block:	equ $470
+ArtTile_SS_Ghost_Block:		equ $4F0
+ArtTile_SS_Plane_4:		equ $500
+ArtTile_SS_W_Block:		equ $570
+ArtTile_SS_Glass:		equ $5F0
+ArtTile_SS_Plane_5:		equ $600
+ArtTile_SS_Plane_6:		equ $700
+ArtTile_SS_Emerald:		equ $770
+ArtTile_SS_Zone_1:		equ $797
+ArtTile_SS_Zone_2:		equ $7A0
+ArtTile_SS_Zone_3:		equ $7A9
+ArtTile_SS_Zone_4:		equ $797
+ArtTile_SS_Zone_5:		equ $7A0
+ArtTile_SS_Zone_6:		equ $7A9
 
 ; Ending.
 ArtTile_EndingCharacter               = $0019

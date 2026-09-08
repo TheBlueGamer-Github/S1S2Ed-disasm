@@ -765,19 +765,53 @@ loc_86E:
 ; ========================================================================>>>
 ;VintSubA
 Vint_S2SS:
-	stopZ80
+		move.w	#$100,($A11100).l ; stop the Z80
 
-	bsr.w	ReadJoypads
-	bsr.w	SSSet_VScroll
+loc_DAE:
+		btst	#0,($A11100).l	; has Z80 stopped?
+		bne.s	loc_DAE		; if not, branch
+		bsr.w	ReadJoypads
+		lea	($C00004).l,a5
+		move.l	#$94009340,(a5)
+		move.l	#$96FD9580,(a5)
+		move.w	#$977F,(a5)
+		move.w	#$C000,(a5)
+		move.w	#$80,($FFFFF640).w
+		move.w	($FFFFF640).w,(a5)
+		lea	($C00004).l,a5
+		move.l	#$94019340,(a5)
+		move.l	#$96FC9500,(a5)
+		move.w	#$977F,(a5)
+		move.w	#$7800,(a5)
+		move.w	#$83,($FFFFF640).w
+		move.w	($FFFFF640).w,(a5)
+		lea	($C00004).l,a5
+		move.l	#$940193C0,(a5)
+		move.l	#$96E69500,(a5)
+		move.w	#$977F,(a5)
+		move.w	#$7C00,(a5)
+		move.w	#$83,($FFFFF640).w
+		move.w	($FFFFF640).w,(a5)
+		move.w	#0,($A11100).l
+		bsr.w	PalCycle_SS
+		tst.b	($FFFFF767).w
+		beq.s	loc_E64
+		lea	($C00004).l,a5
+		move.l	#$94019370,(a5)
+		move.l	#$96E49500,(a5)
+		move.w	#$977F,(a5)
+		move.w	#$7000,(a5)
+		move.w	#$83,($FFFFF640).w
+		move.w	($FFFFF640).w,(a5)
+		move.b	#0,($FFFFF767).w
 
-	dma68kToVDP Normal_palette,$0000,palette_line_size*4,CRAM
-	dma68kToVDP Sprite_Table,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
+loc_E64:
+		tst.w	($FFFFF614).w
+		beq.w	locret_E70
+		subq.w	#1,($FFFFF614).w
 
-	tst.b	(SS_Alternate_HorizScroll_Buf).w
-	beq.s	loc_906
-
-	dma68kToVDP SS_Horiz_Scroll_Buf_2,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
-	bra.s	loc_92A
+locret_E70:
+		rts	
 ; ---------------------------------------------------------------------------
 
 loc_906:
@@ -3639,7 +3673,7 @@ PalPtr_ARZ_U:	palptr Pal_ARZ_U, 0
 PalPtr_SS:	palptr Pal_SS,    0
 PalPtr_MCZ_B:	palptr Pal_MCZ_B, 1
 PalPtr_CNZ_B:	palptr Pal_CNZ_B, 1
-PalPtr_SS1:	palptr Pal_SS1,   3
+PalPtr_SS1:	palptr Pal_SS1,   0
 PalPtr_SS2:	palptr Pal_SS2,   3
 PalPtr_SS3:	palptr Pal_SS3,   3
 PalPtr_SS4:	palptr Pal_SS4,   3
@@ -3692,7 +3726,7 @@ Pal_CNZ_B: palette CNZ Boss.bin ; Casino Night Zone boss palette
 Pal_OOZ_B: palette OOZ Boss.bin ; Oil Ocean Zone boss palette
 Pal_Menu:  palette Menu.bin ; Menu palette
 Pal_SS:    palette Special Stage Main.bin ; Special Stage palette
-Pal_SS1:   palette Special Stage 1.bin ; Special Stage 1 palette
+Pal_SS1:   palette Special Stage.bin ; Special Stage 1 palette
 Pal_SS2:   palette Special Stage 2.bin ; Special Stage 2 palette
 Pal_SS3:   palette Special Stage 3.bin ; Special Stage 3 palette
 Pal_SS4:   palette Special Stage 4.bin ; Special Stage 4 palette
@@ -6602,176 +6636,91 @@ JmpTo_DrawInitialBG ; JmpTo
 ; ===========================================================================
 ; loc_4F64:
 SpecialStage:
-	cmpi.b	#7,(Current_Special_Stage).w
-	blo.s	+
-	move.b	#0,(Current_Special_Stage).w
-+
-	move.w	#SndID_SpecStageEntry,d0 ; play that funky special stage entry sound
-	bsr.w	PlaySound
-	move.b	#MusID_FadeOut,d0 ; fade out the music
-	bsr.w	PlayMusic
-	bsr.w	Pal_FadeToWhite
-	tst.w	(Two_player_mode).w
-	beq.s	+
-	move.w	#0,(Two_player_mode).w
-	st.b	(SS_2p_Flag).w ; set to -1
-	bra.s	++
-; ===========================================================================
-+
-	sf.b	(SS_2p_Flag).w ; set to 0
-; (!)
-+
-	move	#$2700,sr		; Mask all interrupts
-	lea	(VDP_control_port).l,a6
-	move.w	#$8B03,(a6)		; EXT-INT disabled, V scroll by screen, H scroll by line
-	move.w	#$8004,(a6)		; H-INT disabled
-	move.w	#$8ADF,(Hint_counter_reserve).w	; H-INT every 224th scanline
-	move.w	#$8200|(VRAM_SS_Plane_A_Name_Table1/$400),(a6)	; PNT A base: $C000
-	move.w	#$8400|(VRAM_SS_Plane_B_Name_Table/$2000),(a6)	; PNT B base: $A000
-	move.w	#$8C08,(a6)		; H res 32 cells, no interlace, S/H enabled
-	move.w	#$9003,(a6)		; Scroll table size: 128x32
-	move.w	#$8700,(a6)		; Background palette/color: 0/0
-	move.w	#$8D00|(VRAM_Horiz_Scroll_Table/$400),(a6)		; H scroll table base: $FC00
-	move.w	#$8500|(VRAM_Sprite_Attribute_Table/$200),(a6)	; Sprite attribute table base: $F800
-	move.w	(VDP_Reg1_val).w,d0
-	andi.b	#$BF,d0
-	move.w	d0,(VDP_control_port).l
-    ResetDMAQueue
-
-; /------------------------------------------------------------------------\
-; | We're gonna zero-fill a bunch of VRAM regions. This was done by macro, |
-; | so there's gonna be a lot of wasted cycles.                            |
-; \------------------------------------------------------------------------/
-
-	dmaFillVRAM 0,VRAM_SS_Plane_A_Name_Table2,VRAM_SS_Plane_Table_Size ; clear Plane A pattern name table 1
-	dmaFillVRAM 0,VRAM_SS_Plane_A_Name_Table1,VRAM_SS_Plane_Table_Size ; clear Plane A pattern name table 2
-	dmaFillVRAM 0,VRAM_SS_Plane_B_Name_Table,VRAM_SS_Plane_Table_Size ; clear Plane B pattern name table
-	dmaFillVRAM 0,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size  ; clear Horizontal scroll table
-
-	clr.l	(Vscroll_Factor).w
-	clr.l	(unk_F61A).w
-	clr.b	(SpecialStage_Started).w
-
-; /------------------------------------------------------------------------\
-; | Now we clear out some regions in main RAM where we want to store some  |
-; | of our data structures.                                                |
-; \------------------------------------------------------------------------/
-	clearRAM Sprite_Table,Sprite_Table_End
-	clearRAM SS_Horiz_Scroll_Buf_1,SS_Horiz_Scroll_Buf_1+HorizontalScrollBuffer.len
-	clearRAM SS_Shared_RAM,SS_Shared_RAM_End
-	clearRAM Object_Display_Lists,Object_Display_Lists_End
-	clearRAM Object_RAM,Object_RAM_End
-
-    if fixBugs
-	; The DMA queue needs to be reset here, to prevent the remaining queued DMA transfers from
-	; overwriting the special stage's graphics.
-	; In a bizarre twice of luck, the above bug actually nullifies this bug: the excessive
-	; SS_Shared_RAM clear sets VDP_Command_Buffer to 0, just like the below code.
-    ResetDMAQueue
-    endif
-
-	move	#$2300,sr
-	lea	(VDP_control_port).l,a6
-	move.w	#$8F02,(a6)		; VRAM pointer increment: $0002
-	bsr.w	ssInitTableBuffers
-	bsr.w	ssLdComprsdData
-	move.w	#0,(SpecialStage_CurrentSegment).w
-	moveq	#PLCID_SpecialStage,d0
-	bsr.w	RunPLC_ROM
-	clr.b	(Level_started_flag).w
-	move.l	#0,(Camera_X_pos).w	; probably means something else in this context
-	move.l	#0,(Camera_Y_pos).w
-	move.l	#0,(Camera_X_pos_copy).w
-	move.l	#0,(Camera_Y_pos_copy).w
-	cmpi.w	#1,(Player_mode).w	; is this a Tails alone game?
-	bgt.s	+			; if yes, branch
-	move.b	#ObjID_SonicSS,(MainCharacter+id).w ; load Obj09 (special stage Sonic)
-	tst.w	(Player_mode).w		; is this a Sonic and Tails game?
-	bne.s	++			; if not, branch
-+	move.b	#ObjID_TailsSS,(Sidekick+id).w ; load Obj10 (special stage Tails)
-+	move.b	#ObjID_SSHUD,(SpecialStageHUD+id).w ; load Obj5E (special stage HUD)
-	move.b	#ObjID_StartBanner,(SpecialStageStartBanner+id).w ; load Obj5F (special stage banner)
-	move.b	#ObjID_SSNumberOfRings,(SpecialStageNumberOfRings+id).w ; load Obj87 (special stage ring count)
-	move.w	#$80,(SS_Offset_X).w
-	move.w	#$36,(SS_Offset_Y).w
-	bsr.w	SSPlaneB_Background
-	bsr.w	SSDecompressPlayerArt
-	bsr.w	SSInitPalAndData
-	move.l	#$C0000,(SS_New_Speed_Factor).w
-	clr.w	(Ctrl_1_Logical).w
-	clr.w	(Ctrl_2_Logical).w
-
--	move.b	#VintID_S2SS,(Vint_routine).w
-	bsr.w	WaitForVint
-	move.b	(SSTrack_drawing_index).w,d0
-	bne.s	-
-
-	bsr.w	SSTrack_Draw
-
--	move.b	#VintID_S2SS,(Vint_routine).w
-	bsr.w	WaitForVint
-	bsr.w	SSTrack_Draw
-	bsr.w	SSLoadCurrentPerspective
-	bsr.w	SSObjectsManager
-	move.b	(SSTrack_duration_timer).w,d0
-	subq.w	#1,d0
-	bne.s	-
-
-	jsr	(Obj5A_CreateRingsToGoText).l
-	bsr.w	SS_ScrollBG
-	jsr	(RunObjects).l
-	jsr	(BuildSprites).l
-	bsr.w	RunPLC_RAM
-	move.b	#VintID_CtrlDMA,(Vint_routine).w
-	bsr.w	WaitForVint
-	move.w	#MusID_SpecStage,d0
-	bsr.w	PlayMusic
-	move.w	(VDP_Reg1_val).w,d0
-	ori.b	#$40,d0
-	move.w	d0,(VDP_control_port).l
+		move.w	#SndID_SpecStageEntry,d0 ; play that funky special stage entry sound
+		bsr.w	PlaySound
+		bsr.w	Pal_FadeToWhite
+		move	#$2700,sr		; Mask all interrupts
+		lea	(VDP_control_port).l,a6
+		move.w	#$8B03,(a6)
+		move.w	#$8004,(a6)
+		move.w	#$8AAF,(Hint_counter_reserve).w
+		move.w	#$9011,(a6)
+		move.w	(VDP_Reg1_val).w,d0
+		andi.b	#$BF,d0
+		move.w	d0,(VDP_control_port).l
+		bsr.w	ClearScreen
+		move	#$2300,sr
+		lea	(VDP_control_port).l,a5
+		move.w	#$8F01,(a5)
+		move.l	#$946F93FF,(a5)
+		move.w	#$9780,(a5)
+		move.l	#$50000081,(a5)
+		move.w	#0,(VDP_data_port).l
+loc_507C:
+		move.w	(a5),d1
+		btst	#1,d1
+		bne.s	loc_507C
+		move.w	#$8F02,(a5)
+		jsr	S1_SSBGLoad
+		moveq	#PLCID_SpecialStage,d0
+		bsr.w	RunPLC_ROM
+		clearRAM Sprite_Table,Sprite_Table_End
+		clearRAM SS_Horiz_Scroll_Buf_1,SS_Horiz_Scroll_Buf_1+HorizontalScrollBuffer.len
+		clearRAM SS_Shared_RAM,SS_Shared_RAM_End
+		clearRAM Object_Display_Lists,Object_Display_Lists_End
+		clearRAM Object_RAM,Object_RAM_End
+	
+		moveq	#PalID_SS1,d0
+		bsr.w	PalLoad_ForFade
+		clr.b	(Level_started_flag).w
+		move.l	#0,(Camera_X_pos).w	; probably means something else in this context
+		move.l	#0,(Camera_Y_pos).w
+		move.b	#ObjID_SonicSS,(MainCharacter+id).w ; load Obj09 (special stage Sonic)
+		bsr.w	PalCycle_SS
+		clr.w	(v_ssangle).w	; set stage angle to "upright"
+		move.w	#$40,(v_ssrotate).w ; set stage rotation speed
+		clr.w	(Ctrl_1_Logical).w
+		move.w	#MusID_SpecStage,d0
+		bsr.w	PlayMusic
+		move.w	(VDP_Reg1_val).w,d0
+		ori.b	#$40,d0
+		move.w	d0,(VDP_control_port).l
+	
+SS_NoDebug:
 	bsr.w	Pal_FadeFromWhite
 
 -	bsr.w	PauseGame
 	move.w	(Ctrl_1).w,(Ctrl_1_Logical).w
-	move.w	(Ctrl_2).w,(Ctrl_2_Logical).w
-	cmpi.b	#GameModeID_SpecialStage,(Game_Mode).w ; special stage mode?
-	bne.w	SpecialStage_Unpause		; if not, branch
 	move.b	#VintID_S2SS,(Vint_routine).w
 	bsr.w	WaitForVint
-	bsr.w	SSTrack_Draw
-	bsr.w	SSSetGeometryOffsets
-	bsr.w	SSLoadCurrentPerspective
-	bsr.w	SSObjectsManager
-	bsr.w	SS_ScrollBG
 	jsr	(RunObjects).l
 	jsr	(BuildSprites).l
-	bsr.w	RunPLC_RAM
-	tst.b	(SpecialStage_Started).w
-	beq.s	-
+	bsr.w	S1SS_BgAnimate
+	bra.w	-
+	;bsr.w	RunPLC_RAM
+	;tst.b	(SpecialStage_Started).w
+	;beq.s	-
 
-	moveq	#PLCID_SpecStageBombs,d0
-	bsr.w	LoadPLC
-
--	bsr.w	PauseGame
-	cmpi.b	#GameModeID_SpecialStage,(Game_Mode).w ; special stage mode?
-	bne.w	SpecialStage_Unpause		; if not, branch
-	move.b	#VintID_S2SS,(Vint_routine).w
-	bsr.w	WaitForVint
-	bsr.w	SSTrack_Draw
-	bsr.w	SSSetGeometryOffsets
-	bsr.w	SSLoadCurrentPerspective
-	bsr.w	SSObjectsManager
-	bsr.w	SS_ScrollBG
-	bsr.w	PalCycle_SS
-	tst.b	(SS_Pause_Only_flag).w
-	beq.s	+
-	move.w	(Ctrl_1).w,d0
-	andi.w	#(button_start_mask<<8)|button_start_mask,d0
-	move.w	d0,(Ctrl_1_Logical).w
-	move.w	(Ctrl_2).w,d0
-	andi.w	#(button_start_mask<<8)|button_start_mask,d0
-	move.w	d0,(Ctrl_2_Logical).w
-	bra.s	++
+-	;bsr.w	PauseGame
+	;cmpi.b	#GameModeID_SpecialStage,(Game_Mode).w ; special stage mode?
+	;bne.w	SpecialStage_Unpause		; if not, branch
+	;move.b	#VintID_S2SS,(Vint_routine).w
+	;bsr.w	WaitForVint
+	;bsr.w	SSTrack_Draw
+	;bsr.w	SSSetGeometryOffsets
+	;bsr.w	SSLoadCurrentPerspective
+	;bsr.w	SSObjectsManager
+	;bsr.w	SS_ScrollBG
+	;bsr.w	PalCycle_SS
+	;tst.b	(SS_Pause_Only_flag).w
+	;beq.s	+
+	;move.w	(Ctrl_1).w,d0
+	;andi.w	#(button_start_mask<<8)|button_start_mask,d0
+	;move.w	d0,(Ctrl_1_Logical).w
+	;move.w	(Ctrl_2).w,d0
+	;andi.w	#(button_start_mask<<8)|button_start_mask,d0
+	;move.w	d0,(Ctrl_2_Logical).w
+	;bra.s	++
 ; ===========================================================================
 +
 	move.w	(Ctrl_1).w,(Ctrl_1_Logical).w
@@ -6903,79 +6852,277 @@ Pal_SpecialStageStars:	dc.w  $EEE, $CCC, $AAA,	$888, $888, $AAA, $CCC,	$EEE
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
+S1_SSBGLoad:				; CODE XREF: ROM:00005088p
+		lea	(Chunk_Table).l,a1
+		lea	(Eni_SSBg1).l,a0 ; load mappings for the birds and fish
+		move.w	#$4051,d0
+		bsr.w	EniDec
+		move.l	#$50000001,d3
+		lea	(Chunk_Table+$80).l,a2
+		moveq	#6,d7
+
+loc_5302:				; CODE XREF: S1_SSBGLoad+7Ej
+		move.l	d3,d0
+		moveq	#3,d6
+		moveq	#0,d4
+		cmpi.w	#3,d7
+		bcc.s	loc_5310
+		moveq	#1,d4
+
+loc_5310:				; CODE XREF: S1_SSBGLoad+26j
+					; S1_SSBGLoad+64j
+		moveq	#7,d5
+
+loc_5312:				; CODE XREF: S1_SSBGLoad+56j
+		movea.l	a2,a1
+		eori.b	#1,d4
+		bne.s	loc_5326
+		cmpi.w	#6,d7
+		bne.s	loc_5336
+		lea	(Chunk_Table).l,a1
+
+loc_5326:				; CODE XREF: S1_SSBGLoad+32j
+		movem.l	d0-d4,-(sp)
+		moveq	#7,d1
+		moveq	#7,d2
+		bsr.w	PlaneMapToVRAM_H40
+		movem.l	(sp)+,d0-d4
+
+loc_5336:				; CODE XREF: S1_SSBGLoad+38j
+		addi.l	#$100000,d0
+		dbf	d5,loc_5312
+		addi.l	#$3800000,d0
+		eori.b	#1,d4
+		dbf	d6,loc_5310
+		addi.l	#$10000000,d3
+		bpl.s	loc_5360
+		swap	d3
+		addi.l	#$C000,d3
+		swap	d3
+
+loc_5360:				; CODE XREF: S1_SSBGLoad+6Ej
+		adda.w	#$80,a2	; ''
+		dbf	d7,loc_5302
+		lea	(Chunk_Table).l,a1
+		lea	(Eni_SSBg2).l,a0 ; load mappings for the clouds
+		move.w	#$4000,d0
+		bsr.w	EniDec
+		lea	(Chunk_Table).l,a1
+		move.l	#$40000003,d0
+		moveq	#$3F,d1	; '?'
+		moveq	#$1F,d2
+		bsr.w	PlaneMapToVRAM_H40
+		lea	(Chunk_Table).l,a1
+		move.l	#$50000003,d0
+		moveq	#$3F,d1	; '?'
+		moveq	#$3F,d2	; '?'
+		bsr.w	PlaneMapToVRAM_H40
+		rts
+; End of function S1_SSBGLoad
 
 ;sub_543A
-PalCycle_SS:
-	move.b	(Vint_runcount+3).w,d0
-	andi.b	#3,d0
-	bne.s	+
-	move.b	(SS_Star_color_1).w,d0
-	addi_.b	#1,(SS_Star_color_1).w
-	andi.w	#7,d0
-	add.w	d0,d0
-	move.w	Pal_SpecialStageStars(pc,d0.w),(Normal_palette+$1C).w
-	move.b	(SS_Star_color_2).w,d0
-	addi_.b	#1,(SS_Star_color_2).w
-	andi.w	#7,d0
-	add.w	d0,d0
-	move.w	Pal_SpecialStageStars(pc,d0.w),(Normal_palette+$1E).w
-+
-	cmpi.b	#6,(Current_Special_Stage).w
-	bne.s	+
-	cmpi.b	#3,(Current_Special_Act).w
-	beq.w	SSCheckpoint_rainbow
-/
-	tst.b	(SS_Checkpoint_Rainbow_flag).w
-	beq.s	+	; rts
-	move.b	(Vint_runcount+3).w,d0
-	andi.b	#7,d0
-	bne.s	+	; rts
-	move.b	(SS_Rainbow_palette).w,d0
-	addi_.b	#1,(SS_Rainbow_palette).w
-	andi.b	#3,d0
-	add.w	d0,d0
-	move.w	d0,d1
-	add.w	d0,d0
-	add.w	d1,d0
-	move.w	word_54C4(pc,d0.w),(Normal_palette_line4+$16).w
-	move.w	word_54C6(pc,d0.w),(Normal_palette_line4+$18).w
-	move.w	word_54C8(pc,d0.w),(Normal_palette_line4+$1A).w
-+
-	rts
+PalCycle_SS:				; XREF: loc_DA6; SpecialStage
+		tst.w	($FFFFF63A).w
+		bne.s	locret_49E6
+		subq.w	#1,($FFFFF79C).w
+		bpl.s	locret_49E6
+		lea	($C00004).l,a6
+		move.w	($FFFFF79A).w,d0
+		addq.w	#1,($FFFFF79A).w
+		andi.w	#$1F,d0
+		lsl.w	#2,d0
+		lea	(byte_4A3C).l,a0
+		adda.w	d0,a0
+		move.b	(a0)+,d0
+		bpl.s	loc_4992
+		move.w	#$1FF,d0
+
+loc_4992:
+		move.w	d0,($FFFFF79C).w
+		moveq	#0,d0
+		move.b	(a0)+,d0
+		move.w	d0,($FFFFF7A0).w
+		lea	(byte_4ABC).l,a1
+		lea	(a1,d0.w),a1
+		move.w	#-$7E00,d0
+		move.b	(a1)+,d0
+		move.w	d0,(a6)
+		move.b	(a1),($FFFFF616).w
+		move.w	#-$7C00,d0
+		move.b	(a0)+,d0
+		move.w	d0,(a6)
+		move.l	#$40000010,($C00004).l
+		move.l	($FFFFF616).w,($C00000).l
+		moveq	#0,d0
+		move.b	(a0)+,d0
+		bmi.s	loc_49E8
+		lea	(Pal_SSCyc1).l,a1
+		adda.w	d0,a1
+		lea	($FFFFFB4E).w,a2
+		move.l	(a1)+,(a2)+
+		move.l	(a1)+,(a2)+
+		move.l	(a1)+,(a2)+
+
+locret_49E6:
+		rts	
 ; ===========================================================================
-; special stage rainbow blinking sprite palettes... (Chaos Emerald colors?)
-;word_54BC:
-		dc.w   $0EE, $0C0, $0EE, $0C0
-word_54C4:	dc.w   $0EE
-word_54C6:	dc.w   $0CC
-word_54C8:	dc.w   $088, $0E0, $0C0, $080, $EE0, $CC0, $880, $E0E, $C0C, $808
-; ===========================================================================
 
-;loc_54DC
-SSCheckpoint_rainbow:
-	tst.b	(SS_Pause_Only_flag).w
-	beq.s	-
-	moveq	#0,d0
-	move.b	(Vint_runcount+3).w,d0
-	andi.b	#1,d0
-	bne.w	-
-	move.w	(Ring_count).w,d2
-	add.w	(Ring_count_2P).w,d2
-	cmp.w	(SS_Ring_Requirement).w,d2
-	blt.w	-
-	lea	(Normal_palette+2).w,a0
-	movea.l	a0,a1
-	move.w	(a0)+,d0
+loc_49E8:				; XREF: PalCycle_SS
+		move.w	($FFFFF79E).w,d1
+		cmpi.w	#$8A,d0
+		bcs.s	loc_49F4
+		addq.w	#1,d1
 
-	moveq	#$B,d1
--	move.w	(a0)+,(a1)+
-	dbf	d1,-
+loc_49F4:
+		mulu.w	#$2A,d1
+		lea	(Pal_SSCyc2).l,a1
+		adda.w	d1,a1
+		andi.w	#$7F,d0
+		bclr	#0,d0
+		beq.s	loc_4A18
+		lea	($FFFFFB6E).w,a2
+		move.l	(a1),(a2)+
+		move.l	4(a1),(a2)+
+		move.l	8(a1),(a2)+
 
-	move.w	d0,(a1)
-	rts
+loc_4A18:
+		adda.w	#$C,a1
+		lea	($FFFFFB5A).w,a2
+		cmpi.w	#$A,d0
+		bcs.s	loc_4A2E
+		subi.w	#$A,d0
+		lea	($FFFFFB7A).w,a2
+
+loc_4A2E:
+		move.w	d0,d1
+		add.w	d0,d0
+		add.w	d1,d0
+		adda.w	d0,a1
+		move.l	(a1)+,(a2)+
+		move.w	(a1)+,(a2)+
+		rts	
 ; End of function PalCycle_SS
 
+; ===========================================================================
+byte_4A3C:	dc.b 3,	0, 7, $92, 3, 0, 7, $90, 3, 0, 7, $8E, 3, 0, 7,	$8C
+					; XREF: PalCycle_SS
+		dc.b 3,	0, 7, $8B, 3, 0, 7, $80, 3, 0, 7, $82, 3, 0, 7,	$84
+		dc.b 3,	0, 7, $86, 3, 0, 7, $88, 7, 8, 7, 0, 7,	$A, 7, $C
+		dc.b $FF, $C, 7, $18, $FF, $C, 7, $18, 7, $A, 7, $C, 7,	8, 7, 0
+		dc.b 3,	0, 6, $88, 3, 0, 6, $86, 3, 0, 6, $84, 3, 0, 6,	$82
+		dc.b 3,	0, 6, $81, 3, 0, 6, $8A, 3, 0, 6, $8C, 3, 0, 6,	$8E
+		dc.b 3,	0, 6, $90, 3, 0, 6, $92, 7, 2, 6, $24, 7, 4, 6,	$30
+		dc.b $FF, 6, 6,	$3C, $FF, 6, 6,	$3C, 7,	4, 6, $30, 7, 2, 6, $24
+		even
+byte_4ABC:	dc.b $10, 1, $18, 0, $18, 1, $20, 0, $20, 1, $28, 0, $28, 1
+					; XREF: PalCycle_SS
+		even
 
+Pal_SSCyc1:	binclude	"palette/Cycle - Special Stage 1.bin"
+		even
+Pal_SSCyc2:	binclude	"palette/Cycle - Special Stage 2.bin"
+		even
+
+
+S1SS_BgAnimate:
+		move.w	(SS_BGAnim).w,d0
+		bne.s	loc_5634
+		move.w	#0,(Camera_BG_Y_pos).w
+		move.w	(Camera_BG_Y_pos).w,(Vscroll_Factor_BG).w
+loc_5634:
+		cmpi.w	#8,d0
+		bhs.s	loc_568C
+		cmpi.w	#6,d0
+		bne.s	loc_564E
+		addq.w	#1,(Camera_BG3_X_pos).w
+		addq.w	#1,(Camera_BG_Y_pos).w
+		move.w	(Camera_BG_Y_pos).w,(Vscroll_Factor_BG).w
+
+loc_564E:				; CODE XREF: S1SS_BgAnimate+1Cj
+		moveq	#0,d0
+		move.w	(Camera_BG_X_pos).w,d0
+		neg.w	d0
+		swap	d0
+		lea	(byte_5709).l,a1
+		lea	(Decomp_Buffer).w,a3
+		moveq	#9,d3
+
+loc_5664:				; CODE XREF: S1SS_BgAnimate+5Aj
+		move.w	2(a3),d0
+		bsr.w	CalcSine
+		moveq	#0,d2
+		move.b	(a1)+,d2
+		muls.w	d2,d0
+		asr.l	#8,d0
+		move.w	d0,(a3)+
+		move.b	(a1)+,d2
+		ext.w	d2
+		add.w	d2,(a3)+
+		dbf	d3,loc_5664
+		lea	(Decomp_Buffer).w,a3
+		lea	(byte_56F6).l,a2
+		bra.s	loc_56BC
+; ===========================================================================
+
+loc_568C:				; CODE XREF: S1SS_BgAnimate+16j
+		cmpi.w	#$C,d0
+		bne.s	loc_56B2
+		subq.w	#1,(Camera_BG3_X_pos).w
+		lea	(Decomp_Buffer+$100).w,a3
+		move.l	#$18000,d2
+		moveq	#6,d1
+
+loc_56A2:				; CODE XREF: S1SS_BgAnimate+8Cj
+		move.l	(a3),d0
+		sub.l	d2,d0
+		move.l	d0,(a3)+
+		subi.l	#$2000,d2
+		dbf	d1,loc_56A2
+
+loc_56B2:				; CODE XREF: S1SS_BgAnimate+6Ej
+		lea	(Decomp_Buffer+$100).w,a3
+		lea	(byte_5701).l,a2
+
+loc_56BC:				; CODE XREF: S1SS_BgAnimate+68j
+		lea	(Horiz_Scroll_Buf).w,a1
+		move.w	(Camera_BG3_X_pos).w,d0
+		neg.w	d0
+		swap	d0
+		moveq	#0,d3
+		move.b	(a2)+,d3
+		move.w	(Camera_BG_Y_pos).w,d2
+		neg.w	d2
+		andi.w	#$FF,d2
+		lsl.w	#2,d2
+
+loc_56D8:				; CODE XREF: S1SS_BgAnimate+CEj
+		move.w	(a3)+,d0
+		addq.w	#2,a3
+		moveq	#0,d1
+		move.b	(a2)+,d1
+		subq.w	#1,d1
+
+loc_56E2:				; CODE XREF: S1SS_BgAnimate+CAj
+		move.l	d0,(a1,d2.w)
+		addq.w	#4,d2
+		andi.w	#$3FC,d2
+		dbf	d1,loc_56E2
+		dbf	d3,loc_56D8
+		rts
+; End of function S1SS_BgAnimate
+
+; ===========================================================================
+byte_4CB8:
+byte_56F6:	dc.b   9,$28,$18,$10,$28,$18,$10,$30,$18,  8,$10; 0
+		even
+byte_4CC4:
+byte_5701:	dc.b   6,$30,$30,$30,$28,$18,$18,$18; 0	; DATA XREF: S1SS_BgAnimate+94o
+		even
+byte_4CCC:
+byte_5709:	dc.b   8,  2,  4,$FF,  2,  3,  8,$FF,  4,  2,  2,  3,  8,$FD,  4,  2; 0
+		dc.b   2,  3,  2,$FF,  0; 16
+		even
+; ===========================================================================
 ;|||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 
@@ -6998,69 +7145,39 @@ SSLoadCurrentPerspective:
 
 ;sub_5534
 SSObjectsManager:
-	cmpi.b	#4,(SSTrack_drawing_index).w
-	bne.w	return_55DC
-	moveq	#0,d0
-	move.b	(SpecialStage_CurrentSegment).w,d0
-	cmp.b	(SpecialStage_LastSegment2).w,d0
-	beq.w	return_55DC
-	move.b	d0,(SpecialStage_LastSegment2).w
-	movea.l	(SS_CurrentLevelLayout).w,a1
-	move.b	(a1,d0.w),d3
-	andi.w	#$7F,d3
-	lea	(Ani_SSTrack_Len).l,a0
-	move.b	(a0,d3.w),d3
-	add.w	d3,d3
-	add.w	d3,d3
-	movea.l	(SS_CurrentLevelObjectLocations).w,a0
--
-	bsr.w	SSAllocateObject
-	bne.s	return_55DC
-	moveq	#0,d0
-	move.b	(a0)+,d0
-	bmi.s	++
-	move.b	d0,d1
-	andi.b	#$40,d1
-	bne.s	+
-	addq.w	#1,(SS_Perfect_rings_left).w
-	move.b	#ObjID_SSRing,id(a1)
-	add.w	d0,d0
-	add.w	d0,d0
-	add.w	d3,d0
-	move.w	d0,objoff_30(a1)
-	move.b	(a0)+,angle(a1)
-	bra.s	-
+	rts
+	;bra.s	-
 ; ===========================================================================
 +
-	andi.w	#$3F,d0
-	move.b	#ObjID_SSBomb,id(a1)
-	add.w	d0,d0
-	add.w	d0,d0
-	add.w	d3,d0
-	move.w	d0,objoff_30(a1)
-	move.b	(a0)+,angle(a1)
-	bra.s	-
+	;andi.w	#$3F,d0
+	;move.b	#ObjID_SSBomb,id(a1)
+	;add.w	d0,d0
+	;add.w	d0,d0
+	;add.w	d3,d0
+	;move.w	d0,objoff_30(a1)
+	;move.b	(a0)+,angle(a1)
+	;bra.s	-
 ; ===========================================================================
 +
-	move.l	a0,(SS_CurrentLevelObjectLocations).w
-	addq.b	#1,d0
-	beq.s	return_55DC
-	addq.b	#1,d0
-	beq.s	++
-	addq.b	#1,d0
-	beq.s	+
-	st.b	(SS_NoCheckpoint_flag).w
-	sf.b	(SS_NoCheckpointMsg_flag).w
+	;move.l	a0,(SS_CurrentLevelObjectLocations).w
+	;addq.b	#1,d0
+	;beq.s	return_55DC
+	;addq.b	#1,d0
+	;beq.s	++
+	;addq.b	#1,d0
+	;beq.s	+
+	;st.b	(SS_NoCheckpoint_flag).w
+	;sf.b	(SS_NoCheckpointMsg_flag).w
 	bra.s	++
 ; ===========================================================================
 +
-	tst.b	(SS_2p_Flag).w
-	bne.s	+
-	move.b	#ObjID_SSEmerald,id(a1)
+	;tst.b	(SS_2p_Flag).w
+	;bne.s	+
+	;move.b	#ObjID_SSEmerald,id(a1)
 	rts
 ; ===========================================================================
 +
-	move.b	#ObjID_SSMessage,id(a1)
+	;move.b	#ObjID_SSMessage,id(a1)
 
 return_55DC:
 	rts
@@ -66195,7 +66312,7 @@ Obj09_Init:
 	clr.b	collision_property(a0)
 	clr.b	ss_dplc_timer(a0)
 	movea.l	#SpecialStageShadow_Sonic,a1
-	move.b	#ObjID_SSShadow,id(a1) ; load obj63 (shadow) at $FFFFB140
+	;move.b	#ObjID_SSShadow,id(a1) ; load obj63 (shadow) at $FFFFB140
 	move.w	x_pos(a0),x_pos(a1)
 	move.w	y_pos(a0),y_pos(a1)
 	addi.w	#$18,y_pos(a1)
@@ -66266,7 +66383,7 @@ SSHurt_Animation:
 	jsrto	SSAllocateObject, JmpTo_SSAllocateObject
 	bne.s	return_33A90
 	move.l	a0,ss_parent(a1)
-	move.b	#ObjID_SSRingSpill,id(a1) ; load obj5B
+	;move.b	#ObjID_SSRingSpill,id(a1) ; load obj5B
 
 return_33A90:
 	rts
@@ -67591,7 +67708,7 @@ loc_34864:
 	clr.b	ss_dplc_timer(a0)
 	bsr.w	LoadSSTailsDynPLC
 	movea.l	#SpecialStageShadow_Tails,a1
-	move.b	#ObjID_SSShadow,id(a1) ; load obj63 (shadow) at $FFFFB180
+	;move.b	#ObjID_SSShadow,id(a1) ; load obj63 (shadow) at $FFFFB180
 	move.w	x_pos(a0),x_pos(a1)
 	move.w	y_pos(a0),y_pos(a1)
 	addi.w	#$18,y_pos(a1)
@@ -87604,19 +87721,8 @@ PlrList_ArzAnimals_End
 ; Special Stage
 ;---------------------------------------------------------------------------------------
 PlrList_SpecialStage: plrlistheader
-	plreq ArtTile_ArtNem_SpecialEmerald, ArtNem_SpecialEmerald
-	plreq ArtTile_ArtNem_SpecialMessages, ArtNem_SpecialMessages
-	plreq ArtTile_ArtNem_SpecialHUD, ArtNem_SpecialHUD
-	plreq ArtTile_ArtNem_SpecialFlatShadow, ArtNem_SpecialFlatShadow
-	plreq ArtTile_ArtNem_SpecialDiagShadow, ArtNem_SpecialDiagShadow
-	plreq ArtTile_ArtNem_SpecialSideShadow, ArtNem_SpecialSideShadow
-	plreq ArtTile_ArtNem_SpecialExplosion, ArtNem_SpecialExplosion
-	plreq ArtTile_ArtNem_SpecialRings, ArtNem_SpecialRings
-	plreq ArtTile_ArtNem_SpecialStart, ArtNem_SpecialStart
-	plreq ArtTile_ArtNem_SpecialPlayerVSPlayer, ArtNem_SpecialPlayerVSPlayer
-	plreq ArtTile_ArtNem_SpecialBack, ArtNem_SpecialBack
-	plreq ArtTile_ArtNem_SpecialStars, ArtNem_SpecialStars
-	plreq ArtTile_ArtNem_SpecialTailsText, ArtNem_SpecialTailsText
+	plreq ArtTile_SS_Background_Clouds, Nem_SSBgCloud
+	plreq ArtTile_SS_Background_Fish, Nem_SSBgFish
 PlrList_SpecialStage_End
 ;---------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
@@ -89974,7 +90080,14 @@ Nem_SbzDoor2:	binclude	"artnem/SBZ Large Horizontal Door.nem"
 		even
 Nem_Girder:	binclude	"artnem/SBZ Crushing Girder.nem"
 		even
-
+Eni_SSBg1:	binclude	"tilemaps/SS Background 1.eni" ; special stage background (mappings)
+		even
+Nem_SSBgFish:	binclude	"artnem/Special Birds & Fish.nem" ; special stage birds and fish background
+		even
+Eni_SSBg2:	binclude	"tilemaps/SS Background 2.eni" ; special stage background (mappings)
+		even
+Nem_SSBgCloud:	binclude	"artnem/Special Clouds.nem" ; special stage clouds background
+		even
 ; end of 'ROM'
 	if padToPowerOfTwo && (*)&(*-1)
 		cnop	-1,2<<lastbit(*-1)
