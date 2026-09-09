@@ -632,7 +632,7 @@ Vint_Unused6:
 ;VintSub10
 Vint_Pause:
 	cmpi.b	#GameModeID_SpecialStage,(Game_Mode).w	; Special Stage?
-	beq.w	Vint_Pause_specialStage
+	beq.w	Vint_S2SS
 ;VintSub8
 Vint_Level:
 	stopZ80
@@ -765,53 +765,38 @@ loc_86E:
 ; ========================================================================>>>
 ;VintSubA
 Vint_S2SS:
-		move.w	#$100,($A11100).l ; stop the Z80
-
-loc_DAE:
-		btst	#0,($A11100).l	; has Z80 stopped?
-		bne.s	loc_DAE		; if not, branch
+		stopZ80
 		bsr.w	ReadJoypads
-		lea	($C00004).l,a5
+		lea	(VDP_control_port).l,a5
 		move.l	#$94009340,(a5)
 		move.l	#$96FD9580,(a5)
 		move.w	#$977F,(a5)
 		move.w	#$C000,(a5)
-		move.w	#$80,($FFFFF640).w
-		move.w	($FFFFF640).w,(a5)
-		lea	($C00004).l,a5
+		move.w	#$80,(DMA_data_thunk).w
+		move.w	(DMA_data_thunk).w,(a5)
+		lea	(VDP_control_port).l,a5
 		move.l	#$94019340,(a5)
-		move.l	#$96FC9500,(a5)
-		move.w	#$977F,(a5)
+		move.l	#(($9700|((((Sprite_Table)>>1)&$FF00)>>8))<<16)|($9500|(((Sprite_Table)>>1)&$FF)),(a5)
+		move.w	#$9700|(((((Sprite_Table)>>1)&$FF0000)>>16)&$7F),(a5)
 		move.w	#$7800,(a5)
-		move.w	#$83,($FFFFF640).w
-		move.w	($FFFFF640).w,(a5)
-		lea	($C00004).l,a5
+		move.w	#$83,(DMA_data_thunk).w
+		move.w	(DMA_data_thunk).w,(a5)
+		lea	(VDP_control_port).l,a5
 		move.l	#$940193C0,(a5)
-		move.l	#$96E69500,(a5)
-		move.w	#$977F,(a5)
+		move.l	#(($9600|((((Horiz_Scroll_Buf)>>1)&$FF00)>>8))<<16)|($9500|(((Horiz_Scroll_Buf)>>1)&$FF)),(a5)
+		move.w	#$9700|(((((Horiz_Scroll_Buf)>>1)&$FF0000)>>16)&$7F),(a5)
 		move.w	#$7C00,(a5)
-		move.w	#$83,($FFFFF640).w
-		move.w	($FFFFF640).w,(a5)
-		move.w	#0,($A11100).l
+		move.w	#$83,(DMA_data_thunk).w
+		move.w	(DMA_data_thunk).w,(a5)
+		bsr.w	ProcessDMAQueue
+		startZ80
 		bsr.w	PalCycle_SS
-		tst.b	($FFFFF767).w
-		beq.s	loc_E64
-		lea	($C00004).l,a5
-		move.l	#$94019370,(a5)
-		move.l	#$96E49500,(a5)
-		move.w	#$977F,(a5)
-		move.w	#$7000,(a5)
-		move.w	#$83,($FFFFF640).w
-		move.w	($FFFFF640).w,(a5)
-		move.b	#0,($FFFFF767).w
+		tst.w	(Demo_Time_left).w
+		beq.w	locret_EA0
+		subq.w	#1,(Demo_Time_left).w
 
-loc_E64:
-		tst.w	($FFFFF614).w
-		beq.w	locret_E70
-		subq.w	#1,($FFFFF614).w
-
-locret_E70:
-		rts	
+locret_EA0:
+		rts
 ; ---------------------------------------------------------------------------
 
 loc_906:
@@ -6922,102 +6907,96 @@ loc_5360:				; CODE XREF: S1_SSBGLoad+6Ej
 
 ;sub_543A
 PalCycle_SS:				; XREF: loc_DA6; SpecialStage
-		tst.w	($FFFFF63A).w
-		bne.s	locret_49E6
-		subq.w	#1,($FFFFF79C).w
-		bpl.s	locret_49E6
-		lea	($C00004).l,a6
-		move.w	($FFFFF79A).w,d0
-		addq.w	#1,($FFFFF79A).w
+		tst.w	(Game_paused).w
+		bne.s	locret_5424
+		subq.w	#1,(SS_palette_time).w
+		bpl.s	locret_5424
+		lea	(VDP_control_port).l,a6
+		move.w	(SS_palette_number).w,d0
+		addq.w	#1,(SS_palette_number).w
 		andi.w	#$1F,d0
 		lsl.w	#2,d0
-		lea	(byte_4A3C).l,a0
+		lea	(word_547A).l,a0
 		adda.w	d0,a0
 		move.b	(a0)+,d0
-		bpl.s	loc_4992
+		bpl.s	loc_53D0
 		move.w	#$1FF,d0
 
-loc_4992:
-		move.w	d0,($FFFFF79C).w
+loc_53D0:				; CODE XREF: PalCycle_S1SS+2Aj
+		move.w	d0,(SS_palette_time).w
 		moveq	#0,d0
 		move.b	(a0)+,d0
-		move.w	d0,($FFFFF7A0).w
-		lea	(byte_4ABC).l,a1
+		move.w	d0,(SS_BGAnim).w
+		lea	(word_54FA).l,a1
 		lea	(a1,d0.w),a1
-		move.w	#-$7E00,d0
+		move.w	#$8200,d0
 		move.b	(a1)+,d0
 		move.w	d0,(a6)
-		move.b	(a1),($FFFFF616).w
-		move.w	#-$7C00,d0
+		move.b	(a1),(Vscroll_Factor_FG).w
+		move.w	#$8400,d0
 		move.b	(a0)+,d0
 		move.w	d0,(a6)
-		move.l	#$40000010,($C00004).l
-		move.l	($FFFFF616).w,($C00000).l
+		move.l	#$40000010,(VDP_control_port).l
+		move.l	(Vscroll_Factor).w,(VDP_data_port).l
 		moveq	#0,d0
 		move.b	(a0)+,d0
-		bmi.s	loc_49E8
+		bmi.s	loc_5426
 		lea	(Pal_SSCyc1).l,a1
 		adda.w	d0,a1
-		lea	($FFFFFB4E).w,a2
+		lea	(Normal_palette_line3+$E).w,a2
 		move.l	(a1)+,(a2)+
 		move.l	(a1)+,(a2)+
 		move.l	(a1)+,(a2)+
 
-locret_49E6:
-		rts	
+locret_5424:				; CODE XREF: PalCycle_S1SS+4j
+					; PalCycle_S1SS+Aj
+		rts
 ; ===========================================================================
 
-loc_49E8:				; XREF: PalCycle_SS
-		move.w	($FFFFF79E).w,d1
-		cmpi.w	#$8A,d0
-		bcs.s	loc_49F4
+loc_5426:				; CODE XREF: PalCycle_S1SS+70j
+		move.w	(SS_palette_index).w,d1
+		cmpi.w	#$8A,d0	; ''
+		bcs.s	loc_5432
 		addq.w	#1,d1
 
-loc_49F4:
-		mulu.w	#$2A,d1
+loc_5432:				; CODE XREF: PalCycle_S1SS+8Ej
+		mulu.w	#$2A,d1	; '*'
 		lea	(Pal_SSCyc2).l,a1
 		adda.w	d1,a1
-		andi.w	#$7F,d0
+		andi.w	#$7F,d0	; ''
 		bclr	#0,d0
-		beq.s	loc_4A18
-		lea	($FFFFFB6E).w,a2
+		beq.s	loc_5456
+		lea	(Normal_palette_line4+$E).w,a2
 		move.l	(a1),(a2)+
 		move.l	4(a1),(a2)+
 		move.l	8(a1),(a2)+
 
-loc_4A18:
+loc_5456:				; CODE XREF: PalCycle_S1SS+A6j
 		adda.w	#$C,a1
-		lea	($FFFFFB5A).w,a2
+		lea	(Normal_palette_line3+$1A).w,a2
 		cmpi.w	#$A,d0
-		bcs.s	loc_4A2E
+		bcs.s	loc_546C
 		subi.w	#$A,d0
-		lea	($FFFFFB7A).w,a2
+		lea	(Normal_palette_line4+$1A).w,a2
 
-loc_4A2E:
+loc_546C:				; CODE XREF: PalCycle_S1SS+C2j
 		move.w	d0,d1
 		add.w	d0,d0
 		add.w	d1,d0
 		adda.w	d0,a1
 		move.l	(a1)+,(a2)+
 		move.w	(a1)+,(a2)+
-		rts	
+		rts
 ; End of function PalCycle_SS
 
 ; ===========================================================================
-byte_4A3C:	dc.b 3,	0, 7, $92, 3, 0, 7, $90, 3, 0, 7, $8E, 3, 0, 7,	$8C
-					; XREF: PalCycle_SS
-		dc.b 3,	0, 7, $8B, 3, 0, 7, $80, 3, 0, 7, $82, 3, 0, 7,	$84
-		dc.b 3,	0, 7, $86, 3, 0, 7, $88, 7, 8, 7, 0, 7,	$A, 7, $C
-		dc.b $FF, $C, 7, $18, $FF, $C, 7, $18, 7, $A, 7, $C, 7,	8, 7, 0
-		dc.b 3,	0, 6, $88, 3, 0, 6, $86, 3, 0, 6, $84, 3, 0, 6,	$82
-		dc.b 3,	0, 6, $81, 3, 0, 6, $8A, 3, 0, 6, $8C, 3, 0, 6,	$8E
-		dc.b 3,	0, 6, $90, 3, 0, 6, $92, 7, 2, 6, $24, 7, 4, 6,	$30
-		dc.b $FF, 6, 6,	$3C, $FF, 6, 6,	$3C, 7,	4, 6, $30, 7, 2, 6, $24
-		even
-byte_4ABC:	dc.b $10, 1, $18, 0, $18, 1, $20, 0, $20, 1, $28, 0, $28, 1
-					; XREF: PalCycle_SS
-		even
-
+word_547A:	dc.w  $300, $792, $300,	$790, $300, $78E, $300,	$78C, $300, $78B, $300,	$780, $300, $782, $300,	$784; 0
+					; DATA XREF: PalCycle_S1SS+20o
+		dc.w  $300, $786, $300,	$788, $708, $700, $70A,	$70C,$FF0C, $718,$FF0C,	$718, $70A, $70C, $708,	$700; 16
+		dc.w  $300, $688, $300,	$686, $300, $684, $300,	$682, $300, $681, $300,	$68A, $300, $68C, $300,	$68E; 32
+		dc.w  $300, $690, $300,	$692, $702, $624, $704,	$630,$FF06, $63C,$FF06,	$63C, $704, $630, $702,	$624; 48
+word_54FA:	dc.w $1001,$1800,$1801,$2000,$2001,$2800,$2801;	0
+					; DATA XREF: PalCycle_S1SS+3Co
 Pal_SSCyc1:	binclude	"palette/Cycle - Special Stage 1.bin"
 		even
 Pal_SSCyc2:	binclude	"palette/Cycle - Special Stage 2.bin"
@@ -66259,6 +66238,7 @@ JmpTo25_ObjectMove ; JmpTo
 ; ----------------------------------------------------------------------------
 ; Sprite_338EC:
 Obj09:
+	rts
 	bsr.w	loc_33908
 	moveq	#0,d0
 	move.b	routine(a0),d0
