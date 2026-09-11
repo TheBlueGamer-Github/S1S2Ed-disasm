@@ -6649,6 +6649,7 @@ loc_507C:
 		jsr	S1_SSBGLoad
 		moveq	#PLCID_SpecialStage,d0
 		bsr.w	RunPLC_ROM
+		;jsr	(SS_Load).l		; load SS layout data
 		clearRAM Sprite_Table,Sprite_Table_End
 		clearRAM SS_Horiz_Scroll_Buf_1,SS_Horiz_Scroll_Buf_1+HorizontalScrollBuffer.len
 		clearRAM SS_Shared_RAM,SS_Shared_RAM_End
@@ -6667,21 +6668,24 @@ loc_507C:
 		clr.w	(Ctrl_1_Logical).w
 		move.w	#MusID_SpecStage,d0
 		bsr.w	PlayMusic
+		;btst	#bitA,(Ctrl_1).w ; is A button pressed?
+		;beq.s	SS_NoDebug	; if not, branch
+		;move.b	#1,(Debug_placement_mode).w ; enable debug mode
+SS_NoDebug:
 		move.w	(VDP_Reg1_val).w,d0
 		ori.b	#$40,d0
 		move.w	d0,(VDP_control_port).l
-	
-SS_NoDebug:
-	bsr.w	Pal_FadeFromWhite
+		bsr.w	Pal_FadeFromWhite
 
--	bsr.w	PauseGame
+SS_MainLoop:
+	bsr.w	PauseGame
 	move.w	(Ctrl_1).w,(Ctrl_1_Logical).w
 	move.b	#VintID_S2SS,(Vint_routine).w
 	bsr.w	WaitForVint
 	jsr	(RunObjects).l
 	jsr	(BuildSprites).l
 	bsr.w	S1SS_BgAnimate
-	bra.w	-
+	bra.w	SS_MainLoop
 	;bsr.w	RunPLC_RAM
 	;tst.b	(SpecialStage_Started).w
 	;beq.s	-
@@ -66237,21 +66241,374 @@ JmpTo25_ObjectMove ; JmpTo
 ; Object 09 - Sonic in Special Stage
 ; ----------------------------------------------------------------------------
 ; Sprite_338EC:
+
 Obj09:
-	rts
-	bsr.w	loc_33908
-	moveq	#0,d0
-	move.b	routine(a0),d0
-	move.w	Obj09_Index(pc,d0.w),d1
-	jmp	Obj09_Index(pc,d1.w)
+	;tst.w	(Debug_placement_mode).w	; is debug mode being used?
+	;beq.s	Obj09_Normal			; if not, branch
+	;bsr.w	SS_FixCamera
+	;jmp	(DebugMode).l
 ; ===========================================================================
-; off_338FE:
-Obj09_Index:	offsetTable
-		offsetTableEntry.w Obj09_Init	; 0
-		offsetTableEntry.w Obj09_MdNormal	; 2
-		offsetTableEntry.w Obj09_MdJump	; 4
-		offsetTableEntry.w Obj09_Index	; 6 - invalid
-		offsetTableEntry.w Obj09_MdAir	; 8
+
+Obj09_Normal:
+		moveq	#0,d0
+		move.b	obRoutine(a0),d0
+		move.w	Obj09_Index(pc,d0.w),d1
+		jmp	Obj09_Index(pc,d1.w)
+; ===========================================================================
+Obj09_Index:	dc.w Obj09_Main-Obj09_Index
+		dc.w Obj09_ChkDebug-Obj09_Index
+		dc.w Obj09_ExitStage-Obj09_Index
+		dc.w Obj09_Exit2-Obj09_Index
+; ===========================================================================
+
+Obj09_Main:	; Routine 0
+		addq.b	#2,obRoutine(a0)
+		move.b	#$E,obHeight(a0)
+		move.b	#7,obWidth(a0)
+		move.l	#Map_Sonic,obMap(a0)
+		move.w	#make_art_tile(ArtTile_ArtUnc_Sonic,0,0),obGfx(a0)
+		move.b	#4,obRender(a0)
+		move.b	#0,obPriority(a0)
+		move.b	#id_Roll,obAnim(a0)
+		bset	#2,obStatus(a0)
+		bset	#1,obStatus(a0)
+
+Obj09_ChkDebug:	; Routine 2
+		;tst.w	(Debug_placement_mode).w	; is debug mode	cheat enabled?
+		;beq.s	Obj09_NoDebug	; if not, branch
+		;btst	#button_B,(Ctrl_1_Press).w ; is button B pressed?
+		;beq.s	Obj09_NoDebug	; if not, branch
+		;move.w	#1,(Debug_placement_mode).w ; change Sonic into a ring
+
+Obj09_NoDebug:
+		move.b	#0,objoff_30(a0)
+		moveq	#0,d0
+		move.b	obStatus(a0),d0
+		andi.w	#2,d0
+		move.w	Obj09_Modes(pc,d0.w),d1
+		jsr	Obj09_Modes(pc,d1.w)
+		jsr	(LoadSonicDynPLC).l
+		jmp	(DisplaySprite).l
+; ===========================================================================
+Obj09_Modes:	dc.w Obj09_OnWall-Obj09_Modes
+		dc.w Obj09_InAir-Obj09_Modes
+; ===========================================================================
+
+Obj09_OnWall:
+		bsr.w	Obj09_Jump
+		bsr.w	Obj09_Move
+		bsr.w	Obj09_Fall
+		bra.s	Obj09_Display
+		rts
+; ===========================================================================
+
+Obj09_InAir:
+		bsr.w	nullsub_2
+		bsr.w	Obj09_Move
+		bsr.w	Obj09_Fall
+
+Obj09_Display:
+		;bsr.w	Obj09_ChkItems
+		;bsr.w	Obj09_ChkItems2
+		jsr	(ObjectMove).l
+		bsr.w	SS_FixCamera
+		move.w	(v_ssangle).w,d0
+		add.w	(v_ssrotate).w,d0
+		move.w	d0,(v_ssangle).w
+		jsr	(Sonic_Animate).l
+		rts	
+
+; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
+
+
+Obj09_Move:
+		btst	#bitL,(Ctrl_1_Held_Logical).w ; is left being pressed?
+		beq.s	Obj09_ChkRight	; if not, branch
+		bsr.w	Obj09_MoveLeft
+
+Obj09_ChkRight:
+		btst	#bitR,(Ctrl_1_Held_Logical).w ; is right being pressed?
+		beq.s	loc_1BA78	; if not, branch
+		bsr.w	Obj09_MoveRight
+
+loc_1BA78:
+		move.b	(Ctrl_1_Held_Logical).w,d0
+		andi.b	#btnL+btnR,d0
+		bne.s	loc_1BAA8
+		move.w	obInertia(a0),d0
+		beq.s	loc_1BAA8
+		bmi.s	loc_1BA9A
+		subi.w	#$C,d0
+		bcc.s	loc_1BA94
+		move.w	#0,d0
+
+loc_1BA94:
+		move.w	d0,obInertia(a0)
+		bra.s	loc_1BAA8
+; ===========================================================================
+
+loc_1BA9A:
+		addi.w	#$C,d0
+		bcc.s	loc_1BAA4
+		move.w	#0,d0
+
+loc_1BAA4:
+		move.w	d0,obInertia(a0)
+
+loc_1BAA8:
+		move.b	(v_ssangle).w,d0
+		addi.b	#$20,d0
+		andi.b	#$C0,d0
+		neg.b	d0
+		jsr	(CalcSine).l
+		muls.w	obInertia(a0),d1
+		add.l	d1,obX(a0)
+		muls.w	obInertia(a0),d0
+		add.l	d0,obY(a0)
+		movem.l	d0-d1,-(sp)
+		move.l	obY(a0),d2
+		move.l	obX(a0),d3
+		bsr.w	sub_1BCE8
+		beq.s	loc_1BAF2
+		movem.l	(sp)+,d0-d1
+		sub.l	d1,obX(a0)
+		sub.l	d0,obY(a0)
+		move.w	#0,obInertia(a0)
+		rts	
+; ===========================================================================
+
+loc_1BAF2:
+		movem.l	(sp)+,d0-d1
+		rts	
+; End of function Obj09_Move
+
+
+; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
+
+
+Obj09_MoveLeft:
+		bset	#0,obStatus(a0)
+		move.w	obInertia(a0),d0
+		beq.s	loc_1BB06
+		bpl.s	loc_1BB1A
+
+loc_1BB06:
+		subi.w	#$C,d0
+		cmpi.w	#-$800,d0
+		bgt.s	loc_1BB14
+		move.w	#-$800,d0
+
+loc_1BB14:
+		move.w	d0,obInertia(a0)
+		rts	
+; ===========================================================================
+
+loc_1BB1A:
+		subi.w	#$40,d0
+		bcc.s	loc_1BB22
+		nop	
+
+loc_1BB22:
+		move.w	d0,obInertia(a0)
+		rts	
+; End of function Obj09_MoveLeft
+
+
+; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
+
+
+Obj09_MoveRight:
+		bclr	#0,obStatus(a0)
+		move.w	obInertia(a0),d0
+		bmi.s	loc_1BB48
+		addi.w	#$C,d0
+		cmpi.w	#$800,d0
+		blt.s	loc_1BB42
+		move.w	#$800,d0
+
+loc_1BB42:
+		move.w	d0,obInertia(a0)
+		bra.s	locret_1BB54
+; ===========================================================================
+
+loc_1BB48:
+		addi.w	#$40,d0
+		bcc.s	loc_1BB50
+		nop	
+
+loc_1BB50:
+		move.w	d0,obInertia(a0)
+
+locret_1BB54:
+		rts	
+; End of function Obj09_MoveRight
+Obj09_ExitStage:
+		rts
+Obj09_Exit2:
+		rts
+
+Obj09_Fall:
+		move.l	obY(a0),d2
+		move.l	obX(a0),d3
+		move.b	(v_ssangle).w,d0
+		andi.b	#$FC,d0
+		jsr	(CalcSine).l
+		move.w	obVelX(a0),d4
+		ext.l	d4
+		asl.l	#8,d4
+		muls.w	#$2A,d0
+		add.l	d4,d0
+		move.w	obVelY(a0),d4
+		ext.l	d4
+		asl.l	#8,d4
+		muls.w	#$2A,d1
+		add.l	d4,d1
+		add.l	d0,d3
+		bsr.w	sub_1BCE8
+		beq.s	loc_1BCB0
+		sub.l	d0,d3
+		moveq	#0,d0
+		move.w	d0,obVelX(a0)
+		bclr	#1,obStatus(a0)
+		add.l	d1,d2
+		bsr.w	sub_1BCE8
+		beq.s	loc_1BCC6
+		sub.l	d1,d2
+		moveq	#0,d1
+		move.w	d1,obVelY(a0)
+		rts	
+; ===========================================================================
+
+loc_1BCB0:
+		add.l	d1,d2
+		bsr.w	sub_1BCE8
+		beq.s	loc_1BCD4
+		sub.l	d1,d2
+		moveq	#0,d1
+		move.w	d1,obVelY(a0)
+		bclr	#1,obStatus(a0)
+
+loc_1BCC6:
+		asr.l	#8,d0
+		asr.l	#8,d1
+		move.w	d0,obVelX(a0)
+		move.w	d1,obVelY(a0)
+		rts	
+; ===========================================================================
+
+loc_1BCD4:
+		asr.l	#8,d0
+		asr.l	#8,d1
+		move.w	d0,obVelX(a0)
+		move.w	d1,obVelY(a0)
+		bset	#1,obStatus(a0)
+		rts	
+; End of function Obj09_Fall
+
+sub_1BCE8:
+		lea	(Chunk_Table).l,a1
+		moveq	#0,d4
+		swap	d2
+		move.w	d2,d4
+		swap	d2
+		addi.w	#$44,d4
+		divu.w	#$18,d4
+		mulu.w	#$80,d4
+		adda.l	d4,a1
+		moveq	#0,d4
+		swap	d3
+		move.w	d3,d4
+		swap	d3
+		addi.w	#$14,d4
+		divu.w	#$18,d4
+		adda.w	d4,a1
+		moveq	#0,d5
+		move.b	(a1)+,d4
+		bsr.s	sub_1BD30
+		move.b	(a1)+,d4
+		bsr.s	sub_1BD30
+		adda.w	#$7E,a1
+		move.b	(a1)+,d4
+		bsr.s	sub_1BD30
+		move.b	(a1)+,d4
+		bsr.s	sub_1BD30
+		tst.b	d5
+		rts	
+; End of function sub_1BCE8
+
+
+; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
+
+
+sub_1BD30:
+		beq.s	locret_1BD44
+		cmpi.b	#$28,d4
+		beq.s	locret_1BD44
+		cmpi.b	#$3A,d4
+		blo.s	loc_1BD46
+		cmpi.b	#$4B,d4
+		bhs.s	loc_1BD46
+
+locret_1BD44:
+		rts	
+; ===========================================================================
+
+loc_1BD46:
+		move.b	d4,objoff_30(a0)
+		move.l	a1,objoff_32(a0)
+		moveq	#-1,d5
+		rts	
+; End of function sub_1BD30
+
+Obj09_Jump:
+		move.b	(Ctrl_1_Press_Logical).w,d0
+		andi.b	#btnABC,d0	; is A,	B or C pressed?
+		beq.s	Obj09_NoJump	; if not, branch
+		move.b	(v_ssangle).w,d0
+		andi.b	#$FC,d0
+		neg.b	d0
+		subi.b	#$40,d0
+		jsr	(CalcSine).l
+		muls.w	#$680,d1
+		asr.l	#8,d1
+		move.w	d1,obVelX(a0)
+		muls.w	#$680,d0
+		asr.l	#8,d0
+		move.w	d0,obVelY(a0)
+		bset	#1,obStatus(a0)
+		move.w	#SndID_Jump,d0
+		jsr	(PlaySound).l	; play jumping sound
+
+Obj09_NoJump:
+		rts	
+; End of function Obj09_Jump
+
+
+; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
+
+nullsub_2:
+		rts	
+; End of function nullsub_2
+
+SS_FixCamera:
+		move.w	obY(a0),d2
+		move.w	obX(a0),d3
+		move.w	(Camera_X_pos).w,d0
+		subi.w	#$A0,d3
+		bcs.s	loc_1BBCE
+		sub.w	d3,d0
+		sub.w	d0,(Camera_X_pos).w
+
+loc_1BBCE:
+		move.w	(Camera_Y_pos).w,d0
+		subi.w	#$70,d2
+		bcs.s	locret_1BBDE
+		sub.w	d2,d0
+		sub.w	d0,(Camera_Y_pos).w
+
+locret_1BBDE:
+		rts	
+; End of function SS_FixCamera
 ; ===========================================================================
 
 loc_33908:
