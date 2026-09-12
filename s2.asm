@@ -4810,7 +4810,6 @@ Level_FromCheckpoint:
 	jsr	(BuildSprites).l
 	bsr.w	SetLevelEndType
 	move.w	#0,(Demo_button_index).w
-	move.w	#0,(Demo_button_index_2P).w
 	lea	(DemoScriptPointers).l,a1
 	moveq	#0,d0
 	move.b	(Current_Zone).w,d0	; load zone value
@@ -4980,6 +4979,8 @@ InitPlayers:
 	move.b	#ObjID_Sonic,(MainCharacter+id).w ; load Obj01 Sonic object at $FFFFB000
 	move.b	#ObjID_SpindashDust,(Sonic_Dust+id).w ; load Obj08 Sonic's spindash dust/splash object at $FFFFD100
 
+	cmpi.b	#9,(Current_Zone).w
+	beq.s	+
 	move.b	#ObjID_Tails,(Sidekick+id).w ; load Obj02 Tails object at $FFFFB040
 	move.w	(MainCharacter+x_pos).w,(Sidekick+x_pos).w
 	move.w	(MainCharacter+y_pos).w,(Sidekick+y_pos).w
@@ -5147,7 +5148,7 @@ Level_PlayBgm2:
 	beq.s	+
 	move.b	#1,(Debug_mode_flag).w
 +
-	move.b	#ObjID_Sonic,(MainCharacter+id).w ; load Obj01 Sonic object at $FFFFB000
+	bsr.w	InitPlayers
 	bset	#0,(MainCharacter+status).w ; make Sonic face left
 	move.b	#1,(Control_Locked).w		; unlock control
 	move.w	#(button_left_mask<<8),(Ctrl_1_Held_Logical).w ; move Sonic to the left
@@ -6015,7 +6016,9 @@ MoveDemo_On:
 MoveDemo_On_P1:
 	lsl.w	#2,d0
 	movea.l	(a1,d0.w),a1
+	jmp	(EndingDemos).l
 
+notcredits:
 	move.w	(Demo_button_index).w,d0
 	adda.w	d0,a1	; a1 now points to the current button press data
 	move.b	(a1),d0	; load button press
@@ -83849,6 +83852,8 @@ Hurt_Sound:
 KillCharacter:
 	tst.w	(Debug_placement_mode).w
 	bne.s	++
+	tst.w	(Demo_mode_flag).w
+	bmi.w	++ ; if yes, branch
 	clr.b	status_secondary(a0)
 	move.b	#6,routine(a0)
 	jsrto	Sonic_ResetOnFloor_Part2, JmpTo_Sonic_ResetOnFloor_Part2
@@ -90443,6 +90448,17 @@ Sound6F:	include "sound/sfx/EF - Large Laser.asm"
 Sound70:	include "sound/sfx/F0 - Oil Slide.asm"
 
 	finishBank
+
+EndingDemos:
+	tst.w	(Demo_mode_flag).w
+	bpl.s	+
+	lea	(EndingDemoScriptPointers).l,a1
+	move.w	(Ending_demo_number).w,d0
+	subq.w	#1,d0
+	lsl.w	#2,d0
+	movea.l	(a1,d0.w),a1
++
+	jmp	(notcredits).l
 
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - SBZ stuff
