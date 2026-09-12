@@ -4717,7 +4717,7 @@ Level_PlayBgm:
 	bsr.w	PlayMusic		; play level music
 	move.b	#ObjID_TitleCard,(TitleCard+id).w ; load Obj34 (level title card) at $FFFFB080
 ; loc_40DA:
-Level_TtlCard:
+Level_TtlCard: ; 
 	move.b	#VintID_TitleCard,(Vint_routine).w
 	bsr.w	WaitForVint
 	jsr	(RunObjects).l
@@ -13609,8 +13609,8 @@ EndgameCredits:
 		jsr	(RunObjects).l
 		jsr	(BuildSprites).l
 		bsr.w	EndingDemoLoad
-		moveq	#0,d0
-		move.b	(Current_Zone).w,d0
+		;moveq	#0,d0
+		;move.b	(Current_Zone).w,d0
 	; multiply d0 by 12, the size of a level art load block
 		add.w	d0,d0
 		add.w	d0,d0
@@ -13655,7 +13655,7 @@ EndingDemoLoad:
 		andi.w	#$F,d0
 		add.w	d0,d0
 		move.w	EndDemo_Levels(pc,d0.w),d0 ; load level array
-		move.w	d0,(Current_Zone).w	; set level from level array
+		move.w	d0,(Current_ZoneAndAct).w	; set level from level array
 		addq.w	#1,(Ending_demo_number).w
 		cmpi.w	#9,(Ending_demo_number).w ; have credits finished?
 		bhs.s	EndDemo_Exit	; if yes, branch
@@ -13685,7 +13685,16 @@ EndDemo_Exit:
 ; ---------------------------------------------------------------------------
 ; Levels used in the end sequence demos
 ; ---------------------------------------------------------------------------
-EndDemo_Levels:	binclude	"misc/Demo Level Order - Ending.bin"
+EndDemo_Levels:		; previously in "misc/Demo Level Order - Ending.bin"
+		dc.w emerald_hill_zone_act_1
+		dc.w aquatic_ruin_zone_act_2
+		dc.w casino_night_zone_act_3
+		dc.w chemical_plant_zone_act_3
+		dc.w hill_top_zone_act_3
+		dc.w metropolis_zone_act_1
+		dc.w metropolis_zone_act_2
+		dc.w emerald_hill_zone_act_1
+		even
 
 
 TryAgainEnd:
@@ -15307,12 +15316,23 @@ LevelSize:; zoneOrderedTable 2,$10	; WrdArr_LvlSize
 	move.w	(MainCharacter+x_pos).w,d1
 	move.w	(MainCharacter+y_pos).w,d0
 	bra.s	++
+EndingStLocArray:
+		include	"_inc/Start Location Array - Ending.asm"
 ; ===========================================================================
 +	; Put the character at the start location for the level
 	move.w	(Current_Zone).w,d0
 		lsl.b	#6,d0
 		lsr.w	#4,d0
 	lea	StartLocations(pc,d0.w),a1
+		tst.w	(Demo_mode_flag).w	; is ending demo mode on?
+		bpl.s	LevSz_SonicPos	; if not, branch
+
+		move.w	(Ending_demo_number).w,d0
+		subq.w	#1,d0
+		lsl.w	#2,d0
+		lea	EndingStLocArray(pc,d0.w),a1 ; load Sonic's start location
+
+LevSz_SonicPos:
 	moveq	#0,d1
 	move.w	(a1)+,d1
 	move.w	d1,(MainCharacter+x_pos).w
@@ -15449,7 +15469,6 @@ StartLocations: ;zoneOrderedTable 2,4	; WrdArr_StartLoc
 	binclude	 "startpos/slz3.bin"	; Act 1
 	binclude	 "startpos/SCZ_2.bin"	; Act 2
    ; zoneTableEnd
-
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 ;sub_C258:
