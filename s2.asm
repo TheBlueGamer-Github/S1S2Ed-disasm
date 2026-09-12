@@ -776,7 +776,7 @@ Vint_S2SS:
 		move.w	(DMA_data_thunk).w,(a5)
 		lea	(VDP_control_port).l,a5
 		move.l	#$94019340,(a5)
-		move.l	#(($9700|((((Sprite_Table)>>1)&$FF00)>>8))<<16)|($9500|(((Sprite_Table)>>1)&$FF)),(a5)
+		move.l	#(($9600|((((Sprite_Table)>>1)&$FF00)>>8))<<16)|($9500|(((Sprite_Table)>>1)&$FF)),(a5)
 		move.w	#$9700|(((((Sprite_Table)>>1)&$FF0000)>>16)&$7F),(a5)
 		move.w	#$7800,(a5)
 		move.w	#$83,(DMA_data_thunk).w
@@ -4808,7 +4808,6 @@ Level_FromCheckpoint:
 	jsr	(RingsManager).l
 	jsr	(RunObjects).l
 	jsr	(BuildSprites).l
-	;jsrto	AniArt_Load, JmpTo_AniArt_Load
 	bsr.w	SetLevelEndType
 	move.w	#0,(Demo_button_index).w
 	move.w	#0,(Demo_button_index_2P).w
@@ -6649,7 +6648,7 @@ loc_507C:
 		jsr	S1_SSBGLoad
 		moveq	#PLCID_SpecialStage,d0
 		bsr.w	RunPLC_ROM
-		;jsr	(SS_Load).l		; load SS layout data
+		jsr	(SS_Load).l		; load SS layout data
 		clearRAM Sprite_Table,Sprite_Table_End
 		clearRAM SS_Horiz_Scroll_Buf_1,SS_Horiz_Scroll_Buf_1+HorizontalScrollBuffer.len
 		clearRAM SS_Shared_RAM,SS_Shared_RAM_End
@@ -6685,6 +6684,7 @@ SS_MainLoop:
 	jsr	(RunObjects).l
 	jsr	(BuildSprites).l
 	bsr.w	S1SS_BgAnimate
+	;jsr	(SS_FixCamera).l
 	bra.w	SS_MainLoop
 	;bsr.w	RunPLC_RAM
 	;tst.b	(SpecialStage_Started).w
@@ -11245,123 +11245,6 @@ JmpTo_Adjust2PArtPointer ; JmpTo
 ; ===========================================================================
 ; loc_7D50:
 TwoPlayerResults:
-	bsr.w	Pal_FadeToBlack
-	move	#$2700,sr
-	move.w	(VDP_Reg1_val).w,d0
-	andi.b	#$BF,d0
-	move.w	d0,(VDP_control_port).l
-	bsr.w	ClearScreen
-	lea	(VDP_control_port).l,a6
-	move.w	#$8004,(a6)		; H-INT disabled
-	move.w	#$8200|(VRAM_Menu_Plane_A_Name_Table/$400),(a6)	; PNT A base: $C000
-	move.w	#$8400|(VRAM_Menu_Plane_B_Name_Table/$2000),(a6)	; PNT B base: $E000
-	move.w	#$8200|(VRAM_Menu_Plane_A_Name_Table/$400),(a6)	; PNT A base: $C000
-	move.w	#$8700,(a6)		; Background palette/color: 0/0
-	move.w	#$8C81,(a6)		; H res 40 cells, no interlace, S/H disabled
-	move.w	#$9001,(a6)		; Scroll table size: 64x32
-
-	clearRAM Object_Display_Lists,Object_Display_Lists_End
-	clearRAM Object_RAM,Object_RAM_End
-
-	move.l	#vdpComm(tiles_to_bytes(ArtTile_ArtNem_FontStuff),VRAM,WRITE),(VDP_control_port).l
-	lea	(ArtNem_FontStuff).l,a0
-	bsr.w	NemDec
-	move.l	#vdpComm(tiles_to_bytes(ArtTile_ArtNem_1P2PWins),VRAM,WRITE),(VDP_control_port).l
-	lea	(ArtNem_1P2PWins).l,a0
-	bsr.w	NemDec
-	lea	(Chunk_Table).l,a1
-	lea	(MapEng_MenuBack).l,a0
-	move.w	#make_art_tile(ArtTile_VRAM_Start,3,0),d0
-	bsr.w	EniDec
-	lea	(Chunk_Table).l,a1
-	move.l	#vdpComm(VRAM_Plane_B_Name_Table,VRAM,WRITE),d0
-	moveq	#40-1,d1
-	moveq	#28-1,d2
-	jsrto	PlaneMapToVRAM_H40, PlaneMapToVRAM_H40
-	move.w	(Results_Screen_2P).w,d0
-	add.w	d0,d0
-	add.w	d0,d0
-	add.w	d0,d0
-	lea	TwoPlayerResultsPointers(pc),a2
-	movea.l	(a2,d0.w),a0
-	movea.l	4(a2,d0.w),a2
-	lea	(Chunk_Table).l,a1
-	move.w	#make_art_tile(ArtTile_VRAM_Start,0,0),d0
-	bsr.w	EniDec
-	jsr	(a2)	; dynamic call! to Setup2PResults_Act, Setup2PResults_Zone, Setup2PResults_Game, Setup2PResults_SpecialAct, or Setup2PResults_SpecialZone, assuming the pointers in TwoPlayerResultsPointers have not been changed
-	lea	(Chunk_Table).l,a1
-	move.l	#vdpComm(tiles_to_bytes(ArtTile_TwoPlayerResults),VRAM,WRITE),d0
-	moveq	#40-1,d1
-	moveq	#28-1,d2
-	jsrto	PlaneMapToVRAM_H40, PlaneMapToVRAM_H40
-    ResetDMAQueue
-	clr.b	(Level_started_flag).w
-	clr.w	(Anim_Counters).w
-	lea	(Anim_SonicMilesBG).l,a2
-	jsrto	Dynamic_Normal, JmpTo_Dynamic_Normal
-	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
-	beq.s	+			; if it's S2 Final Sonic, branch
-	moveq	#PLCID_Std1S1,d0
-	bra.s	++
-+
-	moveq	#PLCID_Std1,d0
-+
-	bsr.w	LoadPLC2
-	moveq	#PalID_Menu,d0
-	bsr.w	PalLoad_ForFade
-	moveq	#0,d0
-	move.b	#MusID_2PResult,d0
-	cmp.w	(Level_Music).w,d0
-	beq.s	+
-	move.w	d0,(Level_Music).w
-	bsr.w	PlayMusic
-+
-	move.w	#(30*60)-1,(Demo_Time_left).w	; 30 seconds
-	clr.w	(Two_player_mode).w
-	clr.l	(Camera_X_pos).w
-	clr.l	(Camera_Y_pos).w
-	clr.l	(Vscroll_Factor).w
-	clr.l	(Vscroll_Factor_P2).w
-	clr.l	(Vscroll_Factor_P2_HInt).w
-	move.b	#ObjID_2PResults,(VSResults_HUD+id).w
-	move.b	#VintID_Menu,(Vint_routine).w
-	bsr.w	WaitForVint
-	move.w	(VDP_Reg1_val).w,d0
-	ori.b	#$40,d0
-	move.w	d0,(VDP_control_port).l
-	bsr.w	Pal_FadeFromBlack
-
--	move.b	#VintID_Menu,(Vint_routine).w
-	bsr.w	WaitForVint
-	lea	(Anim_SonicMilesBG).l,a2
-	jsrto	Dynamic_Normal, JmpTo_Dynamic_Normal
-	jsr	(RunObjects).l
-	jsr	(BuildSprites).l
-	bsr.w	RunPLC_RAM
-	tst.l	(Plc_Buffer).w
-	bne.s	-
-	move.b	(Ctrl_1_Press).w,d0
-	or.b	(Ctrl_2_Press).w,d0
-	andi.b	#button_start_mask,d0
-	beq.s	-			; stay on that screen until either player presses start
-
-	move.w	(Results_Screen_2P).w,d0 ; were we at the act results screen? (VsRSID_Act)
-	bne.w	TwoPlayerResultsDone_Zone ; if not, branch
-	tst.b	(Current_Act).w		; did we just finish act 1?
-	bne.s	+			; if not, branch
-	addq.b	#1,(Current_Act).w	; go to the next act
-	move.b	#1,(Current_Act_2P).w
-	move.b	#GameModeID_Level,(Game_Mode).w ; => Level (Zone play mode)
-	move.b	#0,(Last_star_pole_hit).w
-	move.b	#0,(Last_star_pole_hit_2P).w
-	moveq	#1,d0
-	move.w	d0,(Two_player_mode).w
-	move.w	d0,(Two_player_mode_copy).w
-	moveq	#0,d0
-	move.l	d0,(Score).w
-	move.l	d0,(Score_2P).w
-	move.l	#5000,(Next_Extra_life_score).w
-	move.l	#5000,(Next_Extra_life_score_2P).w
 	rts
 ; ===========================================================================
 +	; Displays results for the zone
@@ -13783,11 +13666,11 @@ EndingDemoLoad:
 		move.w	d0,(Ring_count).w	; clear rings
 		move.l	d0,(Timer).w		; clear time
 		move.l	d0,(Score).w	; clear score
-		;move.b	d0,(v_lastlamp).w ; clear lamppost counter
+		move.b	d0,(Last_star_pole_hit).w ; clear lamppost counter
 		cmpi.w	#4,(Ending_demo_number).w ; is SLZ demo running?
 		bne.s	EndDemo_Exit	; if not, branch
 		lea	(EndDemo_LampVar).l,a1 ; load lamppost variables
-		;lea	(v_lastlamp).w,a2
+		lea	(Last_star_pole_hit).w,a2
 		move.w	#(EndDemo_LampVar_End-EndDemo_LampVar)/4-1,d0
 
 EndDemo_LampLoad:
@@ -13821,8 +13704,8 @@ TryAgainEnd:
 
 		clearRAM Object_RAM,Object_RAM_End ; fill object RAM ($B000-$D5FF) with $0
 
-		;moveq	#plcid_TryAgain,d0
-		;bsr.w	QuickPLC	; load "TRY AGAIN" or "END" patterns
+		moveq	#plcid_TryAgain,d0
+		jsr	(LoadPLC).l	; load "TRY AGAIN" or "END" patterns
 
 		clearRAM Target_palette,Target_palette_End	; fill palette with 0 (black)
 
@@ -66243,6 +66126,7 @@ JmpTo25_ObjectMove ; JmpTo
 ; Sprite_338EC:
 
 Obj09:
+	;jmp	(Obj01)
 	;tst.w	(Debug_placement_mode).w	; is debug mode being used?
 	;beq.s	Obj09_Normal			; if not, branch
 	;bsr.w	SS_FixCamera
@@ -66254,7 +66138,7 @@ Obj09_Normal:
 		move.b	obRoutine(a0),d0
 		move.w	Obj09_Index(pc,d0.w),d1
 		jmp	Obj09_Index(pc,d1.w)
-; ===========================================================================
+; =======================================  ====================================
 Obj09_Index:	dc.w Obj09_Main-Obj09_Index
 		dc.w Obj09_ChkDebug-Obj09_Index
 		dc.w Obj09_ExitStage-Obj09_Index
@@ -66265,7 +66149,13 @@ Obj09_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		move.b	#$E,obHeight(a0)
 		move.b	#7,obWidth(a0)
-		move.l	#Map_Sonic,obMap(a0)
+	tst.w	(Two_player_items).w	; is Sonic styles option set to S1 Sonic?
+	beq.s	+			; if not, branch
+	move.l	#MapUnc_Sonic1,mappings(a0)
+	bra.s	++
++
+	move.l	#MapUnc_Sonic,mappings(a0)
++	; keep teleport monitor from causing unwanted effects
 		move.w	#make_art_tile(ArtTile_ArtUnc_Sonic,0,0),obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.b	#0,obPriority(a0)
@@ -66308,7 +66198,7 @@ Obj09_InAir:
 		bsr.w	Obj09_Fall
 
 Obj09_Display:
-		;bsr.w	Obj09_ChkItems
+		bsr.w	Obj09_ChkItems
 		;bsr.w	Obj09_ChkItems2
 		jsr	(ObjectMove).l
 		bsr.w	SS_FixCamera
@@ -66560,6 +66450,32 @@ loc_1BD46:
 		rts	
 ; End of function sub_1BD30
 
+
+Obj09_ChkItems:
+		lea	(Chunk_Table).l,a1
+		moveq	#0,d4
+		move.w	obY(a0),d4
+		addi.w	#$50,d4
+		divu.w	#$18,d4
+		mulu.w	#$80,d4
+		adda.l	d4,a1
+		moveq	#0,d4
+		move.w	obX(a0),d4
+		addi.w	#$20,d4
+		divu.w	#$18,d4
+		adda.w	d4,a1
+		move.b	(a1),d4
+		bne.s	Obj09_ChkCont
+		tst.b	objoff_3A(a0)
+		bne.w	Obj09_MakeGhostSolid
+		moveq	#0,d4
+		rts	
+; ===========================================================================
+
+Obj09_ChkCont:
+		rts
+Obj09_MakeGhostSolid
+		rts
 Obj09_Jump:
 		move.b	(Ctrl_1_Press_Logical).w,d0
 		andi.b	#btnABC,d0	; is A,	B or C pressed?
@@ -66591,6 +66507,7 @@ nullsub_2:
 ; End of function nullsub_2
 
 SS_FixCamera:
+		;lea	(v_player).w,a0
 		move.w	obY(a0),d2
 		move.w	obX(a0),d3
 		move.w	(Camera_X_pos).w,d0
@@ -66609,16 +66526,130 @@ loc_1BBCE:
 locret_1BBDE:
 		rts	
 ; End of function SS_FixCamera
+
+
+SS_1:		binclude	"sslayout/1.eni"
+		even
+SS_2:		binclude	"sslayout/2.eni"
+		even
+SS_3:		binclude	"sslayout/3.eni"
+		even
+SS_4:		binclude	"sslayout/4.eni"
+		even
+SS_5:		binclude	"sslayout/5 (JP1).eni"
+			even
+SS_6:		binclude	"sslayout/6 (JP1).eni"
+		even
+
+SS_Load:
+		moveq	#0,d0
+;		move.b	(v_lastspecial).w,d0 ; load number of last special stage entered
+;		addq.b	#1,(v_lastspecial).w
+;		cmpi.b	#6,(v_lastspecial).w
+;		blo.s	SS_ChkEmldNum
+;		move.b	#0,(v_lastspecial).w ; reset if higher than 6
+
+;SS_ChkEmldNum:
+		;cmpi.b	#6,(Emerald_Count).w ; do you have all emeralds?
+		;beq.s	SS_LoadData	; if yes, branch
+		;moveq	#0,d1
+		;move.b	(Emerald_Count).w,d1
+		;subq.b	#1,d1
+		;blo.s	SS_LoadData
+		;lea	(v_emldlist).w,a3 ; check which emeralds you have
+
+;SS_ChkEmldLoop:	
+		;cmp.b	(a3,d1.w),d0
+		;bne.s	SS_ChkEmldRepeat
+		;bra.s	SS_Load
+; ===========================================================================
+
+;SS_ChkEmldRepeat:
+		;dbf	d1,SS_ChkEmldLoop
+
+SS_LoadData:
+		; Load player position data
+		lsl.w	#2,d0
+		lea	SS_StartLoc(pc,d0.w),a1
+		move.w	(a1)+,(v_player+obX).w
+		move.w	(a1)+,(v_player+obY).w
+
+		; Load layout data
+		movea.l	SS_LayoutIndex(pc,d0.w),a0
+		lea	(v_ssbuffer2&$FFFFFF).l,a1
+		move.w	#0,d0
+		jsr	(EniDec).l
+		; Clear everything from v_ssbuffer1 to v_ssbuffer2
+		lea	(Chunk_Table).l,a1
+		move.w	#(v_ssbuffer2-Chunk_Table)/4-1,d0
+
+SS_ClrRAM3:
+		clr.l	(a1)+
+		dbf	d0,SS_ClrRAM3
+
+		; Copy $1000 of data from v_ssbuffer2 to v_ssblockbuffer,
+		; inserting $40 bytes of padding for every $40 bytes copied.
+		lea	(v_ssblockbuffer&$FFFFFF).l,a1
+		lea	(v_ssbuffer2&$FFFFFF).l,a0
+		moveq	#(v_ssblockbuffer_end-v_ssblockbuffer)/$80-1,d1
+
+loc_1B6F6:
+		moveq	#$40-1,d2
+
+loc_1B6F8:
+		move.b	(a0)+,(a1)+
+		dbf	d2,loc_1B6F8
+
+		lea	$40(a1),a1
+		dbf	d1,loc_1B6F6
+
+		;lea	((v_ssblocktypes+8)&$FFFFFF).l,a1
+		;lea	(SS_MapIndex).l,a0
+		;moveq	#(SS_MapIndex_End-SS_MapIndex)/6-1,d1
+
+loc_1B714:
+		;move.l	(a0)+,(a1)+
+		;move.w	#0,(a1)+
+		;move.b	-4(a0),-1(a1)
+		;move.w	(a0)+,(a1)+
+		;dbf	d1,loc_1B714
+
+		lea	(v_ssitembuffer&$FFFFFF).l,a1
+		move.w	#(v_ssitembuffer_end-v_ssitembuffer)/4-1,d1
+
+loc_1B730:
+
+		clr.l	(a1)+
+		dbf	d1,loc_1B730
+
+		rts	
+; End of function SS_Load
+v_ssblockbuffer		= Chunk_Table+$1020 ; ($2000 bytes)
+v_ssblockbuffer_end	= v_ssblockbuffer+$80*$40
+v_ssbuffer2		= Chunk_Table+$4000
+v_ssblocktypes		= v_ssbuffer2
+v_ssitembuffer		= v_ssbuffer2+$400 ; ($100 bytes)
+v_ssitembuffer_end	= v_ssitembuffer+$100
+v_ssbuffer3		= Chunk_Table+$8000
+;v_ssscroll_buffer	= v_ngfx_buffer+$100
+
+SS_MapIndex:
+
+SS_MapIndex_End:
+		even
+
+SS_StartLoc:	include	"_inc/Start Location Array - Special Stages.asm"
+SS_LayoutIndex:
+		dc.l SS_1
+		dc.l SS_2
+		dc.l SS_3
+		dc.l SS_4
+		dc.l SS_5
+		dc.l SS_6
+		even
 ; ===========================================================================
 
 loc_33908:
-	lea	(SS_Ctrl_Record_Buf_End).w,a1
-
-	moveq	#bytesToWcnt(SS_Ctrl_Record_Buf_End-SS_Ctrl_Record_Buf)-1,d0
--	move.w	-4(a1),-(a1)
-	dbf	d0,-
-
-	move.w	(Ctrl_1_Logical).w,-(a1)
 	rts
 ; ===========================================================================
 ; loc_3391C:
@@ -87295,7 +87326,7 @@ PLCptr_Std1S1:		offsetTableEntry.w PlrList_Std1S1			; 10
 PLCptr_Unused2:		offsetTableEntry.w PlrList_Ending			; 11
 PLCptr_Mtz1:		offsetTableEntry.w PlrList_Mtz1			; 12
 PLCptr_Mtz2:		offsetTableEntry.w PlrList_Mtz2			; 13
-			offsetTableEntry.w PlrList_Wfz1			; 14
+PLCptr_TryAgain:	offsetTableEntry.w PlrList_TryAgain			; 14
 			offsetTableEntry.w PlrList_Wfz1			; 15
 PLCptr_Wfz1:		offsetTableEntry.w PlrList_Wfz1			; 16
 PLCptr_Wfz2:		offsetTableEntry.w PlrList_Wfz2			; 17
@@ -87448,6 +87479,8 @@ Nem_CreditText:	binclude	"artnem/Ending - Credits.nem"
 		even
 Nem_EndStH:	binclude	"artnem/Ending - StH Logo.nem"
 		even
+Nem_TryAgain:	binclude	"artnem/Ending - Try Again.nem"
+		even
 ;---------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Emerald Hill Zone secondary
@@ -87530,6 +87563,12 @@ PlrList_Mtz2: plrlistheader
 	plreq ArtTile_ArtNem_VrtclSprng, ArtNem_VrtclSprng
 	plreq ArtTile_ArtNem_HrzntlSprng, ArtNem_HrzntlSprng
 PlrList_Mtz2_End
+
+PlrList_TryAgain: plrlistheader
+		plreq	ArtTile_Try_Again_Emeralds,     Nem_EndEm  ; emeralds
+		plreq	ArtTile_Try_Again_Eggman,     Nem_TryAgain  ; Eggman
+		plreq	ArtTile_Credits_Font,     Nem_CreditText       ; credits alphabet
+PlrList_TryAgain_End
 ;---------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Wing Fortress Zone primary

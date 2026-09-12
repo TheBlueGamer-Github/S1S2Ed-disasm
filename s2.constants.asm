@@ -521,6 +521,7 @@ PLCID_Std1S1 =		id(PLCptr_Std1S1) ; A
 PLCID_Unused2 =		id(PLCptr_Unused2) ; B
 PLCID_Mtz1 =		id(PLCptr_Mtz1) ; C
 PLCID_Mtz2 =		id(PLCptr_Mtz2) ; D
+plcid_TryAgain = 	id(PLCptr_TryAgain) ; D
 PLCID_Wfz1 =		id(PLCptr_Wfz1) ; 10
 PLCID_Wfz2 =		id(PLCptr_Wfz2) ; 11
 PLCID_Htz1 =		id(PLCptr_Htz1) ; 12
