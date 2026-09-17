@@ -13612,8 +13612,8 @@ EndgameCredits:
 		jsr	(RunObjects).l
 		jsr	(BuildSprites).l
 		bsr.w	EndingDemoLoad
-		;moveq	#0,d0
-		;move.b	(Current_Zone).w,d0
+		moveq	#0,d0
+		move.b	(Current_Zone).w,d0
 	; multiply d0 by 12, the size of a level art load block
 		add.w	d0,d0
 		add.w	d0,d0
@@ -87514,13 +87514,13 @@ PlrList_Ending2: plrlistheader
 		plreq	ArtTile_Ending_Flowers, Nem_EndFlower   ; flowers
 		plreq	ArtTile_Ending_Emeralds,     Nem_EndEm  ; emeralds
 		plreq	ArtTile_Ending_Sonic,  Nem_EndSonic     ; Sonic
-		;plcm	Nem_Rabbit,    ArtTile_Ending_Rabbit    ; rabbit
-		;plcm	Nem_Chicken,   ArtTile_Ending_Chicken   ; chicken
-		;plcm	Nem_Penguin,   ArtTile_Ending_Penguin   ; penguin
-		;plcm	Nem_Seal,      ArtTile_Ending_Seal      ; seal
-		;plcm	Nem_Pig,       ArtTile_Ending_Pig       ; pig
-		;plcm	Nem_Flicky,    ArtTile_Ending_Flicky    ; flicky
-		;plcm	Nem_Squirrel,  ArtTile_Ending_Squirrel  ; squirrel
+		plreq	ArtTile_Ending_Rabbit,  ArtNem_Rabbit   ; rabbit
+		plreq	ArtTile_Ending_Chicken,  ArtNem_Chicken ; chicken
+		plreq	ArtTile_Ending_Penguin,  ArtNem_Penguin ; penguin
+		plreq	ArtTile_Ending_Seal,  ArtNem_Seal 	; seal
+		plreq	ArtTile_Ending_Pig,  ArtNem_Pig		; pig
+		plreq	ArtTile_Ending_Flicky,  ArtNem_Flicky 	; flicky
+		plreq	ArtTile_Ending_Squirrel, ArtNem_Squirrel; squirrel
 		plreq	ArtTile_Ending_STH,    Nem_EndStH       ; "SONIC THE HEDGEHOG"
 PlrList_Ending2_End
 ;---------------------------------------------------------------------------------------
@@ -89715,8 +89715,8 @@ Off_Objects: zoneOrderedOffsetTable 2,4
 	zoneOffsetTableEntry.w  Objects_HPZ_1	; Act 1
 	zoneOffsetTableEntry.w  Objects_Null	; Act 2
 	; Zone 9
-	zoneOffsetTableEntry.w  Objects_Null	; Act 1
-	zoneOffsetTableEntry.w  Objects_Null	; Act 2
+	zoneOffsetTableEntry.w  ObjPos_End	; Act 1
+	zoneOffsetTableEntry.w  ObjPos_End	; Act 2
 	zoneOffsetTableEntry.w  Objects_Null	; Act 1
 	zoneOffsetTableEntry.w  Objects_Null	; Act 2
 	; OOZ
@@ -89834,7 +89834,7 @@ Objects_Null:
 	ObjectLayoutBoundary
 	; And another
 	ObjectLayoutBoundary
-	; And another
+ObjPos_End:	binclude	"level/objects/ending.bin"
 	ObjectLayoutBoundary
 
 ; --------------------------------------------------------------------------------------
